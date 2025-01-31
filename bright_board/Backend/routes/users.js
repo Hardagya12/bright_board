@@ -1,7 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const router = express.Router();
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET || "e!3@B1y#i9$u&8mNpXz2LqA0V";
@@ -16,13 +15,13 @@ module.exports = function (db) {
             const { name, email, password } = req.body;
 
             if (!name || !email || !password) {
-                return res.status(400).send("All fields (name, email, password) are required");
+                return res.status(400).json({ error: "All fields (name, email, password) are required" });
             }
 
             // Check if user already exists
             const existingUser = await users.findOne({ email });
             if (existingUser) {
-                return res.status(400).send("User already exists with this email");
+                return res.status(400).json({ error: "User already exists with this email" });
             }
 
             // Hash password before storing
@@ -32,9 +31,9 @@ module.exports = function (db) {
             // Insert user into DB
             const result = await users.insertOne(newUser);
 
-            res.status(201).send(`User registered successfully with ID: ${result.insertedId}`);
+            res.status(201).json({ message: "User registered successfully", userId: result.insertedId });
         } catch (err) {
-            res.status(500).send("Error registering user: " + err.message);
+            res.status(500).json({ error: "Error registering user: " + err.message });
         }
     });
 
@@ -44,19 +43,19 @@ module.exports = function (db) {
             const { email, password } = req.body;
 
             if (!email || !password) {
-                return res.status(400).send("Email and password are required");
+                return res.status(400).json({ error: "Email and password are required" });
             }
 
             // Check if user exists
             const user = await users.findOne({ email });
             if (!user) {
-                return res.status(400).send("Invalid email or password");
+                return res.status(400).json({ error: "Invalid email or password" });
             }
 
             // Compare password
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
-                return res.status(400).send("Invalid email or password");
+                return res.status(400).json({ error: "Invalid email or password" });
             }
 
             // Generate JWT token
@@ -64,17 +63,17 @@ module.exports = function (db) {
 
             res.status(200).json({ message: "Login successful", token });
         } catch (err) {
-            res.status(500).send("Error logging in: " + err.message);
+            res.status(500).json({ error: "Error logging in: " + err.message });
         }
     });
 
     // **GET: Fetch All Users (For Admin)**
     router.get('/', async (req, res) => {
         try {
-            const allUsers = await users.find({}, { projection: { password: 0 } }).toArray(); // Exclude passwords
+            const allUsers = await users.find().project({ password: 0 }).toArray(); // Exclude passwords
             res.status(200).json(allUsers);
         } catch (err) {
-            res.status(500).send("Error fetching users: " + err.message);
+            res.status(500).json({ error: "Error fetching users: " + err.message });
         }
     });
 

@@ -14,17 +14,24 @@ const dbName = "bright_board";
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB and share the connection
 async function initializeDatabase() {
     try {
-        const client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+        const client = new MongoClient(uri);
+        await client.connect();
         console.log("Connected to MongoDB");
 
         const db = client.db(dbName);
 
-        // Pass the database to route files
-        app.use('/support', require('./models/support')(db));
-        app.use('/users', require('./models/users')(db));
+        // Use routes correctly
+        app.use('/users', require('./routes/users')(db));
+        app.use('/support', require('./routes/support')(db));
+
+        // Handle MongoDB disconnection properly
+        process.on('SIGINT', async () => {
+            await client.close();
+            console.log("MongoDB connection closed");
+            process.exit(0);
+        });
 
         // Start the server
         app.listen(port, () => {
@@ -37,5 +44,5 @@ async function initializeDatabase() {
     }
 }
 
-// Initialize the database and start the server
+// Initialize the database
 initializeDatabase();
