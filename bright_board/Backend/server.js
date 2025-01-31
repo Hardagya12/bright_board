@@ -23,8 +23,8 @@ async function initializeDatabase() {
         const db = client.db(dbName);
 
         // Pass the database to route files
-        app.use('/support', require('./support')(db));
-        app.use('/users', require('./users')(db));
+        app.use('/support', require('./models/support')(db));
+        app.use('/users', require('./models/users')(db));
 
         // Start the server
         app.listen(port, () => {
