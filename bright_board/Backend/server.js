@@ -7,7 +7,7 @@ const app = express();
 const port = 3000;
 
 // MongoDB connection details
-const uri = "mongodb+srv://rajputhardagya:1234@cluster0.pgaya.mongodb.net/";
+const uri = process.env.MONGO_URI; // Use the environment variable
 const dbName = "bright_board";
 
 // Middleware
@@ -16,15 +16,19 @@ app.use(express.json());
 
 async function initializeDatabase() {
     try {
-        const client = new MongoClient(uri);
+        const client = new MongoClient(uri, {
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000, // Increase the timeout value
+        });
         await client.connect();
         console.log("Connected to MongoDB");
 
         const db = client.db(dbName);
 
         // Use routes correctly
-        app.use('/users', require('./routes/users')(db));
-        app.use('/support', require('./routes/support')(db));
+        app.use('/users', require('./users')(db));
+        app.use('/support', require('./support')(db));
+        app.use('/institutes', require('./institutes')); // Import and use the institutes router
 
         // Handle MongoDB disconnection properly
         process.on('SIGINT', async () => {
