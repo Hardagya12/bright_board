@@ -22,7 +22,7 @@ router.post('/', async (req, res) => {
         const newInstitute = { name, address, contactNumber, email };
         
         const result = await db.collection('institutes').insertOne(newInstitute);
-        res.status(201).json(result.ops[0]); // Return the newly created institute
+        res.status(201).json({ message: "Registered successfully"}); // Return the newly created institute
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
