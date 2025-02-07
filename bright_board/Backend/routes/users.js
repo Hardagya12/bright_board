@@ -12,10 +12,10 @@ module.exports = function (db) {
     // **POST: User Registration (Sign-Up)**
     router.post('/signup', async (req, res) => {
         try {
-            const { name, email, password, instituteId } = req.body;
+            const { name, email, password } = req.body;
 
-            if (!name || !email || !password || !instituteId) {
-                return res.status(400).json({ error: "All fields (name, email, password, instituteId) are required" });
+            if (!name || !email || !password) {
+                return res.status(400).json({ error: "All fields (name, email, password) are required" });
             }
 
             // Check if user already exists
@@ -26,7 +26,7 @@ module.exports = function (db) {
 
             // Hash password before storing
             const hashedPassword = await bcrypt.hash(password, 10);
-            const newUser = { name, email, password: hashedPassword, instituteId, createdAt: new Date() };
+            const newUser = { name, email, password: hashedPassword, createdAt: new Date() };
 
             // Insert user into DB
             const result = await users.insertOne(newUser);
@@ -58,14 +58,10 @@ module.exports = function (db) {
                 return res.status(400).json({ error: "Invalid email or password" });
             }
 
-            // Generate JWT token with name and instituteId
-            const token = jwt.sign(
-                { userId: user._id, name: user.name, email: user.email, instituteId: user.instituteId },
-                JWT_SECRET,
-                { expiresIn: "1h" }
-            );
+            // Generate JWT token
+            const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
 
-            res.status(200).json({ message: "Login successful", token, name: user.name, instituteId: user.instituteId });
+            res.status(200).json({ message: "Login successful", token });
         } catch (err) {
             res.status(500).json({ error: "Error logging in: " + err.message });
         }
