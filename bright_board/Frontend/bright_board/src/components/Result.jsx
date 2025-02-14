@@ -5,6 +5,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Download, Share2, Search, SortAsc, SortDesc, Book, Award, TrendingUp, TrendingDown, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import Sidebar from './Sidebar';
 import './Result.css';
+import { downloadPDF, downloadCSV } from '../utils/download';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title);
 
@@ -38,7 +39,7 @@ const Result = () => {
         grade: calculateGrade(Math.floor(Math.random() * 41) + 60),
       })),
     };
-    
+
     data.cgpa = calculateCGPA(data.subjects);
     data.passPercentage = (data.subjects.filter(s => s.grade !== 'F').length / data.totalSubjects) * 100;
     data.rank = Math.floor(Math.random() * 50) + 1; // 1 to 50
@@ -127,6 +128,35 @@ const Result = () => {
     ],
   };
 
+  const handleDownloadPDF = () => {
+    if (studentData) {
+      downloadPDF(studentData.subjects);
+    }
+  };
+
+  const handleDownloadCSV = () => {
+    if (studentData) {
+      downloadCSV(studentData.subjects);
+    }
+  };
+
+  const handleShareResults = () => {
+    const shareUrl = window.location.href; // Replace with the specific URL you want to share
+    const shareText = `Check out my results on Bright Board: ${shareUrl}`;
+
+    if (navigator.share) {
+      // Use Web Share API if available
+      navigator.share({
+        title: 'Bright Board Results',
+        text: shareText,
+        url: shareUrl,
+      }).catch(err => console.log('Error sharing:', err));
+    } else {
+      // Fallback to opening a new tab with the share URL
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank');
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -174,7 +204,10 @@ const Result = () => {
                     <circle className="progress-bg" cx="50" cy="50" r="45"></circle>
                     <circle className="progress-bar" cx="50" cy="50" r="45" style={{
                       strokeDasharray: `${2 * Math.PI * 45}`,
-                      strokeDashoffset: `${2 * Math.PI * 45 * (1 - studentData.cgpa / 10)}`
+                      strokeDashoffset: `${2 * Math.PI * 45 * (1 - studentData.cgpa / 10)}`,
+                      strokeWidth: 10,
+                      fill: 'none',
+                      stroke: '#4caf50'
                     }}></circle>
                   </svg>
                   <span className="progress-text">{studentData.cgpa}</span>
@@ -231,11 +264,15 @@ const Result = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <button className="download-btn">
+                <button className="download-btn" onClick={handleDownloadPDF}>
                   <Download size={20} />
-                  Download Report
+                  Download PDF
                 </button>
-                <button className="share-btn">
+                <button className="download-btn" onClick={handleDownloadCSV}>
+                  <Download size={20} />
+                  Download CSV
+                </button>
+                <button className="share-btn" onClick={handleShareResults}>
                   <Share2 size={20} />
                   Share Results
                 </button>
