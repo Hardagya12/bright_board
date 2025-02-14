@@ -140,6 +140,23 @@ const Result = () => {
     }
   };
 
+  const handleShareResults = () => {
+    const shareUrl = window.location.href; // Replace with the specific URL you want to share
+    const shareText = `Check out my results on Bright Board: ${shareUrl}`;
+
+    if (navigator.share) {
+      // Use Web Share API if available
+      navigator.share({
+        title: 'Bright Board Results',
+        text: shareText,
+        url: shareUrl,
+      }).catch(err => console.log('Error sharing:', err));
+    } else {
+      // Fallback to opening a new tab with the share URL
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank');
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -255,7 +272,7 @@ const Result = () => {
                   <Download size={20} />
                   Download CSV
                 </button>
-                <button className="share-btn">
+                <button className="share-btn" onClick={handleShareResults}>
                   <Share2 size={20} />
                   Share Results
                 </button>
