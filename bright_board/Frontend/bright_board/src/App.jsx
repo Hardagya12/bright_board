@@ -6,6 +6,7 @@ import SignUp from './components/StudentSignup';
 import DashboardStudent from './components/DashboardStudent';
 import StudentProfile from './components/ProfileStudent'
 import Result from './components/Result';
+import AdminDashboard from './Admin/pages/AdminDashboard';
 import './App.css';
 
 function App() {
@@ -13,11 +14,12 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/dashboard" element={<DashboardStudent />} />
-        <Route path="/profile" element={<StudentProfile />} />
-        <Route path="/result" element={<Result />} />
+        <Route path="/ssignin" element={<SignIn />} />
+        <Route path="/ssignup" element={<SignUp />} />
+        <Route path="/sdashboard" element={<DashboardStudent />} />
+        <Route path="/sprofile" element={<StudentProfile />} />
+        <Route path="/sresult" element={<Result />} />
+        <Route path="/adashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
