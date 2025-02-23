@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -17,16 +18,16 @@ import {
 import './AdminSidebar.css';
 
 const navItems = [
-  { title: 'Dashboard', icon: <LayoutDashboard size={20} />, section: 'dashboard' },
-  { title: 'Students', icon: <Users size={20} />, section: 'students' },
-  { title: 'Attendance', icon: <ClipboardCheck size={20} />, section: 'attendance' },
-  { title: 'Study Materials', icon: <BookOpen size={20} />, section: 'materials' },
-  { title: 'Exams', icon: <GraduationCap size={20} />, section: 'exams' },
-  { title: 'Results', icon: <LineChart size={20} />, section: 'results' },
-  { title: 'Payments', icon: <CreditCard size={20} />, section: 'payments' },
-  { title: 'Feedback', icon: <MessageSquare size={20} />, section: 'feedback' },
-  { title: 'Support', icon: <LifeBuoy size={20} />, section: 'support' },
-  { title: 'Settings', icon: <Settings size={20} />, section: 'settings' },
+  { title: 'Dashboard', icon: <LayoutDashboard size={20} />, section: 'dashboard', path: '/a/dashboard' },
+  { title: 'Students', icon: <Users size={20} />, section: 'students', path: '/a/students' },
+  { title: 'Attendance', icon: <ClipboardCheck size={20} />, section: 'attendance', path: '/a/attendance' },
+  { title: 'Study Materials', icon: <BookOpen size={20} />, section: 'materials', path: '/a/materials' },
+  { title: 'Exams', icon: <GraduationCap size={20} />, section: 'exams', path: '/a/exams' },
+  { title: 'Results', icon: <LineChart size={20} />, section: 'results', path: '/a/results' },
+  { title: 'Payments', icon: <CreditCard size={20} />, section: 'payments', path: '/a/payments' },
+  { title: 'Feedback', icon: <MessageSquare size={20} />, section: 'feedback', path: '/a/feedback' },
+  { title: 'Support', icon: <LifeBuoy size={20} />, section: 'support', path: '/a/support' },
+  { title: 'Settings', icon: <Settings size={20} />, section: 'settings', path: '/a/settings' },
 ];
 
 export default function AdminSidebar() {
@@ -52,17 +53,18 @@ export default function AdminSidebar() {
       <nav className="nav-menu">
         <div className="menu-items">
           {navItems.map((item) => (
-            <button
+            <Link
               key={item.section}
-              onClick={() => setActiveSection(item.section)}
+              to={item.path}
               className={`menu-item ${activeSection === item.section ? 'active' : ''}`}
+              onClick={() => setActiveSection(item.section)}
               aria-current={activeSection === item.section ? 'page' : undefined}
             >
               <div className="item-content">
                 <span className="item-icon">{item.icon}</span>
                 <span className="item-text">{item.title}</span>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
       </nav>
