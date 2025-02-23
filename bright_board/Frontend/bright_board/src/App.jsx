@@ -19,7 +19,7 @@ function App() {
         <Route path="/sdashboard" element={<DashboardStudent />} />
         <Route path="/sprofile" element={<StudentProfile />} />
         <Route path="/sresult" element={<Result />} />
-        <Route path="/adashboard" element={<AdminDashboard />} />
+        <Route path="/a/dashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
