@@ -1,0 +1,262 @@
+/* Base Styles */
+.admin-dashboard {
+  min-height: 100vh;
+  display: flex;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3b 100%);
+  color: #e2e8f0;
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+}
+
+/* Content Wrapper */
+.admin-dashboard-content {
+  flex: 1;
+  padding: 3rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Batch Selector */
+.admin-batch-selector {
+  margin-bottom: 2.5rem;
+  position: relative;
+  display: inline-block;
+  width: 200px;
+}
+
+.admin-batch-toggle {
+  padding: 0.9rem 1.8rem;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #35354a, #252536);
+  color: #e2e8f0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    0 6px 16px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: background 0.4s ease, transform 0.2s ease;
+}
+
+.admin-batch-toggle:hover {
+  background: linear-gradient(145deg, #10b981, #34d399);
+  transform: translateY(-2px);
+}
+
+.admin-dropdown-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #e2e8f0;
+  transition: transform 0.3s ease;
+}
+
+.admin-batch-toggle:hover .admin-dropdown-icon {
+  transform: rotate(180deg);
+}
+
+.admin-batch-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(145deg, #35354a, #252536);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0.75rem 0 0;
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-batch-option {
+  padding: 0.9rem 1.8rem;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, padding-left 0.3s ease;
+}
+
+.admin-batch-option:hover {
+  background: linear-gradient(145deg, #10b981, #34d399);
+  color: #ffffff;
+  padding-left: 2.2rem;
+}
+
+/* Overview Grid */
+.admin-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3.5rem;
+}
+
+.admin-stat-card {
+  background: linear-gradient(145deg, #35354a, #252536);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.4s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(145deg, #404055, #303045);
+}
+
+.admin-stat-card .admin-icon {
+  color: #10b981;
+  width: 2.8rem;
+  height: 2.8rem;
+  margin-bottom: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
+}
+
+.admin-stat-card .admin-rupee-icon {
+  display: block;
+  color: #10b981;
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
+}
+
+.admin-stat-value {
+  display: block;
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.admin-stat-label {
+  font-size: 1.1rem;
+  color: #b0b8c4;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Insights Grid */
+.admin-insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 2.5rem;
+  margin-bottom: 3.5rem;
+}
+
+.admin-chart-container {
+  background: linear-gradient(145deg, #35354a, #252536);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-chart-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.admin-insights-grid h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Feedback Section */
+.admin-feedback-container {
+  background: linear-gradient(145deg, #35354a, #252536);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.admin-feedback-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.admin-feedback-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(5px);
+}
+
+.admin-feedback-item:last-child {
+  border-bottom: none;
+}
+
+.admin-feedback-item .admin-icon {
+  color: #fbbf24;
+  width: 1.8rem;
+  height: 1.8rem;
+  filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.3));
+}
+
+.admin-feedback-item p {
+  margin: 0;
+  font-weight: 700;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.admin-feedback-item span {
+  font-size: 0.95rem;
+  color: #b0b8c4;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .admin-insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-overview-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  .admin-dashboard-content {
+    padding: 2rem;
+  }
+  .admin-batch-selector {
+    width: 100%;
+  }
+  .admin-batch-toggle {
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-stat-card {
+    padding: 1.5rem;
+  }
+  .admin-stat-value {
+    font-size: 1.8rem;
+  }
+  .admin-stat-label {
+    font-size: 1rem;
+  }
+}
