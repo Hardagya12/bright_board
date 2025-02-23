@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Users, Calendar, Star, ChevronDown } from 'lucide-react'; // Removed DollarSign
 import './AdminDashboard.css';
-import AdminSidebar from '../components/adminsidebar';
+import AdminSidebar from '../components/Adminsidebar';
 
 // Mock data simulating backend response with batch-specific data
 const getDashboardData = () => ({
