@@ -1,6 +1,9 @@
-# bright_board
+# Bright Board
+
 https://www.figma.com/design/xcEDvU6QBItNIE7jeAkjKi/Bright-Board?node-id=0-1&t=w65gnY37rnB355p3-1
 
+# Deployed Link:
+https://brightboard-seven.vercel.app/
 
 ### **Problem Statement**  
 The education sector faces challenges in managing and organizing digital classrooms, especially for small to medium-sized institutions. Tutors often lack a centralized platform to manage student attendance, share study materials, track progress, and provide feedback. Similarly, students and parents often struggle to access information about attendance, results, and payments in an organized manner. Current solutions are either too expensive, overly complex, or lack customization for small institutions.
