@@ -114,7 +114,7 @@ const AdminDashboard = () => {
   const PieChartComponent = ({ title, data }) => (
     <div className="admin-chart-container">
       <h2>{title}</h2>
-      <PieChart width={450} height={300}>
+      <PieChart width={350} height={300}>
         <Pie
           data={data}
           cx="50%"
@@ -162,6 +162,7 @@ const AdminDashboard = () => {
     <div className="admin-dashboard">
       <AdminSidebar />
       <div className="admin-dashboard-content">
+        <h1>Admin Dashboard</h1>
         <main>
           <div className="admin-batch-selector">
             <div
