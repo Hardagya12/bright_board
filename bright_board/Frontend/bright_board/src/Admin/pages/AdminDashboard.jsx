@@ -162,6 +162,7 @@ const AdminDashboard = () => {
     <div className="admin-dashboard">
       <AdminSidebar />
       <div className="admin-dashboard-content">
+        <h1>Admin Dashboard</h1>
         <main>
           <div className="admin-batch-selector">
             <div

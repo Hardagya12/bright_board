@@ -1,0 +1,450 @@
+:root {
+  --primary-color: #a5b4fc; 
+  --secondary-color: #34d399;
+  --background-color: #1a1f25; 
+  --card-background: rgba(255, 255, 255, 0.05); 
+  --text-color: #fff; 
+  --text-secondary-color: #a5b4fc; 
+  --border-color: rgba(255, 255, 255, 0.1);
+  --hover-background: rgba(255, 255, 255, 0.15); 
+  --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --modal-background: rgba(0, 0, 0, 0.75); 
+}
+
+/* Base Styles */
+.student-management-container {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--background-color) 0%, #121418 100%); /* Adjusted gradient */
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 50px; 
+  margin-right: 50px;
+  overflow-x: auto;
+}
+
+/* Debugging */
+.debug-content {
+  color: red;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Overview Cards */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+  gap: 1.5rem; 
+  margin-bottom: 2rem;
+}
+
+.overview-card {
+  background: var(--card-background);
+  backdrop-filter: blur(10px); 
+  border-radius: 1rem; 
+  padding: 1.5rem; 
+  border: 1px solid var(--border-color);
+  transition: transform 0.3s ease;
+}
+
+.overview-card:hover {
+  transform: translateY(-5px);
+  background: var(--hover-background);
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.overview-card svg {
+  filter: drop-shadow(0 2px 4px rgba(165, 180, 252, 0.3)); 
+}
+
+.overview-card h3 {
+  font-size: 0.9rem; 
+  color: var(--text-secondary-color);
+  margin-bottom: 0.5rem;
+}
+
+.overview-card p {
+  font-size: 1.5rem; 
+  font-weight: bold;
+}
+
+/* Search & Filters */
+.filters-section {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.1); 
+  border-radius: 0.5rem; 
+  padding: 0.75rem 1rem;
+  color: var(--text-color);
+  border: 1px solid rgba(255, 255, 255, 0.2); 
+  flex: 1;
+  min-width: 200px;
+  transition: all 0.3s ease; 
+}
+
+.search-input:hover,
+.search-input:focus {
+  border-color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+
+.filter-select {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-color);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 120px;
+  transition: all 0.3s ease;
+}
+
+.filter-select:hover,
+.filter-select:focus {
+  border-color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.filter-select option {
+  background: #35354a;
+  color: var(--text-color);
+}
+
+/* Student List Table */
+.table-container {
+  background: var(--card-background);
+  border-radius: 1rem; 
+  padding: 1.5rem; 
+  margin-bottom: 2rem;
+  overflow-x: auto;
+}
+
+.student-table {
+  width: 100%;
+  border-collapse: separate; 
+  border-spacing: 0 0.5rem;
+}
+
+.student-table th {
+  color: var(--text-secondary-color);
+  font-weight: 500; 
+  font-size: 1rem; 
+  background: transparent; 
+  padding: 1rem;
+  text-align: left;
+}
+
+.student-table td {
+  color: var(--text-color);
+  font-size: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05); 
+}
+
+.student-table tr td:first-child {
+  border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.student-table tr td:last-child {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.student-table tr:hover {
+  background: var(--hover-background);
+}
+
+.status-chip {
+  padding: 0.5rem 1rem; 
+  border-radius: 0.5rem; 
+  border: 1px solid var(--border-color); 
+  font-weight: 500;
+}
+
+.status-chip.active {
+  border-color: var(--secondary-color); 
+  color: var(--secondary-color);
+}
+
+.status-chip.inactive {
+  border-color: #f87171;
+  color: #f87171;
+}
+
+.actions button {
+  background: transparent;
+  border: none;
+  color: #ef4444; 
+  cursor: pointer;
+  padding: 0.25rem; 
+  border-radius: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.actions button:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Pagination */
+.pagination {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pagination button {
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.1); 
+  border: 1px solid var(--border-color); 
+  padding: 0.75rem 1.5rem; 
+  border-radius: 0.5rem; 
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination button.active {
+  background: var(--primary-color);
+  color: #1a1f25; 
+}
+
+.pagination button:hover {
+  background: var(--secondary-color);
+}
+
+/* Charts */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+  gap: 2rem;
+  margin-top: 2rem; 
+}
+
+.chart-card {
+  background: var(--card-background); 
+  border-radius: 1rem; 
+  padding: 1.5rem; 
+  margin: 0; 
+  border: 1px solid var(--border-color); 
+}
+
+.chart-card h3 {
+  color: var(--text-secondary-color);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.recharts-wrapper {
+  margin: 0 auto;
+}
+
+/* Quick Actions */
+.bulk-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.bulk-actions button {
+  background: var(--primary-color);
+  color: #1a1f25; 
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem; 
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bulk-actions button:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--modal-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--background-color); 
+  border-radius: 1rem; 
+  padding: 2rem;
+  width: 90%; 
+  max-width: 600px; 
+  border: 1px solid var(--border-color); 
+}
+
+.modal-content h2 {
+  font-size: 1.5rem; 
+  color: var(--text-color);
+  font-weight: 700;
+  margin: 0 0 1.5rem 0; 
+}
+
+.modal-content p {
+  color: var(--text-color);
+  margin: 1rem 0; 
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.modal-actions button {
+  padding: 0.75rem 1.5rem; 
+  border-radius: 0.5rem; 
+  border: none;
+  cursor: pointer;
+  font-weight: 500; 
+  transition: all 0.3s ease; 
+}
+
+.modal-actions button:first-child {
+  background: rgba(255, 255, 255, 0.1); 
+  color: var(--text-color); 
+}
+
+.modal-actions button:last-child {
+  background: var(--primary-color); 
+  color: #1a1f25; 
+}
+
+.modal-actions button:first-child:hover {
+  background: var(--hover-background);
+}
+
+.modal-actions button:last-child:hover {
+  background: var(--secondary-color);
+}
+
+/* Drawer */
+.drawer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 300px;
+  background: var(--card-background);
+  padding: 2rem;
+  border-left: 1px solid var(--border-color);
+  z-index: 1000;
+}
+
+.drawer-content h2 {
+  color: var(--text-color);
+  margin: 0 0 1rem 0;
+}
+
+.drawer-content p {
+  color: var(--text-color);
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.drawer-content button {
+  background: var(--primary-color);
+  color: #1a1f25; 
+  padding: 0.75rem 1.5rem; 
+  border-radius: 0.5rem; 
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease; 
+}
+
+.drawer-content button:hover {
+  background: var(--secondary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .overview-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .student-management-container {
+    flex-direction: column;
+    padding: 1rem; 
+  }
+  .main-content {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 1rem;
+  }
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .student-table td,
+  .student-table th {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  .actions button {
+    padding: 0.25rem;
+  }
+  .filters-section {
+    flex-direction: column;
+  }
+  .search-input,
+  .filter-select {
+    width: 100%;
+  }
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-management-container {
+    padding: 1rem;
+  }
+  .overview-card p {
+    font-size: 1.5rem;
+  }
+  .overview-card h3 {
+    font-size: 0.9rem;
+  }
+  .overview-card svg {
+    width: 32px;
+    height: 32px;
+  }
+  .recharts-wrapper {
+    width: 100% !important;
+    height: 200px !important;
+  }
+  .bulk-actions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
