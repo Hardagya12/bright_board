@@ -11,7 +11,7 @@
 /* Content Wrapper */
 .admin-dashboard-content {
   flex: 1;
-  padding: 3rem;
+  padding: 1rem;
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -89,7 +89,7 @@
 /* Overview Grid */
 .admin-overview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 2rem;
   margin-bottom: 3.5rem;
 }
@@ -132,7 +132,7 @@
   font-size: 2.2rem;
   font-weight: 800;
   background: linear-gradient(90deg, #10b981, #34d399);
-  -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
@@ -171,8 +171,8 @@
   font-weight: 800;
   margin-bottom: 1.5rem;
   background: linear-gradient(90deg, #10b981, #34d399);
+  background-clip: text;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
