@@ -1,8 +1,8 @@
-# bright_board
+# Bright Board
 
 https://www.figma.com/design/xcEDvU6QBItNIE7jeAkjKi/Bright-Board?node-id=0-1&t=w65gnY37rnB355p3-1
 
-#Deployed Link:
+# Deployed Link:
 https://brightboard-seven.vercel.app/
 
 ### **Problem Statement**  
