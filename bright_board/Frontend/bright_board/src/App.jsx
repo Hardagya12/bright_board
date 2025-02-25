@@ -8,6 +8,7 @@ import StudentProfile from './components/ProfileStudent'
 import Result from './components/Result';
 import AdminDashboard from './Admin/pages/AdminDashboard';
 import StudentManagementPage from './Admin/pages/StudentManagementPage';
+import AttendanceManagement from './Admin/pages/AttendanceManagement';
 import './App.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/s/result" element={<Result />} />
         <Route path="/a/dashboard" element={<AdminDashboard />} />
         <Route path="/a/students" element={<StudentManagementPage />} />
+        <Route path="/a/attendance" element={<AttendanceManagement />} />
       </Routes>
     </Router>
   );
