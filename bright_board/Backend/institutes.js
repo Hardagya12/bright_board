@@ -32,8 +32,8 @@ const otpSchema = Joi.string().length(6).pattern(/^\d+$/).required();
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER, // Add to .env
-        pass: process.env.EMAIL_PASS  // Add to .env (App Password)
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
@@ -51,7 +51,14 @@ const sendOtpEmail = async (email, otp) => {
         text: `Your OTP is: ${otp}. It expires in 5 minutes.`
     };
 
-    return transporter.sendMail(mailOptions);
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent:', info.response); // Log success
+        return true;
+    } catch (error) {
+        console.error('Error sending OTP email:', error); // Log error
+        throw error;
+    }
 };
 
 // **Signup - Step 1: Send OTP**
@@ -63,27 +70,25 @@ router.post('/signup/send-otp', async (req, res) => {
         const db = await getDbClient();
         const { name, address, contactNumber, email, password, coursesOffered } = req.body;
 
-        // Check if institute already exists
         const existingInstitute = await db.collection('institutes').findOne({ email });
         if (existingInstitute) return res.status(400).json({ error: 'Institute already exists' });
 
-        // Generate and store OTP with expiration
         const otp = generateOtp();
         const otpDoc = {
             email,
             otp,
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes expiry
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
             formData: { name, address, contactNumber, email, password, coursesOffered }
         };
 
-        await db.collection('otps').deleteMany({ email }); // Remove any existing OTPs for this email
+        await db.collection('otps').deleteMany({ email });
         await db.collection('otps').insertOne(otpDoc);
 
-        // Send OTP
         await sendOtpEmail(email, otp);
         res.status(200).json({ message: 'OTP sent successfully' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error in /signup/send-otp:', err);
+        res.status(500).json({ error: `Failed to send OTP: ${err.message}` });
     }
 });
 
@@ -105,10 +110,7 @@ router.post('/signup/verify-otp', async (req, res) => {
 
         const { name, address, contactNumber, email: otpEmail, password, coursesOffered } = otpDoc.formData;
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Generate instituteId
         const count = await db.collection('institutes').countDocuments();
         const newInstituteId = `INST${(count + 1).toString().padStart(3, '0')}`;
 
@@ -126,10 +128,11 @@ router.post('/signup/verify-otp', async (req, res) => {
         };
 
         await db.collection('institutes').insertOne(newInstitute);
-        await db.collection('otps').deleteOne({ email, otp }); // Clean up OTP
+        await db.collection('otps').deleteOne({ email, otp });
 
         res.status(201).json({ message: "Institute registered successfully", instituteId: newInstituteId });
     } catch (err) {
+        console.error('Error in /signup/verify-otp:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -150,6 +153,7 @@ router.post('/signin', async (req, res) => {
         const token = jwt.sign({ userId: institute._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(200).json({ token });
     } catch (err) {
+        console.error('Error in /signin:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -161,6 +165,7 @@ router.get('/', async (req, res) => {
         const institutes = await db.collection('institutes').find({ status: { $ne: "Deleted" } }).toArray();
         res.status(200).json(institutes);
     } catch (err) {
+        console.error('Error in GET /:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -174,6 +179,7 @@ router.get('/:id', async (req, res) => {
         if (!institute) return res.status(404).json({ error: 'Institute not found' });
         res.status(200).json(institute);
     } catch (err) {
+        console.error('Error in GET /:id:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -196,6 +202,7 @@ router.put('/:id', auth, async (req, res) => {
         if (!updatedInstitute.value) return res.status(404).json({ error: 'Institute not found or already deleted' });
         res.status(200).json({ message: "Institute updated successfully", institute: updatedInstitute.value });
     } catch (err) {
+        console.error('Error in PUT /:id:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -213,6 +220,7 @@ router.delete('/:id', auth, async (req, res) => {
         if (!result.value) return res.status(404).json({ error: 'Institute not found or already deleted' });
         res.status(200).json({ message: 'Institute soft deleted successfully' });
     } catch (err) {
+        console.error('Error in DELETE /:id:', err);
         res.status(500).json({ error: err.message });
     }
 });
