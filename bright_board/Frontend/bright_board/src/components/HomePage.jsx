@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaFacebook, FaTwitter, FaLinkedin ,FaInstagram ,FaGithub } from "react-icons/fa";
-import StudentSignup from "./StudentSignup";
-import SupportImage from "../images/specialists-customer-support-center-laptop-as-communication-device-blue-background-flat-illustration.png";
+import { Link } from "react-router-dom"; // Added Link import
 import "./HomePage.css";
 
 const HomePage = () => {
@@ -74,7 +73,7 @@ const HomePage = () => {
   return (
     <div className="landing-page">
       <nav className="navbar">
-        <div className="logo">BrightBoard</div>
+        <div className="logo" style={{ width: 'auto' }}>BrightBoard</div>
         <ul className="nav-links">
           <li>
             <a href="#hero" className="nav-link">
@@ -90,9 +89,9 @@ const HomePage = () => {
             <a href="#contact" className="nav-link">
               Contact
             </a>
-            <a href ="{StudentSignup}" className="nav-link">
+            <Link to="/role" className="nav-link"> {/* Changed to Link */}
               Sign Up
-            </a>
+            </Link>
           </li>
         </ul>
       </nav>
@@ -105,7 +104,9 @@ const HomePage = () => {
     <h2 className="hero-subtitle">
       Empowering students, tutors, and institutes with **next-gen digital tools**.
     </h2>
-    <button className="cta-button">Get Started Now</button>
+    <Link to="/role" className="cta-button"> {/* Changed to Link */}
+      Get Started Now
+    </Link>
   </div>
 </section>
 
@@ -196,7 +197,6 @@ const HomePage = () => {
           {/* Contact Section */}
           <div className="footer-section">
             <h3>Contact Us</h3>
-            <img src="{SupportImage}" alt="Support" className="support-image" />
             <p>
               <strong>Email:</strong>{" "}
               <a href="mailto:info@brightboard.com">brightboard@gmail.com</a>
@@ -224,7 +224,7 @@ const HomePage = () => {
         {/* Footer Bottom */}
         <div className="footer-bottom">
           <p>
-            &copy; {new Date().getFullYear()} BrightBoard. All rights reserved.
+            © {new Date().getFullYear()} BrightBoard. All rights reserved.
           </p>
         </div>
       </footer>

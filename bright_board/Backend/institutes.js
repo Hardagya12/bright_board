@@ -4,6 +4,7 @@ const Joi = require('joi');
 const bcrypt = require('bcrypt'); // To hash passwords
 const jwt = require('jsonwebtoken'); // To generate JWT
 const auth = require('./middleware/auth'); // Authentication middleware
+const { sendOtpEmail } = require('./middleware/email'); // Email middleware
 const router = express.Router();
 
 const uri = process.env.MONGO_URI;
@@ -23,6 +24,96 @@ const instituteSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(), // Password validation
     coursesOffered: Joi.array().items(Joi.string()).optional()
+});
+
+// Generate a 6-digit OTP
+function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Request OTP route
+router.post('/request-otp', async (req, res) => {
+    const { email } = req.body;
+    
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+
+    try {
+        const db = await getDbClient();
+        
+        // Check if email already exists in institutes collection
+        const existingInstitute = await db.collection('institutes').findOne({ email });
+        if (existingInstitute) {
+            return res.status(400).json({ error: 'Institute with this email already exists' });
+        }
+        
+        // Generate OTP
+        const otp = generateOTP();
+        
+        // Store OTP in database (replace existing if any)
+        await db.collection('otps').deleteMany({ email });
+        await db.collection('otps').insertOne({
+            email,
+            otp,
+            createdAt: new Date(),
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes expiry
+        });
+        
+        // Send OTP via email
+        const emailResult = await sendOtpEmail(email, otp);
+        
+        if (!emailResult.success) {
+            return res.status(500).json({ error: 'Failed to send OTP email' });
+        }
+        
+        res.status(200).json({ message: 'OTP sent successfully' });
+    } catch (err) {
+        console.error('OTP request error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Verify OTP route
+router.post('/verify-otp', async (req, res) => {
+    const { email, otp } = req.body;
+    
+    if (!email || !otp) {
+        return res.status(400).json({ error: 'Email and OTP are required' });
+    }
+
+    try {
+        const db = await getDbClient();
+        
+        // Find OTP in database
+        const otpRecord = await db.collection('otps').findOne({ 
+            email, 
+            otp,
+            expiresAt: { $gt: new Date() } // Check if OTP is not expired
+        });
+        
+        if (!otpRecord) {
+            return res.status(400).json({ error: 'Invalid or expired OTP' });
+        }
+        
+        // OTP is valid, delete it to prevent reuse
+        await db.collection('otps').deleteOne({ _id: otpRecord._id });
+        
+        // Generate a temporary verification token
+        const verificationToken = jwt.sign(
+            { email, verified: true },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+        
+        res.status(200).json({ 
+            message: 'Email verified successfully',
+            verificationToken
+        });
+    } catch (err) {
+        console.error('OTP verification error:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // **Signup (create a new institute)**

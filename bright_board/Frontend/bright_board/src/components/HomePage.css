@@ -162,6 +162,7 @@ body {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.5s ease 0.4s, transform 0.5s ease 0.4s;
+  text-decoration: none;
 }
 
 .cta-button:hover {
