@@ -18,6 +18,7 @@
     color: var(--text-color);
     font-family: 'Inter', sans-serif;
     background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    background-color: #191D34;
   }
   
   /* Assuming AdminSidebar has a class of "sidebar" - adjust if different */
