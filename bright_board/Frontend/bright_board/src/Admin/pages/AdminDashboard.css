@@ -24,11 +24,18 @@
 /* Content Wrapper */
 .admin-dashboard-content {
   flex: 1;
-  margin-left: 50px;
-  margin-right: 50px; 
   overflow-x: auto;
+  background-color:#191D34;
 }
-
+h1{
+  font-size: var(--font-xl);
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(45deg, var(--gradient-start), var(--gradient-end));
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px var(--shadow-color);
+}
 /* Batch Selector */
 .admin-batch-selector {
   margin-bottom: 2rem; 
