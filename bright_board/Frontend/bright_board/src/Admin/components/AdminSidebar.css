@@ -67,6 +67,11 @@
   -webkit-text-fill-color: transparent;
   letter-spacing: 0.05em;
   transition: all 0.3s;
+  margin-top: 100px;
+  width: 300px;
+}
+h1.logo{
+  width: 300px;
 }
 
 .collapsed .logo {

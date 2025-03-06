@@ -12,8 +12,6 @@ import {
   LifeBuoy,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import './AdminSidebar.css';
 
@@ -41,7 +39,7 @@ export default function AdminSidebar() {
         className="toggle-button"
         aria-label={isCollapsed ? "Expand AdminSidebar" : "Collapse AdminSidebar"}
       >
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        {isCollapsed ? '>' : '<'}
       </button>
 
       <div className="AdminSidebar-header">
