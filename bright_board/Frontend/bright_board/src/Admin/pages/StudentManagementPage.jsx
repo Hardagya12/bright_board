@@ -66,6 +66,16 @@ const StudentManagementPage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [editForm, setEditForm] = useState({
+    id: '',
+    name: '',
+    email: '',
+    phone: '',
+    course: '',
+    attendance: '',
+    status: '',
+    batch: ''
+  });
   const rowsPerPage = 5;
 
   useEffect(() => {
@@ -112,7 +122,27 @@ const StudentManagementPage = () => {
 
   const handleEdit = (student) => {
     setSelectedStudent(student);
+    setEditForm({
+      id: student.id,
+      name: student.name,
+      email: student.email,
+      phone: student.phone,
+      course: student.course,
+      attendance: student.attendance,
+      status: student.status,
+      batch: student.batch
+    });
     setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    const updatedStudents = students.map(student => 
+      student.id === editForm.id ? { ...student, ...editForm } : student
+    );
+    setStudents(updatedStudents);
+    setFilteredStudents(updatedStudents);
+    setEditModalOpen(false);
+    setSelectedStudent(null);
   };
 
   const handleDelete = (student) => {
@@ -120,7 +150,10 @@ const StudentManagementPage = () => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
+    const updatedStudents = students.filter(student => student.id !== selectedStudent.id);
+    setStudents(updatedStudents);
+    setFilteredStudents(updatedStudents);
     setDeleteDialogOpen(false);
     setSelectedStudent(null);
   };
@@ -178,7 +211,7 @@ const StudentManagementPage = () => {
           onChange={(e) => setFilters({ ...filters, [filter]: e.target.value })}
           className="filter-select"
         >
-          <option value="">All {filter}s</option>
+          <option value="">All {filter.charAt(0).toUpperCase() + filter.slice(1)}s</option>
           {filter === 'batch' && ['Batch A', 'Batch B', 'Batch C'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
           {filter === 'course' && ['CS101', 'ME201', 'EE301'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
           {filter === 'attendance' && ['70', '80', '90'].map(opt => <option key={opt} value={opt}>{`>${opt}%`}</option>)}
@@ -220,14 +253,14 @@ const StudentManagementPage = () => {
                   </span>
                 </td>
                 <td className="actions">
-                  <button onClick={() => handleEdit(student)}>
-                    <Edit sx={{ color: '#10b981' }} />
+                  <button onClick={() => handleViewProfile(student)} className="action-button view">
+                    <Visibility />
                   </button>
-                  <button onClick={() => handleDelete(student)}>
-                    <Delete sx={{ color: '#f87171' }} />
+                  <button onClick={() => handleEdit(student)} className="action-button edit">
+                    <Edit />
                   </button>
-                  <button onClick={() => handleViewProfile(student)}>
-                    <Visibility sx={{ color: '#10b981' }} />
+                  <button onClick={() => handleDelete(student)} className="action-button delete">
+                    <Delete />
                   </button>
                 </td>
               </motion.tr>
@@ -293,7 +326,7 @@ const StudentManagementPage = () => {
     <div className="student-management-container">
       <AdminSidebar />
       <main className="main-content">
-      <h1> Student Management </h1>
+        <h1>Student Management</h1>
         <OverviewSection />
         <FilterSection />
         <StudentTable />
@@ -309,12 +342,90 @@ const StudentManagementPage = () => {
 
         {editModalOpen && (
           <motion.div className="modal" variants={animationVariants.modal} initial="initial" animate="animate">
-            <div className="modal-content">
+            <div className="modal-content modal-scrollable">
               <h2>Edit Student</h2>
-              <p>Editing {selectedStudent?.name}</p>
+              <form className="edit-form">
+                <div className="form-group">
+                  <label>Name</label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input
+                    type="text"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Course</label>
+                  <select
+                    value={editForm.course}
+                    onChange={(e) => setEditForm({ ...editForm, course: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Course</option>
+                    {['CS101', 'ME201', 'EE301'].map(course => (
+                      <option key={course} value={course}>{course}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Attendance (%)</label>
+                  <input
+                    type="number"
+                    value={editForm.attendance}
+                    onChange={(e) => setEditForm({ ...editForm, attendance: parseInt(e.target.value) })}
+                    min="0"
+                    max="100"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Status</label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Status</option>
+                    {['Active', 'Inactive'].map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Batch</label>
+                  <select
+                    value={editForm.batch}
+                    onChange={(e) => setEditForm({ ...editForm, batch: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Batch</option>
+                    {['Batch A', 'Batch B', 'Batch C'].map(batch => (
+                      <option key={batch} value={batch}>{batch}</option>
+                    ))}
+                  </select>
+                </div>
+              </form>
               <div className="modal-actions">
-                <button onClick={() => setEditModalOpen(false)}>Cancel</button>
-                <button onClick={() => setEditModalOpen(false)}>Save</button>
+                <button onClick={() => setEditModalOpen(false)} className="cancel-button">Cancel</button>
+                <button onClick={handleSaveEdit} className="save-button">Save</button>
               </div>
             </div>
           </motion.div>
@@ -326,8 +437,8 @@ const StudentManagementPage = () => {
               <h2>Confirm Delete</h2>
               <p>Are you sure you want to delete {selectedStudent?.name}?</p>
               <div className="modal-actions">
-                <button onClick={() => setDeleteDialogOpen(false)}>Cancel</button>
-                <button onClick={confirmDelete}>Delete</button>
+                <button onClick={() => setDeleteDialogOpen(false)} className="cancel-button">Cancel</button>
+                <button onClick={confirmDelete} className="delete-button">Delete</button>
               </div>
             </div>
           </motion.div>
@@ -343,12 +454,14 @@ const StudentManagementPage = () => {
           >
             <div className="drawer-content">
               <h2>{selectedStudent?.name}</h2>
-              <p>Email: {selectedStudent?.email}</p>
-              <p>Phone: {selectedStudent?.phone}</p>
-              <p>Course: {selectedStudent?.course}</p>
-              <p>Attendance: {selectedStudent?.attendance}%</p>
-              <p>Status: {selectedStudent?.status}</p>
-              <button onClick={() => setDrawerOpen(false)}>Close</button>
+              <p><strong>ID:</strong> {selectedStudent?.id}</p>
+              <p><strong>Email:</strong> {selectedStudent?.email}</p>
+              <p><strong>Phone:</strong> {selectedStudent?.phone}</p>
+              <p><strong>Course:</strong> {selectedStudent?.course}</p>
+              <p><strong>Attendance:</strong> {selectedStudent?.attendance}%</p>
+              <p><strong>Status:</strong> {selectedStudent?.status}</p>
+              <p><strong>Batch:</strong> {selectedStudent?.batch}</p>
+              <button onClick={() => setDrawerOpen(false)} className="close-button">Close</button>
             </div>
           </motion.div>
         )}
