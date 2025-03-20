@@ -1,7 +1,7 @@
 import React from 'react';
 import './DashboardStudent.css';
 import { Calendar, BookOpen, FileText, LayoutDashboard, CreditCard, UserCircle, MessageSquare, Check, X, Percent, Bell } from 'lucide-react';
-import Sidebar from './Sidebar';
+import Sidebar from '../components/Sidebar';
 const DashboardStudent = () => {
   return (
     <div className="dashboard-container">

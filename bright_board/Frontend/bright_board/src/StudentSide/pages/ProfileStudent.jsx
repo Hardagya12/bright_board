@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './ProfileStudent.css';
 import pfp from '../images/pfp.jpg';
 import { FaTachometerAlt, FaUser, FaBook, FaCalendarAlt, FaChartBar, FaCog, FaSignOutAlt } from 'react-icons/fa';
-import Sidebar from './Sidebar';
+import Sidebar from '../components/Sidebar';
 
 const StudentProfile = () => {
   const [activeTab, setActiveTab] = useState('Personal Info');
