@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title } from 'chart.js';
 import { Download, Share2, Search, SortAsc, SortDesc, Book, Award, TrendingUp, TrendingDown, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
-import Sidebar from './Sidebar';
+import Sidebar from '../components/Sidebar';
 import './Result.css';
 import { downloadPDF, downloadCSV } from '../utils/download';
 
