@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import { Users, Calendar, Star, ChevronDown } from 'lucide-react'; // Removed DollarSign
-import './AdminDashboard.css';
+import { Users, Calendar, Star, ChevronDown } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
-
-// Mock data simulating backend response with batch-specific data
+import { getInstituteProfile } from '../../utils/services/institute';
+import { listStudents } from '../../utils/services/students';
 const getDashboardData = () => ({
   batches: {
     'Batch A': {
@@ -90,7 +88,7 @@ const getDashboardData = () => ({
       ],
     },
   },
-  COLORS: ['#10b981', '#f87171', '#fbbf24'],
+  COLORS: ['#ffffff', '#cccccc', '#666666'],
 });
 
 const AdminDashboard = () => {
@@ -98,22 +96,33 @@ const AdminDashboard = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dashboardData = getDashboardData();
   const batches = Object.keys(dashboardData.batches);
+  const [live, setLive] = useState({ instituteName: '', studentCount: 0 });
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [p, s] = await Promise.all([getInstituteProfile(), listStudents({ limit: 1 })]);
+        setLive({ instituteName: p.data.institute?.name || '', studentCount: s.data.pagination?.total || (s.data.students?.length || 0) });
+      } catch (e) {}
+    };
+    load();
+  }, []);
 
   const StatCard = ({ icon: Icon, value, label, isRupee }) => (
-    <motion.div className="admin-stat-card" whileHover={{ scale: 1.05 }}>
+    <div className="p-6 rounded-xl bg-white/5 border border-white/10 text-center hover:bg-white/15 hover:-translate-y-1 transition-transform duration-300">
       {isRupee ? (
-        <span className="admin-rupee-icon">₹</span> // Custom Rupee symbol
+        <span className="block text-white text-5xl font-bold mb-4 drop-shadow-[0_2px_4px_rgba(255,255,255,0.3)]">₹</span>
       ) : (
-        <Icon className="admin-icon" />
+        Icon && <Icon className="w-12 h-12 text-white mb-4 drop-shadow-[0_2px_4px_rgba(255,255,255,0.3)]" />
       )}
-      <span className="admin-stat-value">{value}</span>
-      <span className="admin-stat-label">{label}</span>
-    </motion.div>
+      <span className="block text-2xl font-bold text-white">{value}</span>
+      <span className="block text-sm font-medium text-gray-300">{label}</span>
+    </div>
   );
 
   const PieChartComponent = ({ title, data }) => (
-    <div className="admin-chart-container">
-      <h2>{title}</h2>
+    <div className="p-6 rounded-xl bg-white/5 border border-white/10 hover:bg-white/15 hover:-translate-y-1 transition-transform duration-300">
+      <h2 className="text-lg font-medium text-gray-300 mb-4">{title}</h2>
       <PieChart width={350} height={300}>
         <Pie
           data={data}
@@ -136,22 +145,19 @@ const AdminDashboard = () => {
   );
 
   const FeedbackList = ({ feedback }) => (
-    <div className="admin-feedback-container">
-      <h2>Course & Platform Feedback</h2>
+    <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+      <h2 className="text-lg font-medium text-gray-300 mb-4">Course & Platform Feedback</h2>
       {feedback.map((item, index) => (
-        <motion.div
+        <div
           key={index}
-          className="admin-feedback-item"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
+          className="flex items-center gap-4 py-4 border-b border-white/10 last:border-b-0 hover:bg-white/15 transition-all duration-300"
         >
-          <Star className="admin-icon" />
+          <Star className="w-7 h-7 text-white drop-shadow-[0_2px_4px_rgba(255,255,255,0.3)]" />
           <div>
-            <p>{item.course}: {item.rating}/5</p>
-            <span>{item.comment}</span>
+            <p className="font-medium text-white text-base">{item.course}: {item.rating}/5</p>
+            <span className="text-sm font-medium text-gray-300">{item.comment}</span>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );
@@ -159,24 +165,30 @@ const AdminDashboard = () => {
   const batchData = dashboardData.batches[selectedBatch];
 
   return (
-    <div className="admin-dashboard">
+    <div className="min-h-screen flex font-inter bg-black text-white bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.05)_0%,transparent_50%)]">
       <AdminSidebar />
-      <div className="admin-dashboard-content">
-        <h1>Admin Dashboard</h1>
+      <div className="flex-1 overflow-x-auto bg-black p-4">
+        <h1 className="text-3xl font-bold text-center text-white drop-shadow-[0_0_30px_rgba(0,0,0,0.4)] mb-8">
+          Admin Dashboard
+        </h1>
+        {live.instituteName && (
+          <div className="mb-4 text-center text-bw-75">{live.instituteName} • Students: {live.studentCount}</div>
+        )}
         <main>
-          <div className="admin-batch-selector">
+          <div className="mb-8 relative inline-block w-52">
             <div
-              className="admin-batch-toggle"
+              className="flex items-center gap-2 p-3 rounded-lg bg-white/10 text-white text-base font-medium border border-white/10 cursor-pointer hover:bg-white hover:text-black hover:-translate-y-0.5 transition-all duration-300"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              {selectedBatch} <ChevronDown className="admin-dropdown-icon" />
+              {selectedBatch}
+              <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </div>
             {isDropdownOpen && (
-              <ul className="admin-batch-options">
+              <ul className="absolute top-full left-0 w-full bg-white/5 border border-white/10 rounded-lg mt-2 p-2 z-10">
                 {batches.map((batch) => (
                   <li
                     key={batch}
-                    className="admin-batch-option"
+                    className="p-3 text-white text-base font-medium cursor-pointer hover:bg-white hover:text-black hover:pl-6 transition-all duration-300"
                     onClick={() => {
                       setSelectedBatch(batch);
                       setIsDropdownOpen(false);
@@ -189,17 +201,17 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          <section className="admin-overview-grid">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             <StatCard icon={Users} value={batchData.totalStudents} label="Students" />
             <StatCard icon={Calendar} value={batchData.totalClasses} label="Classes" />
             <StatCard
-              icon={null} // No icon prop, using custom Rupee
+              icon={null}
               value={`${batchData.pendingPayments.toLocaleString('en-IN')}`}
               label="Pending Payments"
               isRupee={true}
             />
             <StatCard
-              icon={null} // No icon prop, using custom Rupee
+              icon={null}
               value={`${batchData.revenueThisMonth.toLocaleString('en-IN')}`}
               label="Revenue (Month)"
               isRupee={true}
@@ -207,7 +219,7 @@ const AdminDashboard = () => {
             <StatCard icon={Users} value={`${batchData.avgAttendance}%`} label="Avg. Attendance" />
           </section>
 
-          <section className="admin-insights-grid">
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <PieChartComponent title="Attendance Breakdown" data={batchData.attendanceData} />
             <PieChartComponent title="Payment Status" data={batchData.paymentStatus} />
             <PieChartComponent title="Exam Score Distribution" data={batchData.examScores} />

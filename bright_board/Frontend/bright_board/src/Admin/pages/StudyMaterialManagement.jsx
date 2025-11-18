@@ -14,7 +14,6 @@ import {
   Lock,
   Eye
 } from 'lucide-react';
-import './StudyMaterialManagement.css';
 import AdminSidebar from '../components/AdminSidebar';
 
 const StudyMaterialManagement = () => {
@@ -139,78 +138,77 @@ const StudyMaterialManagement = () => {
   const totalDownloads = filteredMaterials.reduce((sum, material) => sum + material.downloads, 0);
 
   return (
-    <div className="study-material-container">
+    <div className="min-h-screen bg-black text-white flex">
       <AdminSidebar />
-      <div className="main-content">
-      <h1>Study Material Management</h1>
+      <div className="flex-1 p-6 space-y-6">
+        <h1 className="font-comic text-2xl">Study Material Management</h1>
         <motion.div 
-          className="header"
+          className="border border-bw-37 rounded-lg bg-black p-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          
         </motion.div>
 
-        <div className="stats-grid">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <motion.div className="stat-card" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3 }}>
-            <div className="stat-content">
+            <div className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3">
               <BarChart3 className="stat-icon blue" />
               <div className="stat-info">
-                <p className="stat-label">Total Materials</p>
-                <p className="stat-value">{filteredMaterials.length}</p>
+                <p className="text-sm text-bw-75">Total Materials</p>
+                <p>{filteredMaterials.length}</p>
               </div>
             </div>
           </motion.div>
           
           <motion.div className="stat-card" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, delay: 0.1 }}>
-            <div className="stat-content">
+            <div className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3">
               <Download className="stat-icon green" />
               <div className="stat-info">
-                <p className="stat-label">Total Downloads</p>
-                <p className="stat-value">{totalDownloads}</p>
+                <p className="text-sm text-bw-75">Total Downloads</p>
+                <p>{totalDownloads}</p>
               </div>
             </div>
           </motion.div>
 
           <motion.div className="stat-card" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, delay: 0.2 }}>
-            <div className="stat-content">
+            <div className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3">
               <Eye className="stat-icon purple" />
               <div className="stat-info">
-                <p className="stat-label">Total Views</p>
-                <p className="stat-value">{totalViews}</p>
+                <p className="text-sm text-bw-75">Total Views</p>
+                <p>{totalViews}</p>
               </div>
             </div>
           </motion.div>
         </div>
 
-        <motion.div className="search-section" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-          <div className="search-container">
-            <div className="search-input-wrapper">
+        <motion.div className="border border-bw-37 rounded-lg bg-black p-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 border border-bw-37 rounded px-3 py-2 w-full md:w-auto">
               <Search className="search-icon" />
               <input
                 type="text"
                 placeholder="Search materials..."
                 value={searchTerm}
                 onChange={handleSearch}
-                className="search-input"
+                className="bg-black focus:outline-none"
               />
             </div>
-            <div className="filter-controls">
-              <select value={selectedSubject} onChange={handleSubjectChange} className="subject-select">
+            <div className="flex items-center gap-3">
+              <select value={selectedSubject} onChange={handleSubjectChange} className="bg-black border border-bw-37 rounded px-3 py-2">
                 <option value="all">All Subjects</option>
                 <option value="physics">Physics</option>
                 <option value="chemistry">Chemistry</option>
                 <option value="mathematics">Mathematics</option>
               </select>
-              <select value={selectedBatch} onChange={handleBatchChange} className="batch-select">
+              <select value={selectedBatch} onChange={handleBatchChange} className="bg-black border border-bw-37 rounded px-3 py-2">
                 {batches.map(batch => (
                   <option key={batch} value={batch}>
                     {batch === 'all' ? 'All Batches' : `Batch ${batch}`}
                   </option>
                 ))}
               </select>
-              <button className="filter-button">
+              <button className="border border-bw-37 rounded px-3 py-2">
                 <Filter />
                 <span>Filters</span>
               </button>
@@ -219,7 +217,7 @@ const StudyMaterialManagement = () => {
         </motion.div>
 
         <motion.div 
-          className={`upload-section ${isDragging ? 'dragging' : ''}`}
+          className={`border border-bw-37 rounded p-6 text-center ${isDragging ? 'bg-bw-12' : ''}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -234,17 +232,17 @@ const StudyMaterialManagement = () => {
             type="file"
             id="file-upload"
             multiple
-            className="hidden-input"
+            className="hidden"
             onChange={(e) => handleFileUpload(Array.from(e.target.files))}
           />
-          <label htmlFor="file-upload" className="upload-button">
+          <label htmlFor="file-upload" className="border border-bw-37 rounded px-3 py-2 inline-block cursor-pointer">
             Upload Files
           </label>
         </motion.div>
 
-        <motion.div className="materials-table-container" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}>
-          <div className="table-wrapper">
-            <table className="materials-table">
+        <motion.div className="border border-bw-37 rounded-lg bg-black p-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -265,7 +263,7 @@ const StudyMaterialManagement = () => {
                     transition={{ duration: 0.3 }}
                   >
                     <td>
-                      <div className="file-name">
+                      <div className="flex items-center gap-2">
                         {getFileIcon(material.type)}
                         <span>{material.name}</span>
                       </div>
@@ -276,9 +274,9 @@ const StudyMaterialManagement = () => {
                     <td>{material.downloads}</td>
                     <td>{material.views}</td>
                     <td>
-                      <div className="action-buttons">
+                      <div className="flex items-center gap-2">
                         <button 
-                          className="action-button"
+                          className="border border-bw-37 rounded p-2"
                           onClick={() => handleDownload(material)}
                           title="Download"
                           disabled={material.restricted}
@@ -286,14 +284,14 @@ const StudyMaterialManagement = () => {
                           <Download />
                         </button>
                         <button 
-                          className="action-button"
+                          className="border border-bw-37 rounded p-2"
                           onClick={() => handleView(material)}
                           title="Show Views"
                         >
                           <Eye />
                         </button>
                         <button 
-                          className={`action-button ${material.restricted ? 'restricted' : ''}`}
+                          className={`border border-bw-37 rounded p-2 ${material.restricted ? 'bg-bw-12' : ''}`}
                           onClick={() => handleToggleRestriction(material.id)}
                           title={material.restricted ? "Grant Access" : "Restrict Access"}
                         >

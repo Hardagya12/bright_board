@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Clock, Download, Filter, Search, Users, X, Upload, FileSpreadsheet, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import './AttendanceManagement.css';
 import AdminSidebar from '../components/AdminSidebar';
+import { listStudents } from '../../utils/services/students';
 
 const AttendanceManagement = () => {
   const [selectedBatch, setSelectedBatch] = useState('');
@@ -17,12 +17,26 @@ const AttendanceManagement = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef(null);
 
-  const [students, setStudents] = useState([
-    { id: 1, name: 'John Doe', status: 'present', attendance: 92 },
-    { id: 2, name: 'Jane Smith', status: 'absent', attendance: 85 },
-    { id: 3, name: 'Mike Johnson', status: 'late', attendance: 78 },
-    { id: 4, name: 'Sarah Williams', status: 'excused', attendance: 95 },
-  ]);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const { data } = await listStudents({ limit: 100 });
+        const mapped = (data.students || []).map(s => ({ id: s._id || s.id, name: s.name, status: 'present', attendance: 90 }));
+        setStudents(mapped);
+      } catch (err) {
+        setError(err.response?.data?.error || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   // Mock data for charts
   const attendanceData = [
@@ -124,66 +138,65 @@ const AttendanceManagement = () => {
   );
 
   return (
-    <motion.div 
-      className="attendance-container"
-      
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      
-    >
-        
-        <AdminSidebar />
-        <div className="main-content">
+    <div className="min-h-screen bg-black text-white flex">
+      <AdminSidebar />
+      <motion.div 
+        className="flex-1 p-6 space-y-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
        
       {/* Header Section */}
       <motion.div 
-        className="attendance-header"
+        className="border border-bw-37 rounded-lg bg-black p-4"
         initial={{ y: -20 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h1>Attendance Management</h1>
-        <div className="header-stats">
+        <h1 className="font-comic text-2xl mb-4">Attendance Management</h1>
+        {loading && <div className="text-bw-62">Loading...</div>}
+        {error && <div className="text-bw-62">{error}</div>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <motion.div 
-            className="stat-card"
+            className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3"
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
             <Users size={24} />
             <div>
-              <h3>Total Students</h3>
+              <h3 className="text-sm text-bw-75">Total Students</h3>
               <p>{students.length}</p>
             </div>
           </motion.div>
           <motion.div 
-            className="stat-card"
+            className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3"
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
             <Clock size={24} />
             <div>
-              <h3>Present Today</h3>
+              <h3 className="text-sm text-bw-75">Present Today</h3>
               <p>{Math.round((students.filter(s => s.status === 'present').length / students.length) * 100)}%</p>
             </div>
           </motion.div>
           <motion.div 
-            className="stat-card"
+            className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3"
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
             <Calendar size={24} />
             <div>
-              <h3>Monthly Avg</h3>
+              <h3 className="text-sm text-bw-75">Monthly Avg</h3>
               <p>92%</p>
             </div>
           </motion.div>
         </div>
 
         {/* Charts Section */}
-        <div className="charts-section">
-          <div className="chart-container">
-            <h3>Weekly Attendance Trend</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="border border-bw-37 rounded-lg bg-black p-4">
+            <h3 className="font-comic mb-2">Weekly Attendance Trend</h3>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={attendanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -195,8 +208,8 @@ const AttendanceManagement = () => {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className="chart-container">
-            <h3>Monthly Overview</h3>
+          <div className="border border-bw-37 rounded-lg bg-black p-4">
+            <h3 className="font-comic mb-2">Monthly Overview</h3>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -214,16 +227,16 @@ const AttendanceManagement = () => {
 
       {/* Controls Section */}
       <motion.div 
-        className="attendance-controls"
+        className="border border-bw-37 rounded-lg bg-black p-4"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <div className="control-group">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
           <select 
             value={selectedBatch} 
             onChange={(e) => setSelectedBatch(e.target.value)}
-            className="batch-select"
+            className="bg-black border border-bw-37 rounded px-3 py-2"
           >
             <option value="">Select Batch</option>
             {['Batch 2024A', 'Batch 2024B', 'Batch 2024C'].map(batch => (
@@ -234,12 +247,12 @@ const AttendanceManagement = () => {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="date-picker"
+            className="bg-black border border-bw-37 rounded px-3 py-2"
           />
         </div>
-        <div className="control-group">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
           <motion.div 
-            className="search-box"
+            className="flex items-center gap-2 border border-bw-37 rounded px-3 py-2"
             whileHover={{ scale: 1.02 }}
           >
             <Search size={20} />
@@ -248,10 +261,11 @@ const AttendanceManagement = () => {
               placeholder="Search students..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-black focus:outline-none"
             />
           </motion.div>
           <motion.button 
-            className="filter-btn"
+            className="border border-bw-37 rounded px-3 py-2"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowFilters(!showFilters)}
@@ -260,7 +274,7 @@ const AttendanceManagement = () => {
             Filters
           </motion.button>
           <motion.button 
-            className="upload-btn"
+            className="border border-bw-37 rounded px-3 py-2"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowUploadModal(true)}
@@ -269,18 +283,18 @@ const AttendanceManagement = () => {
             Bulk Upload
           </motion.button>
         </div>
-        <div className="control-group">
+        <div className="flex flex-wrap items-center gap-3">
           <motion.button 
-            className="mark-all-btn"
+            className="border border-bw-37 rounded px-3 py-2"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleMarkAllPresent}
           >
             Mark All Present
           </motion.button>
-          <div className="view-toggle">
+          <div className="flex items-center gap-2">
             <motion.button 
-              className={view === 'list' ? 'active' : ''}
+              className={`border border-bw-37 rounded px-3 py-2 ${view === 'list' ? 'bg-bw-12' : ''}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setView('list')}
@@ -288,7 +302,7 @@ const AttendanceManagement = () => {
               List View
             </motion.button>
             <motion.button 
-              className={view === 'grid' ? 'active' : ''}
+              className={`border border-bw-37 rounded px-3 py-2 ${view === 'grid' ? 'bg-bw-12' : ''}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setView('grid')}
@@ -303,7 +317,7 @@ const AttendanceManagement = () => {
       <AnimatePresence mode="wait">
         <motion.div 
           key={view}
-          className={`attendance-list ${view}`}
+          className={`border border-bw-37 rounded-lg bg-black p-4 ${view === 'grid' ? 'grid grid-cols-1 md:grid-cols-3 gap-4' : ''}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -327,12 +341,12 @@ const AttendanceManagement = () => {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <td>{student.name}</td>
+                    <td className="px-3 py-2">{student.name}</td>
                     <td>
                       <select
                         value={student.status}
                         onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                        className={`status-select ${student.status}`}
+                        className={`bg-black border border-bw-37 rounded px-2 py-1 ${student.status}`}
                       >
                         <option value="present">Present</option>
                         <option value="absent">Absent</option>
@@ -341,9 +355,9 @@ const AttendanceManagement = () => {
                       </select>
                     </td>
                     <td>
-                      <div className="attendance-progress">
+                      <div className="flex items-center gap-2">
                         <motion.div 
-                          className="progress-bar"
+                          className="h-2 bg-bw-12 rounded"
                           initial={{ width: 0 }}
                           animate={{ width: `${student.attendance}%` }}
                           transition={{ duration: 0.5 }}
@@ -353,7 +367,7 @@ const AttendanceManagement = () => {
                     </td>
                     <td>
                       <motion.button 
-                        className="action-btn"
+                        className="border border-bw-37 rounded p-2"
                         whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -365,11 +379,11 @@ const AttendanceManagement = () => {
               </tbody>
             </table>
           ) : (
-            <div className="grid-view">
+            <div>
               {filteredStudents.map(student => (
                 <motion.div 
                   key={student.id}
-                  className="student-card"
+                  className="border border-bw-37 rounded-lg bg-black p-4"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
@@ -379,16 +393,16 @@ const AttendanceManagement = () => {
                   <select
                     value={student.status}
                     onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                    className={`status-select ${student.status}`}
+                    className={`bg-black border border-bw-37 rounded px-2 py-1 ${student.status}`}
                   >
                     <option value="present">Present</option>
                     <option value="absent">Absent</option>
                     <option value="late">Late</option>
                     <option value="excused">Excused</option>
                   </select>
-                  <div className="attendance-progress">
+                  <div className="flex items-center gap-2 mt-2">
                     <motion.div 
-                      className="progress-bar"
+                      className="h-2 bg-bw-12 rounded"
                       initial={{ width: 0 }}
                       animate={{ width: `${student.attendance}%` }}
                       transition={{ duration: 0.5 }}
@@ -404,13 +418,13 @@ const AttendanceManagement = () => {
 
       {/* Export Section */}
       <motion.div 
-        className="export-section"
+        className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6 }}
       >
         <motion.button 
-          className="export-btn"
+          className="border border-bw-37 rounded px-3 py-2"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => handleExport('csv')}
@@ -419,7 +433,7 @@ const AttendanceManagement = () => {
           Export CSV
         </motion.button>
         <motion.button 
-          className="export-btn"
+          className="border border-bw-37 rounded px-3 py-2"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => handleExport('pdf')}
@@ -433,13 +447,13 @@ const AttendanceManagement = () => {
       <AnimatePresence>
         {showUploadModal && (
           <motion.div 
-            className="modal-overlay"
+            className="fixed inset-0 bg-black/60 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div 
-              className="modal-content"
+              className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-xl"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -447,7 +461,7 @@ const AttendanceManagement = () => {
               <div className="modal-header">
                 <h2>Bulk Upload Attendance</h2>
                 <button 
-                  className="close-btn"
+                  className="border border-bw-37 rounded p-2"
                   onClick={() => setShowUploadModal(false)}
                 >
                   <X size={24} />
@@ -455,14 +469,14 @@ const AttendanceManagement = () => {
               </div>
 
               <div 
-                className={`upload-area ${dragActive ? 'drag-active' : ''} ${uploadSuccess ? 'upload-success' : ''}`}
+                className={`border border-bw-37 rounded p-6 text-center ${dragActive ? 'bg-bw-12' : ''}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
                 {uploadSuccess ? (
-                  <div className="success-message">
+                  <div>
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -473,7 +487,7 @@ const AttendanceManagement = () => {
                     <p>Upload Successful!</p>
                   </div>
                 ) : uploadedFile ? (
-                  <div className="file-info">
+                  <div className="flex items-center gap-2 justify-center">
                     <FileSpreadsheet size={48} />
                     <p>{uploadedFile.name}</p>
                   </div>
@@ -482,7 +496,7 @@ const AttendanceManagement = () => {
                     <Upload size={48} />
                     <p>Drag and drop your file here or</p>
                     <button 
-                      className="browse-btn"
+                      className="border border-bw-37 rounded px-3 py-2"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       Browse Files
@@ -490,7 +504,7 @@ const AttendanceManagement = () => {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      className="hidden-input"
+                      className="hidden"
                       onChange={handleFileInput}
                       accept=".csv,.xlsx,.xls"
                     />
@@ -498,26 +512,26 @@ const AttendanceManagement = () => {
                 )}
               </div>
 
-              <div className="upload-info">
-                <div className="info-item">
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center gap-2 text-bw-75">
                   <AlertCircle size={20} />
                   <p>Accepted formats: .csv, .xlsx, .xls</p>
                 </div>
-                <div className="info-item">
+                <div className="flex items-center gap-2 text-bw-75">
                   <AlertCircle size={20} />
                   <p>Maximum file size: 5MB</p>
                 </div>
               </div>
 
-              <div className="modal-footer">
+              <div className="mt-4 flex justify-end gap-2">
                 <button 
-                  className="cancel-btn"
+                  className="border border-bw-37 rounded px-3 py-2"
                   onClick={() => setShowUploadModal(false)}
                 >
                   Cancel
                 </button>
                 <button 
-                  className="upload-submit-btn"
+                  className="border border-bw-37 rounded px-3 py-2"
                   disabled={!uploadedFile || uploadSuccess}
                   onClick={() => {
                     // Handle the upload submission
@@ -536,8 +550,8 @@ const AttendanceManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

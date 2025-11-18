@@ -33,6 +33,9 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      'react/prop-types': 'off',
+      'no-unused-vars': ['warn', { args: 'none', varsIgnorePattern: '^React$' }],
+      'react/jsx-no-undef': 'off',
     },
   },
 ]

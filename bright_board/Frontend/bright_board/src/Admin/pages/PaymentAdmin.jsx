@@ -6,7 +6,7 @@ import {
   Download, Mail, RefreshCcw, Settings, FileText, Plus, X, Calendar, CreditCard
 } from 'lucide-react';
 import { format } from 'date-fns';
-import './PaymentAdmin.css';
+import AdminSidebar from '../components/AdminSidebar';
 
 const mockData = {
   revenue: 125000,
@@ -110,16 +110,18 @@ const PaymentAdmin = () => {
   const PIE_COLORS = ['#4CAF50', '#F44336', '#FFC107'];
 
   return (
-    <div className="payment-admin">
+    <div className="min-h-screen bg-black text-white flex">
+      <AdminSidebar />
+      <div className="flex-1 p-6 space-y-6">
       {/* Summary Cards */}
       <motion.div 
-        className="summary-cards"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div className="summary-card" {...fadeIn}>
-          <div className="card-icon revenue">
+        <motion.div className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3" {...fadeIn}>
+          <div className="w-10 h-10 rounded bg-bw-12 flex items-center justify-center">
             <DollarSign size={24} />
           </div>
           <div className="card-content">
@@ -128,8 +130,8 @@ const PaymentAdmin = () => {
           </div>
         </motion.div>
 
-        <motion.div className="summary-card" {...fadeIn}>
-          <div className="card-icon pending">
+        <motion.div className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3" {...fadeIn}>
+          <div className="w-10 h-10 rounded bg-bw-12 flex items-center justify-center">
             <Clock size={24} />
           </div>
           <div className="card-content">
@@ -138,8 +140,8 @@ const PaymentAdmin = () => {
           </div>
         </motion.div>
 
-        <motion.div className="summary-card" {...fadeIn}>
-          <div className="card-icon success">
+        <motion.div className="border border-bw-37 rounded-lg bg-black p-4 flex items-center gap-3" {...fadeIn}>
+          <div className="w-10 h-10 rounded bg-bw-12 flex items-center justify-center">
             <CheckCircle size={24} />
           </div>
           <div className="card-content">
@@ -150,9 +152,9 @@ const PaymentAdmin = () => {
       </motion.div>
 
       {/* Charts Section */}
-      <div className="charts-grid">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <motion.div 
-          className="chart-section"
+          className="border border-bw-37 rounded-lg bg-black p-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -179,7 +181,7 @@ const PaymentAdmin = () => {
         </motion.div>
 
         <motion.div 
-          className="chart-section"
+          className="border border-bw-37 rounded-lg bg-black p-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -199,7 +201,7 @@ const PaymentAdmin = () => {
         </motion.div>
 
         <motion.div 
-          className="chart-section"
+          className="border border-bw-37 rounded-lg bg-black p-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -230,28 +232,30 @@ const PaymentAdmin = () => {
 
       {/* Transactions Section */}
       <motion.div 
-        className="transactions-section"
+        className="border border-bw-37 rounded-lg bg-black p-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
         <div className="transactions-header">
           <h2>Recent Transactions</h2>
-          <div className="controls">
-            <div className="search-box">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 border border-bw-37 rounded px-3 py-2">
               <Search size={20} />
               <input 
                 type="text" 
                 placeholder="Search transactions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-black focus:outline-none"
               />
             </div>
-            <div className="filter-box">
+            <div className="flex items-center gap-2 border border-bw-37 rounded px-3 py-2">
               <Filter size={20} />
               <select 
                 value={selectedFilter}
                 onChange={(e) => setSelectedFilter(e.target.value)}
+                className="bg-black focus:outline-none"
               >
                 <option value="all">All Status</option>
                 <option value="completed">Completed</option>
@@ -259,30 +263,32 @@ const PaymentAdmin = () => {
                 <option value="failed">Failed</option>
               </select>
             </div>
-            <div className="date-filter">
+            <div className="flex items-center gap-2 border border-bw-37 rounded px-3 py-2">
               <Calendar size={20} />
               <input
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="bg-black focus:outline-none"
               />
               <span>to</span>
               <input
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="bg-black focus:outline-none"
               />
             </div>
-            <button className="action-button" onClick={() => setShowAddPayment(true)}>
+            <button className="border border-bw-37 rounded px-3 py-2" onClick={() => setShowAddPayment(true)}>
               <Plus size={20} />
               Add Payment
             </button>
-            <div className="export-buttons">
-              <button onClick={() => handleExport('csv')}>
+            <div className="flex items-center gap-2">
+              <button className="border border-bw-37 rounded px-3 py-2" onClick={() => handleExport('csv')}>
                 <FileText size={20} />
                 CSV
               </button>
-              <button onClick={() => handleExport('pdf')}>
+              <button className="border border-bw-37 rounded px-3 py-2" onClick={() => handleExport('pdf')}>
                 <FileText size={20} />
                 PDF
               </button>
@@ -290,8 +296,8 @@ const PaymentAdmin = () => {
           </div>
         </div>
 
-        <div className="transactions-table">
-          <table>
+        <div className="overflow-x-auto mt-4">
+          <table className="min-w-full text-left">
             <thead>
               <tr>
                 <th>Transaction ID</th>
@@ -311,11 +317,12 @@ const PaymentAdmin = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   whileHover={{ scale: 1.01 }}
+                  className="hover:bg-bw-12 transition-colors"
                 >
                   <td>{transaction.id}</td>
                   <td>
                     <button 
-                      className="student-name-button"
+                      className="border border-bw-37 rounded px-2 py-1"
                       onClick={() => {
                         setSelectedStudent(transaction);
                         setShowStudentHistory(true);
@@ -330,18 +337,18 @@ const PaymentAdmin = () => {
                   <td>{format(new Date(transaction.date), 'MMM dd, yyyy')}</td>
                   <td>
                     <span 
-                      className="status-badge"
+                      className="px-2 py-1 rounded"
                       style={{ backgroundColor: getStatusColor(transaction.status) }}
                     >
                       {transaction.status}
                     </span>
                   </td>
                   <td>
-                    <div className="action-buttons">
-                      <button onClick={() => handleSendReminder(transaction.id)}>
+                    <div className="flex items-center gap-2">
+                      <button className="border border-bw-37 rounded p-2" onClick={() => handleSendReminder(transaction.id)}>
                         <Mail size={16} />
                       </button>
-                      <button onClick={() => console.log('Refund:', transaction.id)}>
+                      <button className="border border-bw-37 rounded p-2" onClick={() => console.log('Refund:', transaction.id)}>
                         <RefreshCcw size={16} />
                       </button>
                     </div>
@@ -373,13 +380,13 @@ const PaymentAdmin = () => {
       <AnimatePresence>
         {showAddPayment && (
           <motion.div 
-            className="modal-overlay"
+            className="fixed inset-0 bg-black/60 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div 
-              className="modal"
+              className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-xl"
               variants={modalVariants}
               initial="hidden"
               animate="visible"
@@ -398,31 +405,31 @@ const PaymentAdmin = () => {
                     // Form data
                   });
                 }}>
-                  <div className="form-group">
+                  <div className="mb-3">
                     <label>Student Name</label>
-                    <input type="text" required />
+                    <input type="text" required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none" />
                   </div>
-                  <div className="form-group">
+                  <div className="mb-3">
                     <label>Amount</label>
-                    <input type="number" required />
+                    <input type="number" required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none" />
                   </div>
-                  <div className="form-group">
+                  <div className="mb-3">
                     <label>Payment Method</label>
-                    <select required>
+                    <select required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none">
                       <option value="cash">Cash</option>
                       <option value="card">Card</option>
                       <option value="upi">UPI</option>
                     </select>
                   </div>
-                  <div className="form-group">
+                  <div className="mb-3">
                     <label>Batch</label>
-                    <select required>
+                    <select required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none">
                       <option value="batch-a">Batch A</option>
                       <option value="batch-b">Batch B</option>
                       <option value="batch-c">Batch C</option>
                     </select>
                   </div>
-                  <button type="submit" className="submit-button">
+                  <button type="submit" className="border border-bw-37 rounded px-3 py-2">
                     Add Payment
                   </button>
                 </form>
@@ -436,20 +443,20 @@ const PaymentAdmin = () => {
       <AnimatePresence>
         {showStudentHistory && selectedStudent && (
           <motion.div 
-            className="modal-overlay"
+            className="fixed inset-0 bg-black/60 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div 
-              className="modal"
+              className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-xl"
               variants={modalVariants}
               initial="hidden"
               animate="visible"
               exit="hidden"
             >
               <div className="modal-header">
-                <h2>{selectedStudent.studentName}'s Payment History</h2>
+                <h2>{selectedStudent.studentName}&apos;s Payment History</h2>
                 <button onClick={() => setShowStudentHistory(false)}>
                   <X size={24} />
                 </button>
@@ -464,7 +471,7 @@ const PaymentAdmin = () => {
                     <div className="history-details">
                       <h4>${selectedStudent.amount}</h4>
                       <p>{format(new Date(selectedStudent.date), 'MMM dd, yyyy')}</p>
-                      <span className="status-badge" style={{ backgroundColor: getStatusColor(selectedStudent.status) }}>
+                      <span className="px-2 py-1 rounded" style={{ backgroundColor: getStatusColor(selectedStudent.status) }}>
                         {selectedStudent.status}
                       </span>
                     </div>
@@ -475,6 +482,7 @@ const PaymentAdmin = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };

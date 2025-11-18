@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import Joi from 'joi';
 import { Lock, AlertCircle } from 'lucide-react';
-import './Signin.css';
 
 // Validation schema
 const schema = Joi.object({
@@ -135,95 +135,40 @@ const ResetPasswordPage = () => {
   };
 
   // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.5, staggerChildren: 0.1 } }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-  };
+  
 
   return (
-    <div className="signin-container">
-      <motion.div 
-        className="form-container"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.h1 
-          className="form-title"
-          variants={itemVariants}
-        >
-          {isSuccess ? 'Password Reset Successful' : 'Reset Password'}
-        </motion.h1>
-        
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <Card className="w-full max-w-md p-6">
+        <h1 className="font-comic text-2xl mb-2">{isSuccess ? 'Password Reset Successful' : 'Reset Password'}</h1>
         {statusMessage && (
-          <motion.div 
-            className={`status-message ${isSuccess ? 'success' : ''}`}
-            variants={itemVariants}
-          >
-            {statusMessage}
-          </motion.div>
+          <div className={`border rounded p-3 mb-3 ${isSuccess ? 'border-bw-75' : 'border-bw-37'}`}>{statusMessage}</div>
         )}
-
         {errors.general && (
-          <motion.div 
-            className="error-banner"
-            variants={itemVariants}
-          >
-            <AlertCircle size={18} />
-            <span>{errors.general}</span>
-          </motion.div>
+          <div className="border border-bw-37 rounded p-3 mb-3 flex items-center gap-2"><AlertCircle size={18} /><span>{errors.general}</span></div>
         )}
-
         {!isSuccess && (
-          <form onSubmit={handleSubmit}>
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Lock className="input-icon" size={20} />
-              <input 
-                type="password"
-                name="password"
-                placeholder="New Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {errors.password && <div className="error-message">{errors.password}</div>}
-            </motion.div>
-            
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Lock className="input-icon" size={20} />
-              <input 
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm New Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-              {errors.confirmPassword && <div className="error-message">{errors.confirmPassword}</div>}
-            </motion.div>
-            
-            <motion.button 
-              type="submit"
-              className="submit-button"
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Resetting...' : 'Reset Password'}
-            </motion.button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">New Password</label>
+              <div className="flex items-center gap-2">
+                <Lock size={18} className="text-bw-62" />
+                <input type="password" name="password" placeholder="New Password" value={formData.password} onChange={handleChange} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
+              </div>
+              {errors.password && <div className="text-bw-62 text-sm mt-1">{errors.password}</div>}
+            </div>
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Confirm New Password</label>
+              <div className="flex items-center gap-2">
+                <Lock size={18} className="text-bw-62" />
+                <input type="password" name="confirmPassword" placeholder="Confirm New Password" value={formData.confirmPassword} onChange={handleChange} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
+              </div>
+              {errors.confirmPassword && <div className="text-bw-62 text-sm mt-1">{errors.confirmPassword}</div>}
+            </div>
+            <Button type="submit" fullWidth disabled={isLoading}>{isLoading ? 'Resetting...' : 'Reset Password'}</Button>
           </form>
         )}
-      </motion.div>
+      </Card>
     </div>
   );
 };

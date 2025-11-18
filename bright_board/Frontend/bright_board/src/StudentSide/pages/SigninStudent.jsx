@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
-import './SigninStudent.css';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 
 const SigninStudent = () => {
   // State
@@ -106,73 +107,70 @@ const SigninStudent = () => {
   };
 
   return (
-    <div className="student-signin-container">
-      <div className="form-container">
-        <h1 className="form-title">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <Card className="w-full max-w-md p-6">
+        <h1 className="font-comic text-2xl mb-2">
           {loginSuccess ? 'Login Successful' : 'Student Login'}
         </h1>
-        
+
         {statusMessage && (
-          <div className={`status-message ${loginSuccess ? 'success' : ''}`}>
+          <div className={`border rounded p-3 mb-4 ${loginSuccess ? 'border-bw-75 text-bw-75' : 'border-bw-37 text-bw-62'}`}>
             {statusMessage}
           </div>
         )}
 
         {errors.general && (
-          <div className="error-banner">
+          <div className="flex items-center gap-2 border border-bw-37 rounded p-3 mb-4 text-bw-62">
             <AlertCircle size={18} />
             <span>{errors.general}</span>
           </div>
         )}
 
         {!loginSuccess && (
-          <form onSubmit={handleSubmit}>
-            <div className="input-group">
-              <Mail className="input-icon" size={20} />
-              <input 
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-              {errors.email && <div className="error-message">{errors.email}</div>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Email</label>
+              <div className="flex items-center gap-2">
+                <Mail size={18} className="text-bw-62" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="email@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.email && <div className="text-bw-62 text-sm mt-1">{errors.email}</div>}
             </div>
-            
-            <div className="input-group">
-              <Lock className="input-icon" size={20} />
-              <input 
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {errors.password && <div className="error-message">{errors.password}</div>}
+
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Password</label>
+              <div className="flex items-center gap-2">
+                <Lock size={18} className="text-bw-62" />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.password && <div className="text-bw-62 text-sm mt-1">{errors.password}</div>}
             </div>
-            
-            <div className="forgot-password">
-              <Link to="/s/forgot-password" className="forgot-link">
-                Forgot Password?
-              </Link>
+
+            <div className="flex items-center justify-between">
+              <Link to="/forgot-password" className="text-bw-75 hover:text-white text-sm">Forgot Password?</Link>
+              <Link to="/s/signup" className="text-bw-75 hover:text-white text-sm">Register</Link>
             </div>
-            
-            <button 
-              type="submit"
-              className="submit-button"
-              disabled={isLoading}
-            >
+
+            <Button type="submit" fullWidth disabled={isLoading}>
               {isLoading ? 'Signing In...' : 'Sign In'}
-            </button>
-            
-            <div className="signup-link-container">
-              <Link to="/s/signup" className="signup-link">
-                Don't have an account? Register
-              </Link>
-            </div>
+            </Button>
           </form>
         )}
-      </div>
+      </Card>
     </div>
   );
 };

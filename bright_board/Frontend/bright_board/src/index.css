@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bw-0: #000000;
+  --bw-12: #1F1F1F;
+  --bw-25: #404040;
+  --bw-37: #616161;
+  --bw-50: #808080;
+  --bw-62: #9E9E9E;
+  --bw-75: #BFBFBF;
+  --bw-87: #DEDEDE;
+  --bw-100: #FFFFFF;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+}
+

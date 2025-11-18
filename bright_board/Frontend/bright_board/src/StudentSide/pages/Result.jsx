@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title } from 'chart.js';
-import { Download, Share2, Search, SortAsc, SortDesc, Book, Award, TrendingUp, TrendingDown, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Download, Share2, Search, SortAsc, SortDesc, Book, TrendingUp, TrendingDown, CheckCircle, XCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import './Result.css';
 import { downloadPDF, downloadCSV } from '../utils/download';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Skeleton from '../../components/ui/Skeleton';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title);
 
@@ -102,8 +103,8 @@ const Result = () => {
       {
         label: 'Marks Obtained',
         data: studentData?.subjects.map(s => s.marksObtained) || [],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: '#BFBFBF',
+        borderColor: '#DEDEDE',
         borderWidth: 1,
       },
     ],
@@ -121,7 +122,7 @@ const Result = () => {
           studentData?.subjects.filter(s => s.grade === 'D').length || 0,
           studentData?.subjects.filter(s => s.grade === 'F').length || 0,
         ],
-        backgroundColor: ['#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff5722'],
+        backgroundColor: ['#DEDEDE', '#BFBFBF', '#9E9E9E', '#808080', '#616161', '#404040'],
         borderColor: '#ffffff',
         borderWidth: 2,
       },
@@ -157,194 +158,140 @@ const Result = () => {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.3,
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 100 }
-    }
-  };
-
   return (
-    <div className="result-page-container">
+    <div className="min-h-screen bg-black text-white flex">
       <Sidebar />
-      <motion.div 
-        className="result-page"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        <motion.h1 variants={itemVariants}>Student Result Dashboard</motion.h1>
-        
+      <div className="flex-1 p-6 space-y-6">
+        <h1 className="font-comic text-2xl">Student Result Dashboard</h1>
+
         {isLoading ? (
-          <div className="loading-skeleton">
-            <div className="skeleton-item"></div>
-            <div className="skeleton-item"></div>
-            <div className="skeleton-item"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Skeleton height="8rem" />
+            <Skeleton height="8rem" />
+            <Skeleton height="8rem" />
           </div>
         ) : (
           <>
-            <motion.div className="performance-summary" variants={containerVariants}>
-              <motion.div className="summary-card" variants={itemVariants}>
-                <h3>Overall Performance</h3>
-                <div className="circular-progress">
-                  <svg viewBox="0 0 100 100">
-                    <circle className="progress-bg" cx="50" cy="50" r="45"></circle>
-                    <circle className="progress-bar" cx="50" cy="50" r="45" style={{
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="p-4 text-center">
+                <h3 className="font-comic text-lg mb-2">Overall Performance</h3>
+                <div className="relative w-32 h-32 mx-auto">
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <circle cx="50" cy="50" r="45" className="stroke-bw-37" style={{ strokeWidth: 10, fill: 'none' }}></circle>
+                    <circle cx="50" cy="50" r="45" className="stroke-bw-75" style={{
                       strokeDasharray: `${2 * Math.PI * 45}`,
                       strokeDashoffset: `${2 * Math.PI * 45 * (1 - studentData.cgpa / 10)}`,
                       strokeWidth: 10,
-                      fill: 'none',
-                      stroke: '#4caf50'
+                      fill: 'none'
                     }}></circle>
                   </svg>
-                  <span className="progress-text">{studentData.cgpa}</span>
+                  <span className="absolute inset-0 flex items-center justify-center font-comic text-xl">{studentData.cgpa}</span>
                 </div>
-                <p>CGPA</p>
-              </motion.div>
-              <motion.div className="summary-card" variants={itemVariants}>
-                <h3>Pass Percentage</h3>
-                <p className="stat-number">{studentData.passPercentage.toFixed(2)}%</p>
-                <div className="stat-icons">
-                  <span><CheckCircle color="var(--color-success)" /> Passed: {studentData.subjects.filter(s => s.grade !== 'F').length}</span>
-                  <span><XCircle color="var(--color-danger)" /> Failed: {studentData.subjects.filter(s => s.grade === 'F').length}</span>
+                <p className="text-bw-75 mt-2">CGPA</p>
+              </Card>
+              <Card className="p-4">
+                <h3 className="font-comic text-lg mb-2">Pass Percentage</h3>
+                <p className="text-3xl font-comic">{studentData.passPercentage.toFixed(2)}%</p>
+                <div className="mt-2 space-y-1 text-sm">
+                  <div className="flex items-center gap-2 text-bw-75"><CheckCircle size={16} /> Passed: {studentData.subjects.filter(s => s.grade !== 'F').length}</div>
+                  <div className="flex items-center gap-2 text-bw-75"><XCircle size={16} /> Failed: {studentData.subjects.filter(s => s.grade === 'F').length}</div>
                 </div>
-              </motion.div>
-              <motion.div className="summary-card" variants={itemVariants}>
-                <h3>Rank & Performance</h3>
-                <p className="stat-number">#{studentData.rank}</p>
-                <p className="performance-indicator">{studentData.performanceIndicator}</p>
-              </motion.div>
-              <motion.div className="summary-card" variants={itemVariants}>
-                <h3>Subject Analysis</h3>
-                <div className="subject-analysis">
-                  <div className="best-subject">
-                    <TrendingUp color="var(--color-success)" />
-                    <span>Best: {studentData.bestSubject.name} ({studentData.bestSubject.marksObtained}%)</span>
-                  </div>
-                  <div className="worst-subject">
-                    <TrendingDown color="var(--color-danger)" />
-                    <span>Needs Improvement: {studentData.worstSubject.name} ({studentData.worstSubject.marksObtained}%)</span>
-                  </div>
+              </Card>
+              <Card className="p-4">
+                <h3 className="font-comic text-lg mb-2">Rank & Performance</h3>
+                <p className="text-3xl font-comic">#{studentData.rank}</p>
+                <p className="text-bw-75 mt-1">{studentData.performanceIndicator}</p>
+              </Card>
+              <Card className="p-4">
+                <h3 className="font-comic text-lg mb-2">Subject Analysis</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2"><TrendingUp size={16} /><span>Best: {studentData.bestSubject.name} ({studentData.bestSubject.marksObtained}%)</span></div>
+                  <div className="flex items-center gap-2"><TrendingDown size={16} /><span>Needs Improvement: {studentData.worstSubject.name} ({studentData.worstSubject.marksObtained}%)</span></div>
                 </div>
-              </motion.div>
-            </motion.div>
+              </Card>
+            </div>
 
-            <motion.div className="chart-container" variants={containerVariants}>
-              <motion.div className="chart" variants={itemVariants}>
-                <h3>Subject-wise Performance</h3>
-                <Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: false }} />
-              </motion.div>
-              <motion.div className="chart" variants={itemVariants}>
-                <h3>Grade Distribution</h3>
-                <Pie data={pieChartData} options={{ responsive: true, maintainAspectRatio: false }} />
-              </motion.div>
-            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="p-4">
+                <h3 className="font-comic text-lg mb-2">Subject-wise Performance</h3>
+                <div className="h-64"><Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: false }} /></div>
+              </Card>
+              <Card className="p-4">
+                <h3 className="font-comic text-lg mb-2">Grade Distribution</h3>
+                <div className="h-64"><Pie data={pieChartData} options={{ responsive: true, maintainAspectRatio: false }} /></div>
+              </Card>
+            </div>
 
-            <motion.div className="result-table-container" variants={containerVariants}>
-              <motion.div className="table-controls" variants={itemVariants}>
-                <div className="search-bar">
-                  <Search size={20} />
-                  <input 
-                    type="text" 
-                    placeholder="Search subjects..." 
+            <Card className="p-4">
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <div className="flex items-center gap-2 border border-bw-37 rounded px-3 py-2">
+                  <Search size={16} className="text-bw-62" />
+                  <input
+                    type="text"
+                    placeholder="Search subjects..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-black text-white focus:outline-none"
                   />
                 </div>
-                <button className="download-btn" onClick={handleDownloadPDF}>
-                  <Download size={20} />
-                  Download PDF
-                </button>
-                <button className="download-btn" onClick={handleDownloadCSV}>
-                  <Download size={20} />
-                  Download CSV
-                </button>
-                <button className="share-btn" onClick={handleShareResults}>
-                  <Share2 size={20} />
-                  Share Results
-                </button>
-              </motion.div>
+                <Button variant="outline" onClick={handleDownloadPDF}><Download size={16} className="mr-2" />Download PDF</Button>
+                <Button variant="outline" onClick={handleDownloadCSV}><Download size={16} className="mr-2" />Download CSV</Button>
+                <Button variant="outline" onClick={handleShareResults}><Share2 size={16} className="mr-2" />Share Results</Button>
+              </div>
 
-              <motion.table className="result-table" variants={itemVariants}>
-                <thead>
-                  <tr>
-                    <th onClick={() => sortData('name')}>
-                      Subject {sortConfig.key === 'name' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
-                    </th>
-                    <th onClick={() => sortData('marksObtained')}>
-                      Marks {sortConfig.key === 'marksObtained' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
-                    </th>
-                    <th onClick={() => sortData('grade')}>
-                      Grade {sortConfig.key === 'grade' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedSubjects.map((subject) => (
-                    <motion.tr 
-                      key={subject.name}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      onClick={() => setSelectedSubject(subject)}
-                    >
-                      <td>
-                        <Book size={16} className="subject-icon" />
-                        {subject.name}
-                      </td>
-                      <td>
-                        <div className="progress-bar-container">
-                          <div 
-                            className="progress-bar" 
-                            style={{ width: `${subject.marksObtained}%` }}
-                          ></div>
-                          <span>{subject.marksObtained} / {subject.totalMarks}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`grade grade-${subject.grade}`}>{subject.grade}</span>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </motion.table>
-            </motion.div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left border border-bw-37 rounded">
+                  <thead className="bg-bw-12">
+                    <tr>
+                      <th className="px-3 py-2 cursor-pointer" onClick={() => sortData('name')}>
+                        Subject {sortConfig.key === 'name' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
+                      </th>
+                      <th className="px-3 py-2 cursor-pointer" onClick={() => sortData('marksObtained')}>
+                        Marks {sortConfig.key === 'marksObtained' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
+                      </th>
+                      <th className="px-3 py-2 cursor-pointer" onClick={() => sortData('grade')}>
+                        Grade {sortConfig.key === 'grade' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedSubjects.map((subject) => (
+                      <tr key={subject.name} className="hover:bg-bw-12 transition-colors" onClick={() => setSelectedSubject(subject)}>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-2"><Book size={16} /> {subject.name}</div>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-40 bg-bw-12 rounded">
+                              <div className="h-2 bg-bw-75 rounded" style={{ width: `${subject.marksObtained}%` }}></div>
+                            </div>
+                            <span>{subject.marksObtained} / {subject.totalMarks}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className="px-2 py-1 border border-bw-37 rounded text-sm">{subject.grade}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
 
-            <AnimatePresence>
-              {selectedSubject && (
-                <motion.div 
-                  className="subject-modal"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="modal-content">
-                    <h2>{selectedSubject.name}</h2>
-                    <p>Marks: {selectedSubject.marksObtained} / {selectedSubject.totalMarks}</p>
-                    <p>Grade: {selectedSubject.grade}</p>
-                    <p>Performance: {selectedSubject.marksObtained >= 80 ? 'Excellent' : selectedSubject.marksObtained >= 60 ? 'Good' : 'Needs Improvement'}</p>
-                    <button onClick={() => setSelectedSubject(null)}>Close</button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {selectedSubject && (
+              <div className="fixed inset-0 bg-black/60 flex items-center justify-center animate-fade-in">
+                <div className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-md">
+                  <h2 className="font-comic text-xl mb-2">{selectedSubject.name}</h2>
+                  <p>Marks: {selectedSubject.marksObtained} / {selectedSubject.totalMarks}</p>
+                  <p>Grade: {selectedSubject.grade}</p>
+                  <p>Performance: {selectedSubject.marksObtained >= 80 ? 'Excellent' : selectedSubject.marksObtained >= 60 ? 'Good' : 'Needs Improvement'}</p>
+                  <div className="mt-4 flex justify-end"><Button variant="outline" onClick={() => setSelectedSubject(null)}>Close</Button></div>
+                </div>
+              </div>
+            )}
           </>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 };
