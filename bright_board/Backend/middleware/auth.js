@@ -65,5 +65,29 @@ const verifyResetToken = (req, res, next) => {
 module.exports = {
   authenticate,
   verifyEmailToken,
-  verifyResetToken
+  verifyResetToken,
+  requireInstitute: (req, res, next) => {
+    try {
+      const u = req.user || {};
+      const role = u.role || (u.studentId ? 'student' : 'admin');
+      if (role !== 'admin') {
+        return res.status(403).json({ error: 'Only institutes can access this resource' });
+      }
+      next();
+    } catch (err) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+  },
+  requireStudent: (req, res, next) => {
+    try {
+      const u = req.user || {};
+      const role = u.role || (u.studentId ? 'student' : 'admin');
+      if (role !== 'student') {
+        return res.status(403).json({ error: 'Only students can access this resource' });
+      }
+      next();
+    } catch (err) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+  }
 };

@@ -1,6 +1,6 @@
 const express = require('express');
 const Joi = require('joi');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, requireInstitute } = require('../middleware/auth');
 const { ObjectId } = require('mongodb');
 
 module.exports = (db) => {
@@ -26,7 +26,7 @@ module.exports = (db) => {
   });
 
   // Create batch (protected - institute only)
-  router.post('/', authenticate, async (req, res) => {
+  router.post('/', authenticate, requireInstitute, async (req, res) => {
     try {
       const { error } = createBatchSchema.validate(req.body);
       if (error) {
@@ -93,7 +93,7 @@ module.exports = (db) => {
   });
 
   // Get all batches for an institute (protected - institute only)
-  router.get('/', authenticate, async (req, res) => {
+  router.get('/', authenticate, requireInstitute, async (req, res) => {
     try {
       const instituteId = req.user.instituteId;
       const { course, status, page = 1, limit = 10 } = req.query;
@@ -130,7 +130,7 @@ module.exports = (db) => {
   });
 
   // Get single batch (protected - institute only)
-  router.get('/:id', authenticate, async (req, res) => {
+  router.get('/:id', authenticate, requireInstitute, async (req, res) => {
     try {
       const instituteId = req.user.instituteId;
       const batchId = req.params.id;  // Using ObjectId for route param
@@ -154,7 +154,7 @@ module.exports = (db) => {
   });
 
   // Update batch (protected - institute only)
-  router.put('/:id', authenticate, async (req, res) => {
+  router.put('/:id', authenticate, requireInstitute, async (req, res) => {
     try {
       const { error } = updateBatchSchema.validate(req.body);
       if (error) {
@@ -188,7 +188,7 @@ module.exports = (db) => {
   });
 
   // Delete batch (protected - institute only) - Note: This doesn't handle enrolled students; add logic if needed
-  router.delete('/:id', authenticate, async (req, res) => {
+  router.delete('/:id', authenticate, requireInstitute, async (req, res) => {
     try {
       const instituteId = req.user.instituteId;
       const batchId = req.params.id;

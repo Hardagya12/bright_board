@@ -1,5 +1,5 @@
 // ResultManagement.jsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -22,6 +22,8 @@ import Button from '../../components/ui/Button';
 import Skeleton from '../../components/ui/Skeleton';
 import * as FM from 'framer-motion';
 const motion = FM.motion || { div: 'div', span: 'span' };
+import { listTutorResults, getResultsAnalytics } from '../../utils/services/results';
+import { listBatches } from '../../utils/services/batches';
 import {
   Typography,
   FormControl,
@@ -50,91 +52,11 @@ import CloudUpload from '@mui/icons-material/CloudUpload';
 import Search from '@mui/icons-material/Search';
 import { DataGrid } from '@mui/x-data-grid';
 
-// Mock Data with Indian Names and Consistent Avatar
-const mockStudents = [
-  { id: 'STU001', name: 'Aarav Sharma', batch: 'Batch A', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80' },
-  { id: 'STU002', name: 'Priya Patel', batch: 'Batch B', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80' },
-  { id: 'STU003', name: 'Rahul Gupta', batch: 'Batch C', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80' },
-  { id: 'STU004', name: 'Neha Singh', batch: 'Batch A', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80' },
-  { id: 'STU005', name: 'Vikram Jain', batch: 'Batch B', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80' },
-];
+const batchesInitial = ['All'];
 
-const mockSubjects = [
-  { id: 'SUB001', name: 'Mathematics' },
-  { id: 'SUB002', name: 'Science' },
-  { id: 'SUB003', name: 'English' },
-  { id: 'SUB004', name: 'History' },
-  { id: 'SUB005', name: 'Computer Science' },
-];
+let initialResults = [];
 
-const mockExams = [
-  { id: 'EX001', name: 'Midterm Examination' },
-  { id: 'EX002', name: 'Final Examination' },
-  { id: 'EX003', name: 'Quiz 1' },
-  { id: 'EX004', name: 'Quiz 2' },
-];
-
-const batches = ['All', 'Batch A', 'Batch B', 'Batch C'];
-
-const generateMockResults = () => {
-  const results = [];
-  for (let i = 0; i < 100; i++) {
-    const student = mockStudents[Math.floor(Math.random() * mockStudents.length)];
-    const subject = mockSubjects[Math.floor(Math.random() * mockSubjects.length)];
-    const exam = mockExams[Math.floor(Math.random() * mockExams.length)];
-    const totalMarks = 100;
-    const marksObtained = Math.floor(Math.random() * 101);
-    const percentage = (marksObtained / totalMarks) * 100;
-    const status = percentage >= 40 ? 'Pass' : 'Fail';
-
-    results.push({
-      id: `RES${i.toString().padStart(3, '0')}`,
-      studentId: student.id,
-      studentName: student.name,
-      studentAvatar: student.avatar,
-      batch: student.batch,
-      subjectId: subject.id,
-      subjectName: subject.name,
-      examId: exam.id,
-      examName: exam.name,
-      totalMarks,
-      marksObtained,
-      percentage,
-      status,
-      grade: percentage >= 90 ? 'A+' : percentage >= 80 ? 'A' : percentage >= 70 ? 'B' : percentage >= 60 ? 'C' : percentage >= 50 ? 'D' : percentage >= 40 ? 'E' : 'F',
-      remarks: percentage >= 40 ? 'Satisfactory' : 'Needs Improvement',
-      date: new Date(2023, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
-    });
-  }
-  return results;
-};
-
-let initialResults = generateMockResults();
-
-const mockPerformanceData = [
-  { name: 'Batch A', Mathematics: 78, Science: 82, English: 75, History: 68, ComputerScience: 85 },
-  { name: 'Batch B', Mathematics: 72, Science: 78, English: 80, History: 74, ComputerScience: 79 },
-  { name: 'Batch C', Mathematics: 85, Science: 76, English: 72, History: 81, ComputerScience: 88 },
-];
-
-const mockTrendData = [
-  { month: 'Jan', average: 72 },
-  { month: 'Feb', average: 75 },
-  { month: 'Mar', average: 78 },
-  { month: 'Apr', average: 74 },
-  { month: 'May', average: 80 },
-  { month: 'Jun', average: 82 },
-];
-
-const mockDistributionData = [
-  { name: 'A+', value: 15 },
-  { name: 'A', value: 20 },
-  { name: 'B', value: 25 },
-  { name: 'C', value: 18 },
-  { name: 'D', value: 12 },
-  { name: 'E', value: 6 },
-  { name: 'F', value: 4 },
-];
+const initialAnalytics = { performance: [], trend: [], distribution: [] };
 
 const COLORS = ['#DEDEDE', '#BFBFBF', '#9E9E9E', '#808080', '#616161', '#404040', '#1F1F1F'];
 
@@ -152,6 +74,41 @@ const ResultManagement = () => {
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
+  const [analytics, setAnalytics] = useState(initialAnalytics);
+  const [subjects, setSubjects] = useState([]);
+  const [exams, setExams] = useState([]);
+  const [batches, setBatches] = useState(batchesInitial);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data } = await listTutorResults();
+        const rs = (data.results || []).map(r => ({
+          ...r,
+          studentAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+          subjectId: r.subjectName || '',
+        }));
+        setResults(rs);
+        const subjectsSet = Array.from(new Set(rs.map(r => r.subjectName).filter(Boolean)));
+        setSubjects(subjectsSet.map((s, i) => ({ id: s || `SUB${i}`, name: s || 'Unknown' })));
+        const examsSet = Array.from(new Set(rs.map(r => r.examId)));
+        setExams(examsSet.map(e => ({ id: e, name: rs.find(r => r.examId === e)?.examName || 'Exam' })));
+        try {
+          const { data: b } = await listBatches({ limit: 100 });
+          const bb = (b.batches || []).map(x => x.batchId);
+          setBatches(['All', ...bb]);
+        } catch {}
+        const { data: an } = await getResultsAnalytics();
+        setAnalytics(an);
+      } catch (err) {
+        // keep UI operational even if backend lacks data
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const filteredByBatch = selectedBatch === 'All' ? results : results.filter(result => result.batch === selectedBatch);
   const totalExams = [...new Set(filteredByBatch.map(result => result.examId))].length;
@@ -278,14 +235,14 @@ const ResultManagement = () => {
             <label className="block text-sm text-bw-75 mb-1">Filter by Exam</label>
             <select value={selectedExam} onChange={handleExamChange} className="bg-black border border-bw-37 rounded px-3 py-2 w-full">
               <option value="">All Exams</option>
-              {mockExams.map(exam => <option key={exam.id} value={exam.id}>{exam.name}</option>)}
+              {exams.map(exam => <option key={exam.id} value={exam.id}>{exam.name}</option>)}
             </select>
           </div>
           <div className="border border-bw-37 rounded-lg bg-black text-white p-4">
             <label className="block text-sm text-bw-75 mb-1">Filter by Subject</label>
             <select value={selectedSubject} onChange={handleSubjectChange} className="bg-black border border-bw-37 rounded px-3 py-2 w-full">
               <option value="">All Subjects</option>
-              {mockSubjects.map(subject => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
+              {subjects.map(subject => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
             </select>
           </div>
         </div>
@@ -339,24 +296,20 @@ const ResultManagement = () => {
             <Card className="p-4">
               <div className="font-comic mb-2">Performance Comparison</div>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={mockPerformanceData}>
+                <BarChart data={analytics.performance}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#616161" />
                   <XAxis dataKey="name" stroke="#BFBFBF" />
                   <YAxis stroke="#BFBFBF" />
                   <RechartsTooltip />
                   <Legend />
-                  <Bar dataKey="Mathematics" fill="#DEDEDE" />
-                  <Bar dataKey="Science" fill="#BFBFBF" />
-                  <Bar dataKey="English" fill="#9E9E9E" />
-                  <Bar dataKey="History" fill="#808080" />
-                  <Bar dataKey="ComputerScience" fill="#616161" />
+                  <Bar dataKey="average" fill="#DEDEDE" />
                 </BarChart>
               </ResponsiveContainer>
             </Card>
             <Card className="p-4">
               <div className="font-comic mb-2">Performance Trend</div>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mockTrendData}>
+                <LineChart data={analytics.trend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#616161" />
                   <XAxis dataKey="month" stroke="#BFBFBF" />
                   <YAxis stroke="#BFBFBF" />
@@ -405,8 +358,8 @@ const ResultManagement = () => {
             <div className="font-comic mb-2">Grade Distribution</div>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie data={mockDistributionData} cx="50%" cy="50%" labelLine outerRadius={80} dataKey="value">
-                  {mockDistributionData.map((entry, index) => (
+              <Pie data={analytics.distribution} cx="50%" cy="50%" labelLine outerRadius={80} dataKey="value">
+                  {(analytics.distribution || []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

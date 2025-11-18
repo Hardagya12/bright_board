@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, requireInstitute } = require('../middleware/auth');
 const { generateToken } = require('../utils/jwt');
 
 module.exports = (db) => {
@@ -50,8 +50,14 @@ module.exports = (db) => {
     password: Joi.string().required()
   });
 
+  const studentSigninByIdSchema = Joi.object({
+    instituteId: Joi.string().min(5).required(),
+    studentId: Joi.string().length(8).pattern(/^\d{8}$/).required(),
+    password: Joi.string().required()
+  });
+
   // Add student (protected - institute only)
-  router.post('/', authenticate, async (req, res) => {
+  router.post('/', authenticate, requireInstitute, async (req, res) => {
     const session = studentsCollection.client.startSession();
     try {
       const { error } = createStudentSchema.validate(req.body);
@@ -92,9 +98,22 @@ module.exports = (db) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Generate custom studentId: YYMM + 4-digit sequence per institute
+        const now = new Date();
+        const yy = String(now.getFullYear()).slice(2);
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const prefix = `${yy}${mm}`;
+        const monthlyCount = await studentsCollection.countDocuments({
+          instituteId: new ObjectId(instituteId),
+          studentId: { $regex: `^${prefix}` }
+        }, { session });
+        const seq = String(monthlyCount + 1).padStart(4, '0');
+        const customStudentId = `${prefix}${seq}`;
+
         // Create student
         const student = {
           instituteId: new ObjectId(instituteId),
+          studentId: customStudentId,
           name,
           email,
           phone,
@@ -123,9 +142,9 @@ module.exports = (db) => {
 
         res.status(201).json({
           message: 'Student added successfully',
-          studentId: result.insertedId.toString(),
+          studentId: customStudentId,
           student: {
-            id: result.insertedId.toString(),
+            id: customStudentId,
             name,
             email,
             phone,
@@ -196,9 +215,22 @@ module.exports = (db) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Generate custom studentId: YYMM + 4-digit sequence per institute
+        const now = new Date();
+        const yy = String(now.getFullYear()).slice(2);
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const prefix = `${yy}${mm}`;
+        const monthlyCount = await studentsCollection.countDocuments({
+          instituteId: internalInstituteId,
+          studentId: { $regex: `^${prefix}` }
+        }, { session });
+        const seq = String(monthlyCount + 1).padStart(4, '0');
+        const customStudentId = `${prefix}${seq}`;
+
         // Create student
         const student = {
           instituteId: internalInstituteId,
+          studentId: customStudentId,
           name,
           email,
           phone,
@@ -240,9 +272,9 @@ module.exports = (db) => {
         res.status(201).json({
           message: 'Student registered successfully',
           token,
-          studentId: result.insertedId.toString(),
+          studentId: customStudentId,
           student: {
-            id: result.insertedId.toString(),
+            id: customStudentId,
             name,
             email,
             phone,
@@ -264,7 +296,7 @@ module.exports = (db) => {
   });
 
   // Get all students for an institute (protected - institute only)
-  router.get('/', authenticate, async (req, res) => {
+  router.get('/', authenticate, requireInstitute, async (req, res) => {
     try {
       const instituteId = req.user.instituteId;
       const { course, batchId, status, page = 1, limit = 10 } = req.query;
@@ -302,7 +334,7 @@ module.exports = (db) => {
   });
 
   // Get single student (protected - institute only)
-  router.get('/:id', authenticate, async (req, res) => {
+  router.get('/:id', authenticate, requireInstitute, async (req, res) => {
     try {
       const instituteId = req.user.instituteId;
       const studentId = req.params.id;
@@ -327,7 +359,7 @@ module.exports = (db) => {
   });
 
   // Update student (protected - institute only)
-  router.put('/:id', authenticate, async (req, res) => {
+  router.put('/:id', authenticate, requireInstitute, async (req, res) => {
     try {
       const { error } = updateStudentSchema.validate(req.body);
       if (error) {
@@ -377,7 +409,7 @@ module.exports = (db) => {
   });
 
   // Delete student (protected - institute only)
-  router.delete('/:id', authenticate, async (req, res) => {
+  router.delete('/:id', authenticate, requireInstitute, async (req, res) => {
     try {
       const instituteId = req.user.instituteId;
       const studentId = req.params.id;
@@ -463,6 +495,68 @@ module.exports = (db) => {
       });
     } catch (error) {
       console.error('Student signin error:', error);
+      res.status(500).json({ error: error.message || 'Login failed' });
+    }
+  });
+
+  // Student signin using instituteId + studentId
+  router.post('/auth/signin-id', async (req, res) => {
+    try {
+      const { error } = studentSigninByIdSchema.validate(req.body);
+      if (error) {
+        return res.status(400).json({ error: error.details[0].message });
+      }
+
+      const { instituteId: customInstituteId, studentId, password } = req.body;
+
+      const { ObjectId } = require('mongodb');
+      const institutesCollection = db.collection('institutes');
+
+      const institute = await institutesCollection.findOne({ instituteId: customInstituteId });
+      if (!institute) {
+        return res.status(404).json({ error: 'Invalid instituteId' });
+      }
+
+      const internalInstituteId = institute._id;
+
+      const student = await studentsCollection.findOne({ studentId, instituteId: internalInstituteId });
+      if (!student) {
+        return res.status(401).json({ error: 'Invalid studentId or instituteId' });
+      }
+
+      const isValidPassword = await bcrypt.compare(password, student.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Invalid password' });
+      }
+
+      if (student.status !== 'active') {
+        return res.status(403).json({ error: 'Account is not active' });
+      }
+
+      const token = generateToken({
+        studentId: student._id.toString(),
+        instituteId: internalInstituteId.toString(),
+        email: student.email,
+        name: student.name,
+        role: 'student'
+      });
+
+      res.status(200).json({
+        message: 'Login successful',
+        token,
+        studentId: student.studentId,
+        instituteId: customInstituteId,
+        student: {
+          id: student.studentId,
+          name: student.name,
+          email: student.email,
+          course: student.course,
+          batchId: student.batchId,
+          enrollmentDate: student.enrollmentDate
+        }
+      });
+    } catch (error) {
+      console.error('Student signin by id error:', error);
       res.status(500).json({ error: error.message || 'Login failed' });
     }
   });

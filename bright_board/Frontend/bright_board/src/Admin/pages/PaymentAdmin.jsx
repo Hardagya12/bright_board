@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { 
@@ -7,60 +7,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import AdminSidebar from '../components/AdminSidebar';
-
-const mockData = {
-  revenue: 125000,
-  pendingPayments: 15,
-  successfulTransactions: 450,
-  monthlyData: [
-    { month: 'Jan', revenue: 15000 },
-    { month: 'Feb', revenue: 25000 },
-    { month: 'Mar', revenue: 20000 },
-    { month: 'Apr', revenue: 30000 },
-    { month: 'May', revenue: 22000 },
-    { month: 'Jun', revenue: 28000 }
-  ],
-  batchData: [
-    { name: 'Batch A', revenue: 45000 },
-    { name: 'Batch B', revenue: 35000 },
-    { name: 'Batch C', revenue: 25000 },
-    { name: 'Batch D', revenue: 20000 }
-  ],
-  paymentStats: [
-    { name: 'Successful', value: 85 },
-    { name: 'Failed', value: 10 },
-    { name: 'Pending', value: 5 }
-  ],
-  transactions: [
-    {
-      id: 'TRX001',
-      studentName: 'Aarav Sharma',
-      batch: 'Batch A',
-      amount: 1200,
-      method: 'Credit Card',
-      date: '2024-03-15',
-      status: 'Completed'
-    },
-    {
-      id: 'TRX002',
-      studentName: 'Priya Patel',
-      batch: 'Batch B',
-      amount: 1500,
-      method: 'PayPal',
-      date: '2024-03-14',
-      status: 'Pending'
-    },
-    {
-      id: 'TRX003',
-      studentName: 'Rohan Gupta',
-      batch: 'Batch A',
-      amount: 1000,
-      method: 'UPI',
-      date: '2024-03-13',
-      status: 'Failed'
-    }
-  ]
-};
+import { getPaymentsSummary, listTransactions, addPayment } from '../../utils/services/payments';
 
 const PaymentAdmin = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,6 +17,12 @@ const PaymentAdmin = () => {
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [showStudentHistory, setShowStudentHistory] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentHistory, setStudentHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [summary, setSummary] = useState({ revenue: 0, pendingPayments: 0, successfulTransactions: 0, monthlyData: [], batchData: [], paymentStats: [] });
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
@@ -81,6 +34,28 @@ const PaymentAdmin = () => {
     hidden: { opacity: 0, scale: 0.8 },
     visible: { opacity: 1, scale: 1 }
   };
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const { data: sum } = await getPaymentsSummary();
+        setSummary(sum);
+        const params = {};
+        if (selectedFilter !== 'all') params.status = selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1);
+        if (dateRange.start) params.start = dateRange.start;
+        if (dateRange.end) params.end = dateRange.end;
+        const { data: tx } = await listTransactions(params);
+        setTransactions(tx.transactions || []);
+      } catch (err) {
+        setError(err.response?.data?.error || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [selectedFilter, dateRange.start, dateRange.end]);
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -101,10 +76,13 @@ const PaymentAdmin = () => {
     console.log(`Sending reminder to student ${studentId}`);
   };
 
-  const handleAddPayment = (paymentData) => {
-    // Implementation for adding manual payment
-    console.log('Adding payment:', paymentData);
-    setShowAddPayment(false);
+  const handleAddPayment = async (paymentData) => {
+    try {
+      await addPayment(paymentData);
+      setShowAddPayment(false);
+    } catch (err) {
+      console.error('Add payment failed', err);
+    }
   };
 
   const PIE_COLORS = ['#4CAF50', '#F44336', '#FFC107'];
@@ -113,6 +91,8 @@ const PaymentAdmin = () => {
     <div className="min-h-screen bg-black text-white flex">
       <AdminSidebar />
       <div className="flex-1 p-6 space-y-6">
+      {loading && <div className="text-bw-62">Loading...</div>}
+      {error && <div className="text-bw-62">{error}</div>}
       {/* Summary Cards */}
       <motion.div 
         className="grid grid-cols-1 md:grid-cols-3 gap-4"
@@ -126,7 +106,7 @@ const PaymentAdmin = () => {
           </div>
           <div className="card-content">
             <h3>Total Revenue</h3>
-            <p>${mockData.revenue.toLocaleString()}</p>
+            <p>${(summary.revenue || 0).toLocaleString()}</p>
           </div>
         </motion.div>
 
@@ -136,7 +116,7 @@ const PaymentAdmin = () => {
           </div>
           <div className="card-content">
             <h3>Pending Payments</h3>
-            <p>{mockData.pendingPayments}</p>
+            <p>{summary.pendingPayments || 0}</p>
           </div>
         </motion.div>
 
@@ -146,7 +126,7 @@ const PaymentAdmin = () => {
           </div>
           <div className="card-content">
             <h3>Successful Transactions</h3>
-            <p>{mockData.successfulTransactions}</p>
+            <p>{summary.successfulTransactions || 0}</p>
           </div>
         </motion.div>
       </motion.div>
@@ -162,7 +142,7 @@ const PaymentAdmin = () => {
           <h2>Revenue Trends</h2>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={mockData.monthlyData}>
+              <LineChart data={summary.monthlyData || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
@@ -189,7 +169,7 @@ const PaymentAdmin = () => {
           <h2>Batch Revenue</h2>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={mockData.batchData}>
+              <BarChart data={summary.batchData || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -211,7 +191,7 @@ const PaymentAdmin = () => {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={mockData.paymentStats}
+                  data={summary.paymentStats || []}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -219,7 +199,7 @@ const PaymentAdmin = () => {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {mockData.paymentStats.map((entry, index) => (
+                  {(summary.paymentStats || []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={PIE_COLORS[index]} />
                   ))}
                 </Pie>
@@ -311,7 +291,7 @@ const PaymentAdmin = () => {
               </tr>
             </thead>
             <tbody>
-              {mockData.transactions.map((transaction) => (
+              {transactions.map((transaction) => (
                 <motion.tr
                   key={transaction.id}
                   initial={{ opacity: 0 }}
@@ -326,6 +306,14 @@ const PaymentAdmin = () => {
                       onClick={() => {
                         setSelectedStudent(transaction);
                         setShowStudentHistory(true);
+                        (async () => {
+                          setHistoryLoading(true);
+                          try {
+                            const { data } = await listTransactions({ studentName: transaction.studentName });
+                            setStudentHistory(data.transactions || []);
+                          } catch {}
+                          setHistoryLoading(false);
+                        })();
                       }}
                     >
                       {transaction.studentName}
@@ -462,21 +450,28 @@ const PaymentAdmin = () => {
                 </button>
               </div>
               <div className="modal-content">
-                <div className="student-history">
-                  {/* Mock student history data */}
-                  <div className="history-item">
-                    <div className="history-icon">
-                      <CreditCard size={24} />
-                    </div>
-                    <div className="history-details">
-                      <h4>${selectedStudent.amount}</h4>
-                      <p>{format(new Date(selectedStudent.date), 'MMM dd, yyyy')}</p>
-                      <span className="px-2 py-1 rounded" style={{ backgroundColor: getStatusColor(selectedStudent.status) }}>
-                        {selectedStudent.status}
-                      </span>
-                    </div>
+                {historyLoading && <div className="text-bw-62">Loading history...</div>}
+                {!historyLoading && (
+                  <div className="student-history space-y-2">
+                    {studentHistory.map(h => (
+                      <div key={h.id} className="history-item flex items-center gap-3 border border-bw-37 rounded p-3">
+                        <div className="history-icon">
+                          <CreditCard size={24} />
+                        </div>
+                        <div className="history-details flex-1">
+                          <h4>${h.amount}</h4>
+                          <p>{format(new Date(h.date), 'MMM dd, yyyy')} • {h.method}</p>
+                        </div>
+                        <span className="px-2 py-1 rounded" style={{ backgroundColor: getStatusColor(h.status) }}>
+                          {h.status}
+                        </span>
+                      </div>
+                    ))}
+                    {studentHistory.length === 0 && (
+                      <div className="text-bw-62">No transactions found for {selectedStudent.studentName}.</div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
             </motion.div>
           </motion.div>

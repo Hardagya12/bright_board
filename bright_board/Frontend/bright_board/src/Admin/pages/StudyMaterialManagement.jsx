@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Upload, 
@@ -15,50 +15,45 @@ import {
   Eye
 } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
+import { listMaterials, createMaterial, updateMaterialMetrics } from '../../utils/services/materials';
+import { listBatches } from '../../utils/services/batches';
 
 const StudyMaterialManagement = () => {
-  const [materials, setMaterials] = useState([
-    {
-      id: '1',
-      name: 'Physics Notes Chapter 1',
-      type: 'pdf',
-      subject: 'Physics',
-      batch: '2024',
-      uploadDate: '2024-03-10',
-      downloads: 156,
-      views: 342,
-      restricted: false
-    },
-    {
-      id: '2',
-      name: 'Chemistry Lab Manual',
-      type: 'doc',
-      subject: 'Chemistry',
-      batch: '2024',
-      uploadDate: '2024-03-09',
-      downloads: 89,
-      views: 245,
-      restricted: false
-    },
-    {
-      id: '3',
-      name: 'Maths Formula Sheet',
-      type: 'pdf',
-      subject: 'Mathematics',
-      batch: '2023',
-      uploadDate: '2023-03-15',
-      downloads: 120,
-      views: 280,
-      restricted: false
-    }
-  ]);
+  const [materials, setMaterials] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [selectedBatch, setSelectedBatch] = useState('all');
   const [isDragging, setIsDragging] = useState(false);
 
-  const batches = ['all', '2024', '2023', '2022'];
+  const [batches, setBatches] = useState(['all']);
+  const [subjects, setSubjects] = useState(['all']);
+
+  useEffect(() => {
+    const loadMaterials = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const { data } = await listMaterials();
+        const ms = data.materials || [];
+        setMaterials(ms);
+        const subj = ['all', ...Array.from(new Set(ms.map(m => (m.subject || '').toLowerCase()).filter(Boolean)))];
+        setSubjects(subj);
+        try {
+          const { data: b } = await listBatches({ limit: 100 });
+          const bb = (b.batches || []).map(x => x.batchId);
+          setBatches(['all', ...bb]);
+        } catch {}
+      } catch (err) {
+        setError(err.response?.data?.error || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMaterials();
+  }, []);
 
   const getFileIcon = (type) => {
     switch (type) {
@@ -85,26 +80,30 @@ const StudyMaterialManagement = () => {
     handleFileUpload(files);
   };
 
-  const handleFileUpload = (files) => {
-    const newMaterials = files.map((file, index) => ({
-      id: Date.now() + index,
+  const handleFileUpload = async (files) => {
+    const payloads = files.map((file) => ({
       name: file.name,
-      type: file.name.split('.').pop().toLowerCase(),
+      type: (file.name.split('.').pop() || 'file').toLowerCase(),
       subject: selectedSubject !== 'all' ? selectedSubject : 'Uncategorized',
-      batch: selectedBatch !== 'all' ? selectedBatch : '2024',
-      uploadDate: new Date().toISOString().split('T')[0],
-      downloads: 0,
-      views: 0,
-      restricted: false
+      batch: selectedBatch !== 'all' ? selectedBatch : 'General',
+      url: '',
+      restricted: false,
     }));
-    setMaterials([...materials, ...newMaterials]);
+    for (const p of payloads) {
+      try {
+        const { data } = await createMaterial(p);
+        setMaterials((prev) => [...prev, data.material]);
+      } catch (err) {
+        console.error('Create material failed', err);
+      }
+    }
   };
 
-  const handleDownload = (material) => {
+  const handleDownload = async (material) => {
     if (material.restricted) return;
-    setMaterials(materials.map(m => 
-      m.id === material.id ? { ...m, downloads: m.downloads + 1 } : m
-    ));
+    const nextDownloads = (material.downloads || 0) + 1;
+    setMaterials(materials.map(m => m.id === material.id ? { ...m, downloads: nextDownloads } : m));
+    try { await updateMaterialMetrics(material.id, { downloads: nextDownloads }); } catch {}
     const dummyContent = `This is a sample ${material.type} file: ${material.name}`;
     const blob = new Blob([dummyContent], { type: `application/${material.type}` });
     const url = window.URL.createObjectURL(blob);
@@ -117,8 +116,10 @@ const StudyMaterialManagement = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleView = (material) => {
-    alert(`Total views for ${material.name}: ${material.views}`);
+  const handleView = async (material) => {
+    const nextViews = (material.views || 0) + 1;
+    setMaterials(materials.map(m => m.id === material.id ? { ...m, views: nextViews } : m));
+    try { await updateMaterialMetrics(material.id, { views: nextViews }); } catch {}
   };
 
   const handleToggleRestriction = (materialId) => {
@@ -142,6 +143,8 @@ const StudyMaterialManagement = () => {
       <AdminSidebar />
       <div className="flex-1 p-6 space-y-6">
         <h1 className="font-comic text-2xl">Study Material Management</h1>
+        {loading && <div className="text-bw-62">Loading...</div>}
+        {error && <div className="text-bw-62">{error}</div>}
         <motion.div 
           className="border border-bw-37 rounded-lg bg-black p-4"
           initial={{ opacity: 0, y: -20 }}
@@ -196,10 +199,9 @@ const StudyMaterialManagement = () => {
             </div>
             <div className="flex items-center gap-3">
               <select value={selectedSubject} onChange={handleSubjectChange} className="bg-black border border-bw-37 rounded px-3 py-2">
-                <option value="all">All Subjects</option>
-                <option value="physics">Physics</option>
-                <option value="chemistry">Chemistry</option>
-                <option value="mathematics">Mathematics</option>
+                {subjects.map(s => (
+                  <option key={s} value={s}>{s === 'all' ? 'All Subjects' : s}</option>
+                ))}
               </select>
               <select value={selectedBatch} onChange={handleBatchChange} className="bg-black border border-bw-37 rounded px-3 py-2">
                 {batches.map(batch => (

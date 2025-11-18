@@ -3,48 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Eye, Pencil, Trash2, Mail as MailIcon, Download as DownloadIcon, Users as GroupIcon } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
+import { listStudents, createStudent } from '../../utils/services/students';
+import { listBatches, createBatch } from '../../utils/services/batches';
+import { getAttendanceStats } from '../../utils/services/attendance';
+import { getResultsAnalytics } from '../../utils/services/results';
 
-// Mock Data
-const mockData = {
-  overview: {
-    totalStudents: 1200,
-    activeStudents: 950,
-    inactiveStudents: 250,
-    growthTrend: 15,
-  },
-  students: [
-    { id: 1, name: 'Aarav Sharma', email: 'aarav@example.com', phone: '9876543210', course: 'CS101', attendance: 92, status: 'Active', batch: 'Batch A' },
-    { id: 2, name: 'Priya Patel', email: 'priya@example.com', phone: '8765432109', course: 'ME201', attendance: 75, status: 'Inactive', batch: 'Batch B' },
-    { id: 3, name: 'Rohan Gupta', email: 'rohan@example.com', phone: '7654321098', course: 'EE301', attendance: 88, status: 'Active', batch: 'Batch C' },
-  ],
-  attendanceData: [
-    { name: 'Present', value: 70 },
-    { name: 'Absent', value: 20 },
-    { name: 'Late', value: 10 },
-  ],
-  progressData: [
-    { month: 'Jan', grade: 75 },
-    { month: 'Feb', grade: 80 },
-    { month: 'Mar', grade: 85 },
-    { month: 'Apr', grade: 82 },
-    { month: 'May', grade: 88 },
-  ],
-  COLORS: ['#10b981', '#f87171', '#fbbf24'],
-};
 
 // Animation Variants
 const animationVariants = {};
 
-// Data Fetching Service
-const fetchService = {
-  getStudents: async () => mockData.students,
-  getOverview: async () => mockData.overview,
-  getChartData: async () => ({
-    attendanceData: mockData.attendanceData,
-    progressData: mockData.progressData,
-    colors: mockData.COLORS
-  })
-};
 
 const StudentManagementPage = () => {
   const [students, setStudents] = useState([]);
@@ -55,6 +22,7 @@ const StudentManagementPage = () => {
   const [filters, setFilters] = useState({ batch: '', course: '', attendance: '', status: '' });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -70,20 +38,62 @@ const StudentManagementPage = () => {
     batch: ''
   });
   const rowsPerPage = 5;
+  const [newStudent, setNewStudent] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    address: '',
+    course: '',
+    batchId: '',
+    password: ''
+  });
+  const [batches, setBatches] = useState([]);
+  const [error, setError] = useState('');
+  const [createdStudent, setCreatedStudent] = useState(null);
+  const [addBatchOpen, setAddBatchOpen] = useState(false);
+  const [batchError, setBatchError] = useState('');
+  const [newBatch, setNewBatch] = useState({ name: '', course: '', startDate: '', endDate: '', capacity: 30 });
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         setIsLoading(true);
-        const [studentData, overviewData, chartData] = await Promise.all([
-          fetchService.getStudents(),
-          fetchService.getOverview(),
-          fetchService.getChartData()
+        const [{ data: s }, { data: att }, { data: resAn }, { data: b }] = await Promise.all([
+          listStudents({ limit: 100 }),
+          getAttendanceStats({ range: 'week' }),
+          getResultsAnalytics(),
+          listBatches({ limit: 100 })
         ]);
+        const studentData = (s.students || []).map(st => ({
+          id: st.studentId || st.id || st._id,
+          name: st.name,
+          email: st.email,
+          phone: st.phone,
+          course: st.course,
+          attendance: 0,
+          status: (st.status || '').toLowerCase() === 'active' ? 'Active' : 'Inactive',
+          batch: st.batchId || '',
+        }));
         setStudents(studentData);
         setFilteredStudents(studentData);
+        const activeCount = studentData.filter(x => x.status === 'Active').length;
+        const overviewData = {
+          totalStudents: studentData.length,
+          activeStudents: activeCount,
+          inactiveStudents: studentData.length - activeCount,
+          growthTrend: 0,
+        };
         setOverview(overviewData);
-        setChartData(chartData);
+        const attendanceData = att.weekly?.length ? [
+          { name: 'Present', value: Math.round(att.weekly.slice(-1)[0].attendance) },
+          { name: 'Absent', value: 100 - Math.round(att.weekly.slice(-1)[0].attendance) },
+          { name: 'Late', value: 0 },
+        ] : [];
+        const progressData = (resAn.trend || []).map(t => ({ month: t.month, grade: t.average }));
+        setChartData({ attendanceData, progressData, colors: ['#10b981', '#f87171', '#fbbf24'] });
+        const bb = (b.batches || []).map(x => ({ id: x.batchId, name: x.name, course: x.course }));
+        setBatches(bb);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -160,6 +170,33 @@ const StudentManagementPage = () => {
     console.log(`${action} triggered for all students`);
   };
 
+  const handleAddStudent = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      const { data } = await createStudent(newStudent);
+      const st = data.student || {};
+      const mapped = {
+        id: st.id,
+        name: st.name,
+        email: st.email,
+        phone: st.phone,
+        course: st.course,
+        attendance: 0,
+        status: 'Active',
+        batch: st.batchId || ''
+      };
+      const updated = [mapped, ...students];
+      setStudents(updated);
+      setFilteredStudents(updated);
+      setAddModalOpen(false);
+      setCreatedStudent({ name: st.name, id: data.studentId });
+      setNewStudent({ name: '', email: '', phone: '', dateOfBirth: '', address: '', course: '', batchId: '', password: '' });
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+    }
+  };
+
   const OverviewSection = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {overview && [
@@ -194,7 +231,7 @@ const StudentManagementPage = () => {
           className="bg-black border border-bw-37 rounded px-3 py-2"
         >
           <option value="">All {filter.charAt(0).toUpperCase() + filter.slice(1)}s</option>
-          {filter === 'batch' && ['Batch A', 'Batch B', 'Batch C'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          {filter === 'batch' && batches.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
           {filter === 'course' && ['CS101', 'ME201', 'EE301'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
           {filter === 'attendance' && ['70', '80', '90'].map(opt => <option key={opt} value={opt}>{`>${opt}%`}</option>)}
           {filter === 'status' && ['Active', 'Inactive'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -299,6 +336,12 @@ const StudentManagementPage = () => {
           <button onClick={() => handleBulkAction('Export Data')} className="border border-bw-37 rounded px-3 py-2 flex items-center gap-2">
             <DownloadIcon size={16} /> Export Data
           </button>
+          <button onClick={() => setAddModalOpen(true)} className="border border-bw-37 rounded px-3 py-2 flex items-center gap-2">
+            Add New Student
+          </button>
+          <button onClick={() => setAddBatchOpen(true)} className="border border-bw-37 rounded px-3 py-2 flex items-center gap-2">
+            Create Batch
+          </button>
         </div>
 
         {editModalOpen && (
@@ -371,8 +414,8 @@ const StudentManagementPage = () => {
                     onChange={(e) => setEditForm({ ...editForm, batch: e.target.value })}
                     required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75">
                     <option value="">Select Batch</option>
-                    {['Batch A', 'Batch B', 'Batch C'].map(batch => (
-                      <option key={batch} value={batch}>{batch}</option>
+                    {batches.map(batch => (
+                      <option key={batch.id} value={batch.id}>{batch.name}</option>
                     ))}
                   </select>
                 </div>
@@ -393,6 +436,121 @@ const StudentManagementPage = () => {
               <div className="flex justify-end gap-2">
                 <button onClick={() => setDeleteDialogOpen(false)} className="border border-bw-37 rounded px-3 py-2">Cancel</button>
                 <button onClick={confirmDelete} className="border border-bw-37 rounded px-3 py-2">Delete</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {addModalOpen && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+            <div className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-xl">
+              <h2>Add Student</h2>
+              {error && <div className="text-bw-62 mb-2">{error}</div>}
+              <form onSubmit={handleAddStudent} className="space-y-3">
+                <div>
+                  <label>Name</label>
+                  <input type="text" value={newStudent.name} onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Email</label>
+                  <input type="email" value={newStudent.email} onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Phone</label>
+                  <input type="text" value={newStudent.phone} onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Date of Birth</label>
+                  <input type="date" value={newStudent.dateOfBirth} onChange={(e) => setNewStudent({ ...newStudent, dateOfBirth: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Address</label>
+                  <input type="text" value={newStudent.address} onChange={(e) => setNewStudent({ ...newStudent, address: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Course</label>
+                  <input type="text" value={newStudent.course} onChange={(e) => setNewStudent({ ...newStudent, course: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Batch</label>
+                  <select value={newStudent.batchId} onChange={(e) => {
+                    const val = e.target.value;
+                    const bsel = batches.find(b => b.id === val);
+                    setNewStudent({ ...newStudent, batchId: val, course: bsel?.course || newStudent.course });
+                  }} className="w-full px-3 py-2 bg-black border border-bw-37 rounded">
+                    <option value="">Select Batch (optional)</option>
+                    {batches.map(b => (<option key={b.id} value={b.id}>{b.name}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label>Password</label>
+                  <input type="password" value={newStudent.password} onChange={(e) => setNewStudent({ ...newStudent, password: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button type="button" onClick={() => setAddModalOpen(false)} className="border border-bw-37 rounded px-3 py-2">Cancel</button>
+                  <button type="submit" className="border border-bw-37 rounded px-3 py-2">Create</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {addBatchOpen && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+            <div className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-xl">
+              <h2>Create Batch</h2>
+              {batchError && <div className="text-bw-62 mb-2">{batchError}</div>}
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                setBatchError('');
+                try {
+                  const { data } = await createBatch(newBatch);
+                  const nb = { id: data.batch?.id || data.batchId, name: data.batch?.name || newBatch.name };
+                  const updated = [nb, ...batches];
+                  setBatches(updated);
+                  setAddBatchOpen(false);
+                  setNewBatch({ name: '', course: '', startDate: '', endDate: '', capacity: 30 });
+                } catch (err) {
+                  setBatchError(err.response?.data?.error || err.message);
+                }
+              }} className="space-y-3">
+                <div>
+                  <label>Name</label>
+                  <input type="text" value={newBatch.name} onChange={(e) => setNewBatch({ ...newBatch, name: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Course</label>
+                  <input type="text" value={newBatch.course} onChange={(e) => setNewBatch({ ...newBatch, course: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Start Date</label>
+                  <input type="date" value={newBatch.startDate} onChange={(e) => setNewBatch({ ...newBatch, startDate: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>End Date</label>
+                  <input type="date" value={newBatch.endDate} onChange={(e) => setNewBatch({ ...newBatch, endDate: e.target.value })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div>
+                  <label>Capacity</label>
+                  <input type="number" min="1" max="500" value={newBatch.capacity} onChange={(e) => setNewBatch({ ...newBatch, capacity: parseInt(e.target.value) })} required className="w-full px-3 py-2 bg-black border border-bw-37 rounded" />
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button type="button" onClick={() => setAddBatchOpen(false)} className="border border-bw-37 rounded px-3 py-2">Cancel</button>
+                  <button type="submit" className="border border-bw-37 rounded px-3 py-2">Create</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {createdStudent && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+            <div className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-md">
+              <h2 className="font-comic text-xl mb-2">Student Created</h2>
+              <p className="mb-2">Name: {createdStudent.name}</p>
+              <p className="mb-4">Student ID: <span className="font-mono border border-bw-37 rounded px-2 py-1">{createdStudent.id}</span></p>
+              <div className="flex justify-end">
+                <button onClick={() => setCreatedStudent(null)} className="border border-bw-37 rounded px-3 py-2">Close</button>
               </div>
             </div>
           </div>
