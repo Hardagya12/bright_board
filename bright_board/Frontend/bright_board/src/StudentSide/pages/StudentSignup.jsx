@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Building2, MapPin, Phone, Mail, Lock, Key, User } from 'lucide-react';
-import './StudentSignup.css';
+import Button from '../../components/ui/Button';
+import Skeleton from '../../components/ui/Skeleton';
 
 const StudentSignup = () => {
   // State
@@ -261,8 +262,8 @@ const StudentSignup = () => {
   };
 
   return (
-    <div className="student-signup-container">
-      <div className="form-container">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <div className="w-full max-w-lg border border-bw-37 rounded-lg p-6 bg-black text-white">
         <h1 className="form-title">
           {isRegistered
             ? 'Registration Complete'
@@ -274,14 +275,14 @@ const StudentSignup = () => {
         </h1>
         
         {statusMessage && (
-          <div className="status-message">
+          <div className="border border-bw-37 rounded p-3 mb-4 text-bw-62">
             {statusMessage}
           </div>
         )}
 
         {/* Email Input Form */}
         {!isOtpSent && !isEmailVerified && !isRegistered && (
-          <form onSubmit={handleRequestOtp}>
+          <form onSubmit={handleRequestOtp} className="space-y-4">
             <div className="input-group">
               <Mail className="input-icon" size={20} />
               <input 
@@ -290,20 +291,17 @@ const StudentSignup = () => {
                 placeholder="Email"
                 value={formData.email}
                 onChange={handleChange}
+                className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
               />
               {errors.email && <div className="error-message">{errors.email}</div>}
             </div>
             
-            <button 
-              type="submit"
-              className="submit-button"
-              disabled={isSending}
-            >
+            <Button type="submit" fullWidth disabled={isSending}>
               {isSending ? 'Sending...' : 'Request OTP'}
-            </button>
+            </Button>
             
             <div className="signin-link-container">
-              <Link to="/s/signin" className="signin-link">
+              <Link to="/s/signin" className="text-bw-75 hover:text-white text-sm">
                 Already registered? Sign In
               </Link>
             </div>
@@ -312,7 +310,7 @@ const StudentSignup = () => {
 
         {/* OTP Verification Form */}
         {isOtpSent && !isEmailVerified && !isRegistered && (
-          <form onSubmit={handleVerifyOtp}>
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div className="input-group">
               <Key className="input-icon" size={20} />
               <input 
@@ -321,28 +319,25 @@ const StudentSignup = () => {
                 value={otp}
                 onChange={handleOtpChange}
                 maxLength={6}
+                className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
               />
               {otpError && <div className="error-message">{otpError}</div>}
             </div>
             
-            <button 
-              type="submit"
-              className="submit-button"
-              disabled={isVerifying}
-            >
+            <Button type="submit" fullWidth disabled={isVerifying}>
               {isVerifying ? 'Verifying...' : 'Verify OTP'}
-            </button>
+            </Button>
             
             <div className="mt-4 text-center">
               {countdown > 0 ? (
-                <p className="text-gray-400 text-sm">
+                <p className="text-bw-62 text-sm">
                   Resend code in {countdown} seconds
                 </p>
               ) : (
                 <button 
                   onClick={handleRequestOtp}
                   disabled={isSending}
-                  className="text-indigo-400 text-sm hover:underline"
+                  className="text-bw-75 text-sm hover:text-white"
                   type="button"
                 >
                   Resend verification code
@@ -354,7 +349,7 @@ const StudentSignup = () => {
 
         {/* Registration Form */}
         {isEmailVerified && !isRegistered && (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="input-group">
               <User className="input-icon" size={20} />
               <input 
@@ -363,6 +358,7 @@ const StudentSignup = () => {
                 placeholder="Full Name"
                 value={formData.name}
                 onChange={handleChange}
+                className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
               />
               {errors.name && <div className="error-message">{errors.name}</div>}
             </div>
@@ -375,9 +371,9 @@ const StudentSignup = () => {
                 placeholder="Email"
                 value={formData.email}
                 readOnly 
-                className="verified-field"
+                className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white"
               />
-              <span className="verified-badge">✓ Verified</span>
+              <span className="text-bw-75 text-sm">✓ Verified</span>
             </div>
             
             <div className="input-group">
@@ -388,9 +384,10 @@ const StudentSignup = () => {
                 placeholder="Institute ID (provided by your institute)"
                 value={formData.instituteId}
                 onChange={handleChange}
+                className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
               />
-              {errors.instituteId && <div className="error-message">{errors.instituteId}</div>}
-              {isCheckingInstitute && <div className="info-message">Verifying institute...</div>}
+              {errors.instituteId && <div className="text-bw-62 text-sm mt-1">{errors.instituteId}</div>}
+              {isCheckingInstitute && <div className="mt-2"><Skeleton height="0.75rem" /></div>}
               {instituteInfo && (
                 <div className="success-message">
                   Institute verified: {instituteInfo.name}
@@ -406,8 +403,9 @@ const StudentSignup = () => {
                 placeholder="Contact Number"
                 value={formData.contactNumber}
                 onChange={handleChange}
+                className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
               />
-              {errors.contactNumber && <div className="error-message">{errors.contactNumber}</div>}
+              {errors.contactNumber && <div className="text-bw-62 text-sm mt-1">{errors.contactNumber}</div>}
             </div>
             
             <div className="input-group">
@@ -418,8 +416,9 @@ const StudentSignup = () => {
                 placeholder="Address"
                 value={formData.address}
                 onChange={handleChange}
+                className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
               />
-              {errors.address && <div className="error-message">{errors.address}</div>}
+              {errors.address && <div className="text-bw-62 text-sm mt-1">{errors.address}</div>}
             </div>
             
             <div className="input-group">
@@ -430,17 +429,14 @@ const StudentSignup = () => {
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
+                className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
               />
-              {errors.password && <div className="error-message">{errors.password}</div>}
+              {errors.password && <div className="text-bw-62 text-sm mt-1">{errors.password}</div>}
             </div>
             
-            <button 
-              type="submit"
-              className="submit-button"
-              disabled={registrationInProgress || !instituteInfo}
-            >
+            <Button type="submit" fullWidth disabled={registrationInProgress || !instituteInfo}>
               {registrationInProgress ? 'Registering...' : 'Complete Registration'}
-            </button>
+            </Button>
           </form>
         )}
 

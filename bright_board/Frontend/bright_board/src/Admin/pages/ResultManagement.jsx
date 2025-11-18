@@ -1,42 +1,5 @@
 // ResultManagement.jsx
-import React, { useState, useRef } from 'react';
-import './ResultManagement.css';
-import CountUp from 'react-countup';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  IconButton,
-  MenuItem,
-  Modal,
-  Tabs,
-  Tab,
-  FormControl,
-  InputLabel,
-  Select,
-  Snackbar,
-  Alert,
-  Grid,
-  Tooltip,
-  Avatar,
-  CircularProgress,
-} from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import {
-  Search,
-  FilterList,
-  Download,
-  Edit,
-  Visibility,
-  Close,
-  CloudUpload,
-  Print,
-  Save,
-  Delete,
-} from '@mui/icons-material';
+import { useState, useRef } from 'react';
 import {
   BarChart,
   Bar,
@@ -52,8 +15,40 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { motion } from 'framer-motion';
+import { Eye, Pencil, Download as DownloadIcon, Search as SearchIcon, X, CloudUpload as CloudUploadIcon, Printer, Save as SaveIcon, Trash2 } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Skeleton from '../../components/ui/Skeleton';
+import * as FM from 'framer-motion';
+const motion = FM.motion || { div: 'div', span: 'span' };
+import {
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Grid,
+  Modal,
+  Box,
+  Tabs,
+  Tab,
+  IconButton,
+  Snackbar,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import Download from '@mui/icons-material/Download';
+import Close from '@mui/icons-material/Close';
+import Print from '@mui/icons-material/Print';
+import Visibility from '@mui/icons-material/Visibility';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
+import Save from '@mui/icons-material/Save';
+import CloudUpload from '@mui/icons-material/CloudUpload';
+import Search from '@mui/icons-material/Search';
+import { DataGrid } from '@mui/x-data-grid';
 
 // Mock Data with Indian Names and Consistent Avatar
 const mockStudents = [
@@ -141,7 +136,7 @@ const mockDistributionData = [
   { name: 'F', value: 4 },
 ];
 
-const COLORS = ['#4cd964', '#5ac8fa', '#007aff', '#ffcc00', '#ff9500', '#ff3b30', '#8e8e93'];
+const COLORS = ['#DEDEDE', '#BFBFBF', '#9E9E9E', '#808080', '#616161', '#404040', '#1F1F1F'];
 
 const ResultManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -152,7 +147,7 @@ const ResultManagement = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedResult, setSelectedResult] = useState(null);
   const [tabValue, setTabValue] = useState(0);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [banner, setBanner] = useState({ open: false, message: '', type: 'success' });
   const [results, setResults] = useState(initialResults);
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(false);
@@ -202,7 +197,7 @@ const ResultManagement = () => {
       percentage: (editForm.marksObtained / editForm.totalMarks) * 100,
     };
     setResults(results.map(r => r.id === updatedResult.id ? updatedResult : r));
-    setSnackbar({ open: true, message: 'Result updated successfully!', severity: 'success' });
+    setBanner({ open: true, message: 'Result updated successfully!', type: 'success' });
     setEditModalOpen(false);
     setLoading(false);
   };
@@ -211,7 +206,7 @@ const ResultManagement = () => {
     setLoading(true);
     await new Promise(resolve => setTimeout(resolve, 500));
     setResults(results.filter(r => r.id !== selectedResult.id));
-    setSnackbar({ open: true, message: 'Result deleted successfully!', severity: 'success' });
+    setBanner({ open: true, message: 'Result deleted successfully!', type: 'success' });
     setEditModalOpen(false);
     setLoading(false);
   };
@@ -221,7 +216,7 @@ const ResultManagement = () => {
     if (file) {
       setLoading(true);
       setTimeout(() => {
-        setSnackbar({ open: true, message: 'Results uploaded successfully!', severity: 'success' });
+        setBanner({ open: true, message: 'Results uploaded successfully!', type: 'success' });
         setLoading(false);
       }, 1500);
     }
@@ -243,7 +238,7 @@ const ResultManagement = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
+  const handleCloseBanner = () => setBanner({ ...banner, open: false });
 
   const filteredResults = filteredByBatch.filter(result => (
     (searchTerm === '' || 
@@ -253,602 +248,331 @@ const ResultManagement = () => {
     (selectedSubject === '' || result.subjectId === selectedSubject)
   ));
 
-  const columns = [
-    { 
-      field: 'studentId', 
-      headerName: 'Student ID', 
-      flex: 1,
-      minWidth: 120,
-      sortable: false, 
-      filterable: false,
-      disableColumnMenu: true 
-    },
-    {
-      field: 'studentName',
-      headerName: 'Student Name',
-      flex: 1,
-      minWidth: 180,
-      sortable: false,
-      filterable: false,
-      disableColumnMenu: true,
-      renderCell: (params) => (
-        <div className="adminresult-student-info">
-          <img src={params.row.studentAvatar} alt={params.row.studentName} className="adminresult-student-avatar" />
-          <div>{params.row.studentName}</div>
-        </div>
-      ),
-    },
-    { 
-      field: 'batch', 
-      headerName: 'Batch', 
-      flex: 1,
-      minWidth: 120,
-      sortable: false, 
-      filterable: false,
-      disableColumnMenu: true 
-    },
-    { 
-      field: 'examName', 
-      headerName: 'Exam', 
-      flex: 1,
-      minWidth: 180,
-      sortable: false, 
-      filterable: false,
-      disableColumnMenu: true 
-    },
-    { 
-      field: 'subjectName', 
-      headerName: 'Subject', 
-      flex: 1,
-      minWidth: 150,
-      sortable: false, 
-      filterable: false,
-      disableColumnMenu: true 
-    },
-    {
-      field: 'marks',
-      headerName: 'Marks',
-      flex: 1,
-      minWidth: 120,
-      sortable: true,
-      filterable: false,
-      disableColumnMenu: true,
-      renderCell: (params) => (
-        <div>{params.row.marksObtained} / {params.row.totalMarks}</div>
-      ),
-    },
-    {
-      field: 'percentage',
-      headerName: 'Percentage',
-      flex: 1,
-      minWidth: 120,
-      sortable: true,
-      filterable: false,
-      disableColumnMenu: true,
-      renderCell: (params) => (
-        <div>{params.row.percentage.toFixed(2)}%</div>
-      ),
-    },
-    { 
-      field: 'grade', 
-      headerName: 'Grade', 
-      flex: 1,
-      minWidth: 100,
-      sortable: true, 
-      filterable: false,
-      disableColumnMenu: true 
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      flex: 1,
-      minWidth: 120,
-      sortable: false,
-      filterable: false,
-      disableColumnMenu: true,
-      renderCell: (params) => (
-        <div className={`adminresult-status-badge adminresult-status-${params.row.status.toLowerCase()}`}>
-          {params.row.status}
-        </div>
-      ),
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      flex: 1,
-      minWidth: 150,
-      sortable: false,
-      filterable: false,
-      disableColumnMenu: true,
-      renderCell: (params) => (
-        <div>
-          <Tooltip title="View Result">
-            <IconButton className="adminresult-action-button" onClick={() => handleViewResult(params.row)}>
-              <Visibility fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Edit Result">
-            <IconButton className="adminresult-action-button" onClick={() => handleEditResult(params.row)}>
-              <Edit fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Download Report">
-            <IconButton className="adminresult-action-button" onClick={handleExport}>
-              <Download fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </div>
-      ),
-    },
-  ];
+  const tableHeaders = ['Student ID','Student Name','Batch','Exam','Subject','Marks','Percentage','Grade','Status','Actions'];
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  };
+  
 
   return (
-    <div className="adminresult-wrapper">
+    <div className="min-h-screen bg-black text-white flex">
       <AdminSidebar />
-      <div className="adminresult-main-content">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <Typography className="adminresult-page-title">Result Management</Typography>
-          <FormControl className="adminresult-batch-select">
-            <InputLabel>Select Batch</InputLabel>
-            <Select value={selectedBatch} onChange={handleBatchChange}>
-              {batches.map(batch => (
-                <MenuItem key={batch} value={batch}>{batch}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </motion.div>
+      <div className="flex-1 p-6 space-y-6">
+        <h1 className="font-comic text-2xl">Result Management</h1>
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-bw-75">Select Batch</label>
+          <select value={selectedBatch} onChange={handleBatchChange} className="bg-black border border-bw-37 rounded px-3 py-2">
+            {batches.map(batch => (
+              <option key={batch} value={batch}>{batch}</option>
+            ))}
+          </select>
+        </div>
 
-        <motion.div className="adminresult-search-filter-container" variants={containerVariants} initial="hidden" animate="visible">
-          <motion.div variants={itemVariants}>
-            <TextField
-              label="Search Student"
-              variant="outlined"
-              value={searchTerm}
-              onChange={handleSearch}
-              InputProps={{ startAdornment: <Search className="adminresult-search-icon" /> }}
-            />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <FormControl className="adminresult-filter-select">
-              <InputLabel>Filter by Exam</InputLabel>
-              <Select value={selectedExam} onChange={handleExamChange}>
-                <MenuItem value="">All Exams</MenuItem>
-                {mockExams.map(exam => <MenuItem key={exam.id} value={exam.id}>{exam.name}</MenuItem>)}
-              </Select>
-            </FormControl>
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <FormControl className="adminresult-filter-select">
-              <InputLabel>Filter by Subject</InputLabel>
-              <Select value={selectedSubject} onChange={handleSubjectChange}>
-                <MenuItem value="">All Subjects</MenuItem>
-                {mockSubjects.map(subject => <MenuItem key={subject.id} value={subject.id}>{subject.name}</MenuItem>)}
-              </Select>
-            </FormControl>
-          </motion.div>
-        </motion.div>
-
-        <motion.div variants={itemVariants} initial="hidden" animate="visible">
-          <div className="adminresult-table-container">
-            <div className="adminresult-table-header">
-              <div className="adminresult-table-title">Student Results</div>
-              <Button variant="contained" startIcon={<Download />} onClick={handleExport}>
-                Export Results
-              </Button>
-            </div>
-            <div className="adminresult-data-grid-container">
-              <DataGrid
-                rows={filteredResults}
-                columns={columns}
-                initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
-                pageSizeOptions={[5, 10, 25]}
-                disableRowSelectionOnClick
-                disableColumnMenu
-                sx={{
-                  '& .MuiDataGrid-root': {
-                    width: '100%',
-                  },
-                  '& .MuiDataGrid-main': {
-                    overflowX: 'auto',
-                  },
-                  '& .MuiDataGrid-virtualScroller': {
-                    overflowY: 'auto !important',
-                    maxHeight: '400px',
-                  },
-                }}
-              />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="border border-bw-37 rounded-lg bg-black text-white p-4">
+            <label className="block text-sm text-bw-75 mb-1">Search Student</label>
+            <div className="flex items-center gap-2 border border-bw-37 rounded px-3 py-2">
+              <SearchIcon size={16} className="text-bw-62" />
+              <input value={searchTerm} onChange={handleSearch} placeholder="Name or ID" className="bg-black text-white w-full focus:outline-none" />
             </div>
           </div>
-        </motion.div>
+          <div className="border border-bw-37 rounded-lg bg-black text-white p-4">
+            <label className="block text-sm text-bw-75 mb-1">Filter by Exam</label>
+            <select value={selectedExam} onChange={handleExamChange} className="bg-black border border-bw-37 rounded px-3 py-2 w-full">
+              <option value="">All Exams</option>
+              {mockExams.map(exam => <option key={exam.id} value={exam.id}>{exam.name}</option>)}
+            </select>
+          </div>
+          <div className="border border-bw-37 rounded-lg bg-black text-white p-4">
+            <label className="block text-sm text-bw-75 mb-1">Filter by Subject</label>
+            <select value={selectedSubject} onChange={handleSubjectChange} className="bg-black border border-bw-37 rounded px-3 py-2 w-full">
+              <option value="">All Subjects</option>
+              {mockSubjects.map(subject => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
+            </select>
+          </div>
+        </div>
 
-        <motion.div variants={itemVariants} initial="hidden" animate="visible">
-          <Typography className="adminresult-section-title">Result Analytics</Typography>
-          <div className="adminresult-analytics-container">
-            <motion.div className="adminresult-chart-container" variants={itemVariants}>
-              <div className="adminresult-chart-title">Performance Comparison</div>
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-comic text-lg">Student Results</div>
+            <Button onClick={handleExport}><DownloadIcon size={16} className="mr-2" />Export Results</Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left border border-bw-37 rounded">
+              <thead className="bg-bw-12">
+                <tr>
+                  {tableHeaders.map((h) => (<th key={h} className="px-3 py-2">{h}</th>))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredResults.slice(0, 25).map((row) => (
+                  <tr key={row.id} className="hover:bg-bw-12 transition-colors">
+                    <td className="px-3 py-2">{row.studentId}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <img src={row.studentAvatar} alt={row.studentName} className="w-8 h-8 rounded-full" />
+                        <span>{row.studentName}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">{row.batch}</td>
+                    <td className="px-3 py-2">{row.examName}</td>
+                    <td className="px-3 py-2">{row.subjectName}</td>
+                    <td className="px-3 py-2">{row.marksObtained} / {row.totalMarks}</td>
+                    <td className="px-3 py-2">{row.percentage.toFixed(2)}%</td>
+                    <td className="px-3 py-2">{row.grade}</td>
+                    <td className="px-3 py-2"><span className={`px-2 py-1 border rounded text-sm ${row.status === 'Pass' ? 'border-bw-75' : 'border-bw-37'}`}>{row.status}</span></td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" onClick={() => handleViewResult(row)}><Eye size={16} /></Button>
+                        <Button variant="ghost" onClick={() => handleEditResult(row)}><Pencil size={16} /></Button>
+                        <Button variant="ghost" onClick={handleExport}><DownloadIcon size={16} /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <h2 className="font-comic text-lg mb-3">Result Analytics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="p-4">
+              <div className="font-comic mb-2">Performance Comparison</div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={mockPerformanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#616161" />
+                  <XAxis dataKey="name" stroke="#BFBFBF" />
+                  <YAxis stroke="#BFBFBF" />
                   <RechartsTooltip />
                   <Legend />
-                  <Bar dataKey="Mathematics" fill="#ff4d4d" />
-                  <Bar dataKey="Science" fill="#f9cb28" />
-                  <Bar dataKey="English" fill="#4cd964" />
-                  <Bar dataKey="History" fill="#5ac8fa" />
-                  <Bar dataKey="ComputerScience" fill="#007aff" />
+                  <Bar dataKey="Mathematics" fill="#DEDEDE" />
+                  <Bar dataKey="Science" fill="#BFBFBF" />
+                  <Bar dataKey="English" fill="#9E9E9E" />
+                  <Bar dataKey="History" fill="#808080" />
+                  <Bar dataKey="ComputerScience" fill="#616161" />
                 </BarChart>
               </ResponsiveContainer>
-            </motion.div>
-            <motion.div className="adminresult-chart-container" variants={itemVariants}>
-              <div className="adminresult-chart-title">Performance Trend</div>
+            </Card>
+            <Card className="p-4">
+              <div className="font-comic mb-2">Performance Trend</div>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={mockTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#616161" />
+                  <XAxis dataKey="month" stroke="#BFBFBF" />
+                  <YAxis stroke="#BFBFBF" />
                   <RechartsTooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="average" stroke="#5ac8fa" strokeWidth={3} />
+                  <Line type="monotone" dataKey="average" stroke="#DEDEDE" strokeWidth={3} />
                 </LineChart>
               </ResponsiveContainer>
-            </motion.div>
+            </Card>
           </div>
-        </motion.div>
+        </Card>
 
-        <motion.div className="adminresult-grid-container" variants={containerVariants} initial="hidden" animate="visible">
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-              <motion.div className="adminresult-leaderboard-container" variants={itemVariants}>
-                <div className="adminresult-leaderboard-title">Top Performing Students</div>
-                <table className="adminresult-leaderboard-table">
-                  <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Student</th>
-                      <th>Batch</th>
-                      <th>Subject</th>
-                      <th>Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredByBatch.sort((a, b) => b.percentage - a.percentage).slice(0, 5).map((result, index) => (
-                      <tr key={result.id}>
-                        <td className={`adminresult-leaderboard-rank adminresult-rank-${index + 1}`}>{index + 1}</td>
-                        <td>
-                          <div className="adminresult-student-info">
-                            <img src={result.studentAvatar} alt={result.studentName} className="adminresult-student-avatar" />
-                            <div>
-                              <div className="adminresult-student-name">{result.studentName}</div>
-                              <div className="adminresult-student-id">{result.studentId}</div>
-                            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-4 md:col-span-2">
+            <div className="font-comic mb-2">Top Performing Students</div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left border border-bw-37 rounded">
+                <thead className="bg-bw-12">
+                  <tr>
+                    {['Rank','Student','Batch','Subject','Score'].map(h => <th key={h} className="px-3 py-2">{h}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredByBatch.sort((a, b) => b.percentage - a.percentage).slice(0, 5).map((result, index) => (
+                    <tr key={result.id} className="hover:bg-bw-12 transition-colors">
+                      <td className="px-3 py-2">{index + 1}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <img src={result.studentAvatar} alt={result.studentName} className="w-8 h-8 rounded-full" />
+                          <div>
+                            <div>{result.studentName}</div>
+                            <div className="text-bw-75 text-xs">{result.studentId}</div>
                           </div>
-                        </td>
-                        <td>{result.batch}</td>
-                        <td>{result.subjectName}</td>
-                        <td className="adminresult-student-score">{result.percentage.toFixed(2)}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </motion.div>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <motion.div className="adminresult-chart-container" variants={itemVariants}>
-                <div className="adminresult-chart-title">Grade Distribution</div>
-                <div className="adminresult-pie-chart-wrapper">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={mockDistributionData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={true}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent, cx, cy, midAngle, innerRadius, outerRadius, index }) => {
-                          const radius = outerRadius + 20;
-                          const RADIAN = Math.PI / 180;
-                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                          return (
-                            <text
-                              x={x}
-                              y={y}
-                              fill={COLORS[index % COLORS.length]}
-                              textAnchor={x > cx ? 'start' : 'end'}
-                              dominantBaseline="central"
-                              fontSize={12}
-                            >
-                              {`${name}: ${(percent * 100).toFixed(0)}%`}
-                            </text>
-                          );
-                        }}
-                      >
-                        {mockDistributionData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </motion.div>
-            </Grid>
-          </Grid>
-        </motion.div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">{result.batch}</td>
+                      <td className="px-3 py-2">{result.subjectName}</td>
+                      <td className="px-3 py-2">{result.percentage.toFixed(2)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="font-comic mb-2">Grade Distribution</div>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={mockDistributionData} cx="50%" cy="50%" labelLine outerRadius={80} dataKey="value">
+                  {mockDistributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </Card>
+        </div>
 
-        <motion.div variants={itemVariants} initial="hidden" animate="visible">
-          <div className="adminresult-upload-section">
-            <div className="adminresult-upload-title">Bulk Result Upload</div>
-            <div className="adminresult-upload-dropzone" onClick={() => fileInputRef.current.click()}>
-              {loading ? <CircularProgress /> : (
-                <>
-                  <CloudUpload className="adminresult-upload-icon" />
-                  <div className="adminresult-upload-text">Drag & Drop CSV file here or click to browse</div>
-                  <div className="adminresult-upload-subtext">Supported format: CSV with columns for Student ID, Subject, Marks, etc.</div>
-                </>
+        <Card className="p-4">
+          <div className="font-comic mb-2">Bulk Result Upload</div>
+          <div className="border border-bw-37 rounded p-6 text-center cursor-pointer" onClick={() => fileInputRef.current.click()}>
+            {loading ? <Skeleton height="2rem" /> : (
+              <>
+                <CloudUploadIcon className="mx-auto" />
+                <div className="mt-2">Drag & Drop CSV file here or click to browse</div>
+                <div className="text-bw-75 text-sm">Supported format: CSV with columns for Student ID, Subject, Marks, etc.</div>
+              </>
+            )}
+            <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleUpload} />
+          </div>
+        </Card>
+
+        {modalOpen && selectedResult && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+            <div className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-comic text-lg">Student Result Details</div>
+                <button className="border border-bw-37 rounded p-1" onClick={handleCloseModal}><X /></button>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <img src={selectedResult.studentAvatar} alt={selectedResult.studentName} className="w-16 h-16 rounded-full" />
+                <div>
+                  <div className="font-comic">{selectedResult.studentName}</div>
+                  <div className="text-bw-75 text-sm">ID: {selectedResult.studentId} • Batch: {selectedResult.batch} • Exam: {selectedResult.examName} • Date: {selectedResult.date}</div>
+                </div>
+              </div>
+              <div className="flex gap-2 mb-3">
+                <Button variant={tabValue === 0 ? 'primary' : 'outline'} onClick={(e) => setTabValue(0)}>Result Summary</Button>
+                <Button variant={tabValue === 1 ? 'primary' : 'outline'} onClick={(e) => setTabValue(1)}>Performance Analysis</Button>
+              </div>
+              {tabValue === 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="p-4">
+                    <div className="font-comic mb-2">{selectedResult.subjectName}</div>
+                    <div className="text-3xl font-comic">{selectedResult.marksObtained} <span className="text-bw-75 text-xl">/ {selectedResult.totalMarks}</span></div>
+                    <div className="mt-2 text-bw-75">{selectedResult.percentage.toFixed(2)}%</div>
+                  </Card>
+                  <Card className="p-4">
+                    <div className="font-comic mb-2">Grade</div>
+                    <div className="text-2xl">{selectedResult.grade}</div>
+                  </Card>
+                  <Card className="p-4">
+                    <div className="font-comic mb-2">Status</div>
+                    <div><span className={`px-2 py-1 border rounded ${selectedResult.status === 'Pass' ? 'border-bw-75' : 'border-bw-37'}`}>{selectedResult.status}</span></div>
+                  </Card>
+                  <Card className="p-4">
+                    <div className="font-comic mb-2">Remarks</div>
+                    <div>{selectedResult.remarks}</div>
+                  </Card>
+                  <div className="md:col-span-2 flex justify-end gap-2">
+                    <Button variant="outline"><Printer size={16} className="mr-2" />Print Report Card</Button>
+                    <Button><DownloadIcon size={16} className="mr-2" />Download PDF</Button>
+                  </div>
+                </div>
               )}
-              <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleUpload} />
+              {tabValue === 1 && (
+                <div className="space-y-4">
+                  <div>
+                    <div className="font-comic mb-2">Performance Comparison with Class Average</div>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={[{ name: selectedResult.subjectName, Student: selectedResult.percentage, ClassAverage: 72 }]}> 
+                        <CartesianGrid strokeDasharray="3 3" stroke="#616161" />
+                        <XAxis dataKey="name" stroke="#BFBFBF" />
+                        <YAxis stroke="#BFBFBF" />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Bar dataKey="Student" fill="#DEDEDE" />
+                        <Bar dataKey="ClassAverage" fill="#9E9E9E" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div>
+                    <div className="font-comic mb-2">Performance History</div>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={[
+                        { month: 'Jan', score: 65 },
+                        { month: 'Feb', score: 70 },
+                        { month: 'Mar', score: 68 },
+                        { month: 'Apr', score: 75 },
+                        { month: 'May', score: selectedResult.percentage },
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#616161" />
+                        <XAxis dataKey="month" stroke="#BFBFBF" />
+                        <YAxis stroke="#BFBFBF" />
+                        <RechartsTooltip />
+                        <Line type="monotone" dataKey="score" stroke="#DEDEDE" strokeWidth={3} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </motion.div>
+        )}
 
-        {/* View Result Modal */}
-        <Modal open={modalOpen} onClose={handleCloseModal}>
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '90%',
-              maxWidth: '800px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-          >
-            <motion.div
-              className="adminresult-modal-container"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="adminresult-modal-header">
-                <div className="adminresult-modal-title">Student Result Details</div>
-                <IconButton className="adminresult-close-button" onClick={handleCloseModal}>
-                  <Close />
-                </IconButton>
+        {editModalOpen && selectedResult && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+            <div className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-comic text-lg">Edit Student Result</div>
+                <button className="border border-bw-37 rounded p-1" onClick={handleCloseEditModal}><X /></button>
               </div>
-              {selectedResult && (
-                <>
-                  <div className="adminresult-student-profile">
-                    <img src={selectedResult.studentAvatar} alt={selectedResult.studentName} className="adminresult-profile-avatar" />
-                    <div className="adminresult-profile-info">
-                      <div className="adminresult-profile-name">{selectedResult.studentName}</div>
-                      <div className="adminresult-profile-details">
-                        <div className="adminresult-profile-detail">ID: {selectedResult.studentId}</div>
-                        <div className="adminresult-profile-detail">Batch: {selectedResult.batch}</div>
-                        <div className="adminresult-profile-detail">Exam: {selectedResult.examName}</div>
-                        <div className="adminresult-profile-detail">Date: {selectedResult.date}</div>
-                      </div>
+              <div className="flex items-center gap-3 mb-4">
+                <img src={selectedResult.studentAvatar} alt={selectedResult.studentName} className="w-16 h-16 rounded-full" />
+                <div>
+                  <div className="font-comic">{selectedResult.studentName}</div>
+                  <div className="text-bw-75 text-sm">ID: {selectedResult.studentId} • Batch: {selectedResult.batch} • Exam: {selectedResult.examName} • Subject: {selectedResult.subjectName}</div>
+                </div>
+              </div>
+              {loading ? (
+                <div className="py-8"><Skeleton height="2rem" /></div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-bw-75 mb-1">Marks Obtained</label>
+                      <input type="number" value={editForm.marksObtained || ''} onChange={(e) => setEditForm({ ...editForm, marksObtained: parseInt(e.target.value) })} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-bw-75 mb-1">Total Marks</label>
+                      <input type="number" value={editForm.totalMarks || ''} onChange={(e) => setEditForm({ ...editForm, totalMarks: parseInt(e.target.value) })} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
                     </div>
                   </div>
-                  <Tabs value={tabValue} onChange={handleTabChange}>
-                    <Tab label="Result Summary" />
-                    <Tab label="Performance Analysis" />
-                  </Tabs>
-                  {tabValue === 0 && (
-                    <div className="adminresult-subject-scores">
-                      <div className="adminresult-subject-score-item">
-                        <div className="adminresult-subject-name">{selectedResult.subjectName}</div>
-                        <div className="adminresult-subject-marks">
-                          <span className="adminresult-marks-value">{selectedResult.marksObtained}</span>
-                          <span className="adminresult-marks-total">/ {selectedResult.totalMarks}</span>
-                          <span className={`adminresult-marks-percentage ${selectedResult.percentage < 40 ? 'adminresult-low' : ''}`}>
-                            {selectedResult.percentage.toFixed(2)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="adminresult-subject-score-item">
-                        <div className="adminresult-subject-name">Grade</div>
-                        <div className="adminresult-subject-marks">
-                          <span className="adminresult-marks-value">{selectedResult.grade}</span>
-                        </div>
-                      </div>
-                      <div className="adminresult-subject-score-item">
-                        <div className="adminresult-subject-name">Status</div>
-                        <div className="adminresult-subject-marks">
-                          <span className={`adminresult-status-badge adminresult-status-${selectedResult.status.toLowerCase()}`}>
-                            {selectedResult.status}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="adminresult-subject-score-item">
-                        <div className="adminresult-subject-name">Remarks</div>
-                        <div className="adminresult-subject-marks">
-                          <span className="adminresult-marks-value">{selectedResult.remarks}</span>
-                        </div>
-                      </div>
-                      <div className="adminresult-modal-actions">
-                        <Button variant="outlined" startIcon={<Print />}>Print Report Card</Button>
-                        <Button variant="contained" startIcon={<Download />}>Download PDF</Button>
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-bw-75 mb-1">Grade</label>
+                      <select value={editForm.grade || ''} onChange={(e) => setEditForm({ ...editForm, grade: e.target.value })} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75">
+                        {['A+', 'A', 'B', 'C', 'D', 'E', 'F'].map(grade => (<option key={grade} value={grade}>{grade}</option>))}
+                      </select>
                     </div>
-                  )}
-                  {tabValue === 1 && (
-                    <div className="adminresult-performance-analysis">
-                      <Typography className="adminresult-performance-subtitle">Performance Comparison with Class Average</Typography>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={[{ name: selectedResult.subjectName, Student: selectedResult.percentage, ClassAverage: 72 }]}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <RechartsTooltip />
-                          <Legend />
-                          <Bar dataKey="Student" fill="#a5b4fc" />
-                          <Bar dataKey="ClassAverage" fill="rgba(255, 255, 255, 0.3)" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                      <Typography className="adminresult-performance-subtitle">Performance History</Typography>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={[
-                          { month: 'Jan', score: 65 },
-                          { month: 'Feb', score: 70 },
-                          { month: 'Mar', score: 68 },
-                          { month: 'Apr', score: 75 },
-                          { month: 'May', score: selectedResult.percentage },
-                        ]}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <RechartsTooltip />
-                          <Line type="monotone" dataKey="score" stroke="#a5b4fc" strokeWidth={3} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </>
-              )}
-            </motion.div>
-          </Box>
-        </Modal>
-
-        {/* Edit Result Modal */}
-        <Modal open={editModalOpen} onClose={handleCloseEditModal}>
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '90%',
-              maxWidth: '800px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-          >
-            <motion.div
-              className="adminresult-modal-container"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="adminresult-modal-header">
-                <div className="adminresult-modal-title">Edit Student Result</div>
-                <IconButton className="adminresult-close-button" onClick={handleCloseEditModal}>
-                  <Close />
-                </IconButton>
-              </div>
-              {selectedResult && (
-                <>
-                  <div className="adminresult-student-profile">
-                    <img src={selectedResult.studentAvatar} alt={selectedResult.studentName} className="adminresult-profile-avatar" />
-                    <div className="adminresult-profile-info">
-                      <div className="adminresult-profile-name">{selectedResult.studentName}</div>
-                      <div className="adminresult-profile-details">
-                        <div className="adminresult-profile-detail">ID: {selectedResult.studentId}</div>
-                        <div className="adminresult-profile-detail">Batch: {selectedResult.batch}</div>
-                        <div className="adminresult-profile-detail">Exam: {selectedResult.examName}</div>
-                        <div className="adminresult-profile-detail">Subject: {selectedResult.subjectName}</div>
-                      </div>
+                    <div>
+                      <label className="block text-sm text-bw-75 mb-1">Status</label>
+                      <select value={editForm.status || ''} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75">
+                        <option value="Pass">Pass</option>
+                        <option value="Fail">Fail</option>
+                      </select>
                     </div>
                   </div>
-                  {loading ? (
-                    <Box className="adminresult-loading-container">
-                      <CircularProgress />
-                    </Box>
-                  ) : (
-                    <div className="adminresult-edit-form-container">
-                      <div className="adminresult-form-row">
-                        <TextField
-                          label="Marks Obtained"
-                          type="number"
-                          value={editForm.marksObtained || ''}
-                          onChange={(e) => setEditForm({ ...editForm, marksObtained: parseInt(e.target.value) })}
-                          className="adminresult-form-field"
-                          InputProps={{ inputProps: { min: 0, max: editForm.totalMarks } }}
-                        />
-                        <TextField
-                          label="Total Marks"
-                          type="number"
-                          value={editForm.totalMarks || ''}
-                          onChange={(e) => setEditForm({ ...editForm, totalMarks: parseInt(e.target.value) })}
-                          className="adminresult-form-field"
-                          InputProps={{ inputProps: { min: 1 } }}
-                        />
-                      </div>
-                      <div className="adminresult-form-row">
-                        <FormControl className="adminresult-form-field">
-                          <InputLabel>Grade</InputLabel>
-                          <Select
-                            value={editForm.grade || ''}
-                            onChange={(e) => setEditForm({ ...editForm, grade: e.target.value })}
-                          >
-                            {['A+', 'A', 'B', 'C', 'D', 'E', 'F'].map(grade => (
-                              <MenuItem key={grade} value={grade}>{grade}</MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl className="adminresult-form-field">
-                          <InputLabel>Status</InputLabel>
-                          <Select
-                            value={editForm.status || ''}
-                            onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                          >
-                            <MenuItem value="Pass">Pass</MenuItem>
-                            <MenuItem value="Fail">Fail</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </div>
-                      <TextField
-                        label="Remarks"
-                        multiline
-                        rows={3}
-                        value={editForm.remarks || ''}
-                        onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })}
-                        className="adminresult-form-field adminresult-full-width"
-                      />
-                      <div className="adminresult-modal-actions">
-                        <Button variant="outlined" startIcon={<Delete />} onClick={handleDeleteResult}>
-                          Delete Result
-                        </Button>
-                        <Button variant="contained" startIcon={<Save />} onClick={handleSaveEdit}>
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
+                  <div>
+                    <label className="block text-sm text-bw-75 mb-1">Remarks</label>
+                    <textarea rows={3} value={editForm.remarks || ''} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={handleDeleteResult}><Trash2 size={16} className="mr-2" />Delete Result</Button>
+                    <Button onClick={handleSaveEdit}><SaveIcon size={16} className="mr-2" />Save Changes</Button>
+                  </div>
+                </div>
               )}
-            </motion.div>
-          </Box>
-        </Modal>
+            </div>
+          </div>
+        )}
 
-        <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+        {banner.open && (
+          <div className={`border rounded p-3 ${banner.type === 'success' ? 'border-bw-75' : 'border-bw-37'}`}>{banner.message}</div>
+        )}
       </div>
     </div>
   );

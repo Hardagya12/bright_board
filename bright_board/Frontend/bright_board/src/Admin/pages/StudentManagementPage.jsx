@@ -1,10 +1,8 @@
 // StudentManagementPage.jsx
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Edit, Delete, Visibility, Email, Download, Group } from '@mui/icons-material';
+import { Eye, Pencil, Trash2, Mail as MailIcon, Download as DownloadIcon, Users as GroupIcon } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
-import './StudentManagementPage.css';
 
 // Mock Data
 const mockData = {
@@ -35,12 +33,7 @@ const mockData = {
 };
 
 // Animation Variants
-const animationVariants = {
-  card: { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, hover: { scale: 1.05, transition: { duration: 0.3 } } },
-  tableRow: { initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 } },
-  modal: { initial: { opacity: 0 }, animate: { opacity: 1 } },
-  drawer: { initial: { x: '100%' }, animate: { x: 0 }, exit: { x: '100%' } }
-};
+const animationVariants = {};
 
 // Data Fetching Service
 const fetchService = {
@@ -168,48 +161,37 @@ const StudentManagementPage = () => {
   };
 
   const OverviewSection = () => (
-    <div className="overview-grid">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {overview && [
         { title: 'Total Students', value: overview.totalStudents },
         { title: 'Active Students', value: overview.activeStudents },
         { title: 'Inactive Students', value: overview.inactiveStudents },
         { title: 'Growth Trend', value: `${overview.growthTrend}%` }
       ].map((item, index) => (
-        <motion.div
-          key={index}
-          className="overview-card"
-          variants={animationVariants.card}
-          initial="initial"
-          animate="animate"
-          whileHover="hover"
-        >
-          <div className="card-content">
-            <Group sx={{ color: '#10b981', fontSize: '2.5rem' }} />
+        <div key={index} className="border border-bw-37 rounded-lg bg-black text-white p-4 hover:-translate-y-1 transition-transform">
+          <div className="flex items-center gap-3">
+            <GroupIcon className="w-8 h-8" />
             <div>
-              <h3>{item.title}</h3>
-              <p className="overview-value">{item.value}</p>
+              <h3 className="font-comic text-lg">{item.title}</h3>
+              <p className="text-2xl font-comic">{item.value}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );
 
   const FilterSection = () => (
-    <div className="filters-section">
-      <input
-        type="text"
-        placeholder="Search Students"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="search-input"
-      />
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="border border-bw-37 rounded px-3 py-2 flex items-center gap-2">
+        <input type="text" placeholder="Search Students" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-black text-white w-full focus:outline-none" />
+      </div>
       {['batch', 'course', 'attendance', 'status'].map((filter) => (
         <select
           key={filter}
           value={filters[filter]}
           onChange={(e) => setFilters({ ...filters, [filter]: e.target.value })}
-          className="filter-select"
+          className="bg-black border border-bw-37 rounded px-3 py-2"
         >
           <option value="">All {filter.charAt(0).toUpperCase() + filter.slice(1)}s</option>
           {filter === 'batch' && ['Batch A', 'Batch B', 'Batch C'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -222,61 +204,48 @@ const StudentManagementPage = () => {
   );
 
   const StudentTable = () => (
-    <div className="table-container">
-      <table className="student-table">
-        <thead>
+    <div className="border border-bw-37 rounded-lg">
+      <table className="min-w-full text-left">
+        <thead className="bg-bw-12">
           <tr>
             {['Name', 'Email', 'Phone', 'Course', 'Attendance %', 'Status', 'Actions'].map(header => (
-              <th key={header}>{header}</th>
+              <th key={header} className="px-3 py-2">{header}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {isLoading ? (
-            <tr><td colSpan="7">Loading...</td></tr>
+            <tr><td className="px-3 py-2" colSpan="7">Loading...</td></tr>
           ) : getPaginatedStudents().length > 0 ? (
             getPaginatedStudents().map((student) => (
-              <motion.tr
-                key={student.id}
-                variants={animationVariants.tableRow}
-                initial="initial"
-                animate="animate"
-              >
-                <td>{student.name}</td>
-                <td>{student.email}</td>
-                <td>{student.phone}</td>
-                <td>{student.course}</td>
-                <td>{student.attendance}%</td>
-                <td>
-                  <span className={`status-chip ${student.status.toLowerCase()}`}>
-                    {student.status}
-                  </span>
+              <tr key={student.id} className="hover:bg-bw-12 transition-colors">
+                <td className="px-3 py-2">{student.name}</td>
+                <td className="px-3 py-2">{student.email}</td>
+                <td className="px-3 py-2">{student.phone}</td>
+                <td className="px-3 py-2">{student.course}</td>
+                <td className="px-3 py-2">{student.attendance}%</td>
+                <td className="px-3 py-2"><span className={`px-2 py-1 border rounded text-sm ${student.status === 'Active' ? 'border-bw-75' : 'border-bw-37'}`}>{student.status}</span></td>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleViewProfile(student)} className="border border-bw-37 rounded p-1"><Eye size={16} /></button>
+                    <button onClick={() => handleEdit(student)} className="border border-bw-37 rounded p-1"><Pencil size={16} /></button>
+                    <button onClick={() => handleDelete(student)} className="border border-bw-37 rounded p-1"><Trash2 size={16} /></button>
+                  </div>
                 </td>
-                <td className="actions">
-                  <button onClick={() => handleViewProfile(student)} className="action-button view">
-                    <Visibility />
-                  </button>
-                  <button onClick={() => handleEdit(student)} className="action-button edit">
-                    <Edit />
-                  </button>
-                  <button onClick={() => handleDelete(student)} className="action-button delete">
-                    <Delete />
-                  </button>
-                </td>
-              </motion.tr>
+              </tr>
             ))
           ) : (
-            <tr><td colSpan="7">No students found</td></tr>
+            <tr><td className="px-3 py-2" colSpan="7">No students found</td></tr>
           )}
         </tbody>
       </table>
       {filteredStudents.length > 0 && (
-        <div className="pagination">
+        <div className="flex items-center gap-2 p-3">
           {Array(Math.ceil(filteredStudents.length / rowsPerPage)).fill().map((_, i) => (
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={page === i + 1 ? 'active' : ''}
+              className={`px-2 py-1 border rounded ${page === i + 1 ? 'border-bw-75' : 'border-bw-37'}`}
             >
               {i + 1}
             </button>
@@ -288,71 +257,62 @@ const StudentManagementPage = () => {
 
   const ChartsSection = () => (
     chartData && (
-      <div className="charts-grid">
-        <motion.div className="chart-card" variants={animationVariants.card} initial="initial" animate="animate">
-          <h3>Attendance Breakdown</h3>
-          <PieChart width={300} height={250}>
-            <Pie
-              data={chartData.attendanceData}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={90}
-              dataKey="value"
-              label
-            >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="border border-bw-37 rounded p-4">
+          <h3 className="font-comic mb-2">Attendance Breakdown</h3>
+          <PieChart width={320} height={250}>
+            <Pie data={chartData.attendanceData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" label>
               {chartData.attendanceData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={chartData.colors[index]} />
+                <Cell key={`cell-${index}`} fill={["#DEDEDE","#BFBFBF","#9E9E9E"][index]} />
               ))}
             </Pie>
             <Tooltip />
           </PieChart>
-        </motion.div>
-        <motion.div className="chart-card" variants={animationVariants.card} initial="initial" animate="animate">
-          <h3>Performance Trends</h3>
-          <LineChart width={300} height={250} data={chartData.progressData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
+        </div>
+        <div className="border border-bw-37 rounded p-4">
+          <h3 className="font-comic mb-2">Performance Trends</h3>
+          <LineChart width={320} height={250} data={chartData.progressData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#616161" />
+            <XAxis dataKey="month" stroke="#BFBFBF" />
+            <YAxis stroke="#BFBFBF" />
             <Tooltip />
-            <Line type="monotone" dataKey="grade" stroke="#10b981" strokeWidth={2} />
+            <Line type="monotone" dataKey="grade" stroke="#DEDEDE" strokeWidth={2} />
           </LineChart>
-        </motion.div>
+        </div>
       </div>
     )
   );
 
   return (
-    <div className="student-management-container">
+    <div className="min-h-screen bg-black text-white flex">
       <AdminSidebar />
-      <main className="main-content">
-        <h1>Student Management</h1>
+      <main className="flex-1 p-6 space-y-6">
+        <h1 className="font-comic text-2xl">Student Management</h1>
         <OverviewSection />
         <FilterSection />
         <StudentTable />
         <ChartsSection />
-        <div className="bulk-actions">
-          <button onClick={() => handleBulkAction('Send Reminder')}>
-            <Email sx={{ color: '#fff', marginRight: '0.5rem' }} /> Send Reminder
+        <div className="flex items-center gap-2">
+          <button onClick={() => handleBulkAction('Send Reminder')} className="border border-bw-37 rounded px-3 py-2 flex items-center gap-2">
+            <MailIcon size={16} /> Send Reminder
           </button>
-          <button onClick={() => handleBulkAction('Export Data')}>
-            <Download sx={{ color: '#fff', marginRight: '0.5rem' }} /> Export Data
+          <button onClick={() => handleBulkAction('Export Data')} className="border border-bw-37 rounded px-3 py-2 flex items-center gap-2">
+            <DownloadIcon size={16} /> Export Data
           </button>
         </div>
 
         {editModalOpen && (
-          <motion.div className="modal" variants={animationVariants.modal} initial="initial" animate="animate">
-            <div className="modal-content modal-scrollable">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+            <div className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-xl">
               <h2>Edit Student</h2>
-              <form className="edit-form">
+              <form className="space-y-3">
                 <div className="form-group">
                   <label>Name</label>
                   <input
                     type="text"
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    required
-                  />
+                    required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
                 </div>
                 <div className="form-group">
                   <label>Email</label>
@@ -360,8 +320,7 @@ const StudentManagementPage = () => {
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    required
-                  />
+                    required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
                 </div>
                 <div className="form-group">
                   <label>Phone</label>
@@ -369,16 +328,14 @@ const StudentManagementPage = () => {
                     type="text"
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    required
-                  />
+                    required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
                 </div>
                 <div className="form-group">
                   <label>Course</label>
                   <select
                     value={editForm.course}
                     onChange={(e) => setEditForm({ ...editForm, course: e.target.value })}
-                    required
-                  >
+                    required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75">
                     <option value="">Select Course</option>
                     {['CS101', 'ME201', 'EE301'].map(course => (
                       <option key={course} value={course}>{course}</option>
@@ -393,16 +350,14 @@ const StudentManagementPage = () => {
                     onChange={(e) => setEditForm({ ...editForm, attendance: parseInt(e.target.value) })}
                     min="0"
                     max="100"
-                    required
-                  />
+                    required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
                 </div>
                 <div className="form-group">
                   <label>Status</label>
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                    required
-                  >
+                    required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75">
                     <option value="">Select Status</option>
                     {['Active', 'Inactive'].map(status => (
                       <option key={status} value={status}>{status}</option>
@@ -414,8 +369,7 @@ const StudentManagementPage = () => {
                   <select
                     value={editForm.batch}
                     onChange={(e) => setEditForm({ ...editForm, batch: e.target.value })}
-                    required
-                  >
+                    required className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75">
                     <option value="">Select Batch</option>
                     {['Batch A', 'Batch B', 'Batch C'].map(batch => (
                       <option key={batch} value={batch}>{batch}</option>
@@ -423,37 +377,31 @@ const StudentManagementPage = () => {
                   </select>
                 </div>
               </form>
-              <div className="modal-actions">
-                <button onClick={() => setEditModalOpen(false)} className="cancel-button">Cancel</button>
-                <button onClick={handleSaveEdit} className="save-button">Save</button>
+              <div className="mt-4 flex justify-end gap-2">
+                <button onClick={() => setEditModalOpen(false)} className="border border-bw-37 rounded px-3 py-2">Cancel</button>
+                <button onClick={handleSaveEdit} className="border border-bw-37 rounded px-3 py-2">Save</button>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {deleteDialogOpen && (
-          <motion.div className="modal" variants={animationVariants.modal} initial="initial" animate="animate">
-            <div className="modal-content">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+            <div className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-md">
               <h2>Confirm Delete</h2>
               <p>Are you sure you want to delete {selectedStudent?.name}?</p>
-              <div className="modal-actions">
-                <button onClick={() => setDeleteDialogOpen(false)} className="cancel-button">Cancel</button>
-                <button onClick={confirmDelete} className="delete-button">Delete</button>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setDeleteDialogOpen(false)} className="border border-bw-37 rounded px-3 py-2">Cancel</button>
+                <button onClick={confirmDelete} className="border border-bw-37 rounded px-3 py-2">Delete</button>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {drawerOpen && (
-          <motion.div
-            className="drawer"
-            variants={animationVariants.drawer}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            <div className="drawer-content">
-              <h2>{selectedStudent?.name}</h2>
+          <div className="fixed inset-0 bg-black/60 flex items-end justify-center">
+            <div className="border-t border-bw-37 bg-black text-white w-full max-w-2xl p-6 rounded-t-lg">
+              <h2 className="font-comic text-xl mb-2">{selectedStudent?.name}</h2>
               <p><strong>ID:</strong> {selectedStudent?.id}</p>
               <p><strong>Email:</strong> {selectedStudent?.email}</p>
               <p><strong>Phone:</strong> {selectedStudent?.phone}</p>
@@ -461,9 +409,9 @@ const StudentManagementPage = () => {
               <p><strong>Attendance:</strong> {selectedStudent?.attendance}%</p>
               <p><strong>Status:</strong> {selectedStudent?.status}</p>
               <p><strong>Batch:</strong> {selectedStudent?.batch}</p>
-              <button onClick={() => setDrawerOpen(false)} className="close-button">Close</button>
+              <button onClick={() => setDrawerOpen(false)} className="mt-3 border border-bw-37 rounded px-3 py-2">Close</button>
             </div>
-          </motion.div>
+          </div>
         )}
       </main>
     </div>

@@ -1,86 +1,34 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paper, Typography, Button, Box } from '@mui/material';
 import { GraduationCap, School, Lightbulb } from 'lucide-react';
-import { motion } from 'framer-motion';
-import './RoleSelection.css';
+import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
 
 const RoleSelection = () => {
   const navigate = useNavigate();
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1, 
-      transition: { 
-        duration: 0.5, 
-        staggerChildren: 0.2 
-      } 
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-  };
-
   return (
-    <div className="role-selection-container">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <Paper className="role-card" elevation={6}>
-          <motion.div variants={itemVariants} className="logo-container">
-            <Lightbulb className="logo" />
-          </motion.div>
-          
-          <motion.div variants={itemVariants}>
-            <Typography variant="h3" component="h1" className="role-title">
-              Welcome to BrightBoard
-            </Typography>
-          </motion.div>
-          
-          <motion.div variants={itemVariants}>
-            <Typography variant="subtitle1" className="role-subtitle">
-              Please select your role to continue
-            </Typography>
-          </motion.div>
-          
-          <div className="role-button-container">
-            <motion.div variants={itemVariants}>
-              <Button 
-                variant="contained"
-                fullWidth
-                className="role-button tutor-button"
-                onClick={() => navigate('/a/signup')}
-                startIcon={<GraduationCap size={24} className="role-icon" />}
-              >
-                I am a Tutor
-              </Button>
-            </motion.div>
-            
-            <motion.div variants={itemVariants}>
-              <Button 
-                variant="contained"
-                fullWidth
-                className="role-button student-button"
-                onClick={() => navigate('/s/signup')}
-                startIcon={<School size={24} className="role-icon" />}
-              >
-                I am a Student
-              </Button>
-            </motion.div>
-          </div>
-          
-          <motion.div variants={itemVariants}>
-            <Typography variant="body2" style={{ color: '#8b95af' }}>
-              Choose the option that best describes your role
-            </Typography>
-          </motion.div>
-        </Paper>
-      </motion.div>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-lg p-8 text-center">
+        <div className="mb-6 flex justify-center">
+          <Lightbulb className="w-16 h-16 text-white" />
+        </div>
+        <h1 className="font-comic text-2xl mb-2">Welcome to BrightBoard</h1>
+        <p className="text-bw-75 mb-8">Please select your role to continue</p>
+
+        <div className="flex flex-col gap-4 mb-6">
+          <Button fullWidth onClick={() => navigate('/a/signup')} className="flex gap-2 justify-center">
+            <GraduationCap size={20} />
+            I am a Tutor
+          </Button>
+          <Button fullWidth variant="outline" onClick={() => navigate('/s/signup')} className="flex gap-2 justify-center">
+            <School size={20} />
+            I am a Student
+          </Button>
+        </div>
+
+        <p className="text-bw-62 text-sm">Choose the option that best describes your role</p>
+      </Card>
     </div>
   );
 };

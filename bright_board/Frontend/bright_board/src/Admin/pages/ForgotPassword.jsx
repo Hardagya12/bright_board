@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import Joi from 'joi';
 import { Mail, Key, ArrowLeft } from 'lucide-react';
-import './Signin.css';
 
 // Validation schemas
 const emailSchema = Joi.string().email({ tlds: false }).required().messages({
@@ -144,130 +144,56 @@ const ForgotPasswordPage = () => {
   };
 
   // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.5, staggerChildren: 0.1 } }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-  };
+  
 
   return (
-    <div className="signin-container">
-      <motion.div 
-        className="form-container"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div 
-          className="back-link"
-          variants={itemVariants}
-        >
-          <Link to="/" className="back-button">
-            <ArrowLeft size={16} />
-            <span>Back to Login</span>
-          </Link>
-        </motion.div>
-        
-        <motion.h1 
-          className="form-title"
-          variants={itemVariants}
-        >
-          {isOtpVerified 
-            ? 'Verification Successful' 
-            : (isOtpSent ? 'Verify OTP' : 'Forgot Password')}
-        </motion.h1>
-        
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <Card className="w-full max-w-md p-6">
+        <div className="mb-3">
+          <Link to="/" className="text-bw-75 text-sm hover:text-white flex items-center gap-2"><ArrowLeft size={16} /> Back to Login</Link>
+        </div>
+        <h1 className="font-comic text-2xl mb-2">
+          {isOtpVerified ? 'Verification Successful' : (isOtpSent ? 'Verify OTP' : 'Forgot Password')}
+        </h1>
         {statusMessage && (
-          <motion.div 
-            className={`status-message ${isOtpVerified ? 'success' : ''}`}
-            variants={itemVariants}
-          >
-            {statusMessage}
-          </motion.div>
+          <div className={`border rounded p-3 mb-3 ${isOtpVerified ? 'border-bw-75' : 'border-bw-37'}`}>{statusMessage}</div>
         )}
 
-        {/* Email Input Form */}
         {!isOtpSent && !isOtpVerified && (
-          <form onSubmit={handleRequestOtp}>
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Mail className="input-icon" size={20} />
-              <input 
-                type="email"
-                placeholder="Enter your registered email"
-                value={email}
-                onChange={handleEmailChange}
-              />
-              {emailError && <div className="error-message">{emailError}</div>}
-            </motion.div>
-            
-            <motion.button 
-              type="submit"
-              className="submit-button"
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isSending}
-            >
-              {isSending ? 'Sending...' : 'Request OTP'}
-            </motion.button>
+          <form onSubmit={handleRequestOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Email</label>
+              <div className="flex items-center gap-2">
+                <Mail size={18} className="text-bw-62" />
+                <input type="email" placeholder="Enter your registered email" value={email} onChange={handleEmailChange} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
+              </div>
+              {emailError && <div className="text-bw-62 text-sm mt-1">{emailError}</div>}
+            </div>
+            <Button type="submit" fullWidth disabled={isSending}>{isSending ? 'Sending...' : 'Request OTP'}</Button>
           </form>
         )}
 
-        {/* OTP Verification Form */}
         {isOtpSent && !isOtpVerified && (
-          <form onSubmit={handleVerifyOtp}>
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Key className="input-icon" size={20} />
-              <input 
-                type="text"
-                placeholder="Enter 6-digit OTP"
-                value={otp}
-                onChange={handleOtpChange}
-                maxLength={6}
-              />
-              {otpError && <div className="error-message">{otpError}</div>}
-            </motion.div>
-            
-            <motion.button 
-              type="submit"
-              className="submit-button"
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isVerifying}
-            >
-              {isVerifying ? 'Verifying...' : 'Verify OTP'}
-            </motion.button>
-            
-            <div className="mt-4 text-center">
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">OTP</label>
+              <div className="flex items-center gap-2">
+                <Key size={18} className="text-bw-62" />
+                <input type="text" placeholder="Enter 6-digit OTP" value={otp} onChange={handleOtpChange} maxLength={6} className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75" />
+              </div>
+              {otpError && <div className="text-bw-62 text-sm mt-1">{otpError}</div>}
+            </div>
+            <Button type="submit" fullWidth disabled={isVerifying}>{isVerifying ? 'Verifying...' : 'Verify OTP'}</Button>
+            <div className="text-center">
               {countdown > 0 ? (
-                <p className="text-gray-400 text-sm">
-                  Resend code in {countdown} seconds
-                </p>
+                <p className="text-bw-62 text-sm">Resend code in {countdown} seconds</p>
               ) : (
-                <button 
-                  onClick={handleRequestOtp}
-                  disabled={isSending}
-                  className="text-indigo-400 text-sm hover:underline"
-                  type="button"
-                >
-                  Resend verification code
-                </button>
+                <button onClick={handleRequestOtp} disabled={isSending} className="text-bw-75 text-sm hover:text-white" type="button">Resend verification code</button>
               )}
             </div>
           </form>
         )}
-      </motion.div>
+      </Card>
     </div>
   );
 };

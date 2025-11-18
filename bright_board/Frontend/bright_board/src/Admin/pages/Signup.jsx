@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate
 import Joi from 'joi';
 import { Building2, MapPin, Phone, Mail, Lock, BookOpen, Key } from 'lucide-react';
-import './Signup.css';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 
 // Validation schemas
 const schema = Joi.object({
@@ -67,7 +67,7 @@ const SignupPage = () => {
   const navigate = useNavigate(); // Added for navigation
 
   // API endpoint
-  const API_BASE_URL = 'https://bb-t5a0.onrender.com';
+  const API_BASE_URL = 'http://localhost:3000';
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -240,29 +240,12 @@ const SignupPage = () => {
     }
   };
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.5, staggerChildren: 0.1 } }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-  };
+  // Animation variants removed in favor of Tailwind and route transitions
 
   return (
-    <div className="signup-container">
-      <motion.div 
-        className="form-container"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.h1 
-          className="form-title"
-          variants={itemVariants}
-        >
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <Card className="w-full max-w-lg p-6">
+        <h1 className="font-comic text-2xl mb-2">
           {isRegistered
             ? 'Registration Complete'
             : (isEmailVerified
@@ -270,98 +253,71 @@ const SignupPage = () => {
                 : (isOtpSent
                     ? 'Verify Email'
                     : 'Institute Registration'))}
-        </motion.h1>
+        </h1>
         
         {statusMessage && (
-          <motion.div 
-            className="status-message"
-            variants={itemVariants}
-          >
+          <div className="border border-bw-37 rounded p-3 mb-4 text-bw-62">
             {statusMessage}
-          </motion.div>
+          </div>
         )}
 
         {/* Email Input Form */}
         {!isOtpSent && !isEmailVerified && !isRegistered && (
-          <form onSubmit={handleRequestOtp}>
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Mail className="input-icon" size={20} />
-              <input 
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-              {errors.email && <div className="error-message">{errors.email}</div>}
-            </motion.div>
-            
-            <motion.button 
-              type="submit"
-              className="submit-button"
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isSending}
-            >
+          <form onSubmit={handleRequestOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Email</label>
+              <div className="flex items-center gap-2">
+                <Mail size={18} className="text-bw-62" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.email && <div className="text-bw-62 text-sm mt-1">{errors.email}</div>}
+            </div>
+
+            <Button type="submit" fullWidth disabled={isSending}>
               {isSending ? 'Sending...' : 'Request OTP'}
-            </motion.button>
-            
-            <motion.div 
-              className="signin-link-container"
-              variants={itemVariants}
-            >
-              <Link to="/a/signin" className="signin-link">
-                Already registered? Sign In
-              </Link>
-            </motion.div>
+            </Button>
+
+            <div className="text-right">
+              <Link to="/a/signin" className="text-bw-75 hover:text-white text-sm">Already registered? Sign In</Link>
+            </div>
           </form>
         )}
 
         {/* OTP Verification Form */}
         {isOtpSent && !isEmailVerified && !isRegistered && (
-          <form onSubmit={handleVerifyOtp}>
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Key className="input-icon" size={20} />
-              <input 
-                type="text"
-                placeholder="Enter 6-digit OTP"
-                value={otp}
-                onChange={handleOtpChange}
-                maxLength={6}
-              />
-              {otpError && <div className="error-message">{otpError}</div>}
-            </motion.div>
-            
-            <motion.button 
-              type="submit"
-              className="submit-button"
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isVerifying}
-            >
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">OTP</label>
+              <div className="flex items-center gap-2">
+                <Key size={18} className="text-bw-62" />
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={handleOtpChange}
+                  maxLength={6}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {otpError && <div className="text-bw-62 text-sm mt-1">{otpError}</div>}
+            </div>
+
+            <Button type="submit" fullWidth disabled={isVerifying}>
               {isVerifying ? 'Verifying...' : 'Verify OTP'}
-            </motion.button>
-            
-            <div className="mt-4 text-center">
+            </Button>
+
+            <div className="text-center">
               {countdown > 0 ? (
-                <p className="text-gray-400 text-sm">
-                  Resend code in {countdown} seconds
-                </p>
+                <p className="text-bw-62 text-sm">Resend code in {countdown} seconds</p>
               ) : (
-                <button 
-                  onClick={handleRequestOtp}
-                  disabled={isSending}
-                  className="text-indigo-400 text-sm hover:underline"
-                  type="button"
-                >
+                <button onClick={handleRequestOtp} disabled={isSending} className="text-bw-75 text-sm hover:text-white" type="button">
                   Resend verification code
                 </button>
               )}
@@ -371,121 +327,116 @@ const SignupPage = () => {
 
         {/* Registration Form */}
         {isEmailVerified && !isRegistered && (
-          <form onSubmit={handleSubmit}>
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Building2 className="input-icon" size={20} />
-              <input 
-                type="text"
-                name="instituteName"
-                placeholder="Institute Name"
-                value={formData.instituteName}
-                onChange={handleChange}
-              />
-              {errors.instituteName && <div className="error-message">{errors.instituteName}</div>}
-            </motion.div>
-            
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <MapPin className="input-icon" size={20} />
-              <input 
-                type="text"
-                name="address"
-                placeholder="Address"
-                value={formData.address}
-                onChange={handleChange}
-              />
-              {errors.address && <div className="error-message">{errors.address}</div>}
-            </motion.div>
-            
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Phone className="input-icon" size={20} />
-              <input 
-                type="text"
-                name="contactNumber"
-                placeholder="Contact Number"
-                value={formData.contactNumber}
-                onChange={handleChange}
-              />
-              {errors.contactNumber && <div className="error-message">{errors.contactNumber}</div>}
-            </motion.div>
-            
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Mail className="input-icon" size={20} />
-              <input 
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                readOnly 
-                className="verified-field"
-              />
-              <span className="verified-badge">✓ Verified</span>
-            </motion.div>
-            
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <Lock className="input-icon" size={20} />
-              <input 
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {errors.password && <div className="error-message">{errors.password}</div>}
-            </motion.div>
-            
-            <motion.div 
-              className="input-group"
-              variants={itemVariants}
-            >
-              <BookOpen className="input-icon" size={20} />
-              <input 
-                type="text"
-                name="courses"
-                placeholder="Courses (comma separated)"
-                value={formData.courses}
-                onChange={handleChange}
-              />
-              {errors.courses && <div className="error-message">{errors.courses}</div>}
-            </motion.div>
-            
-            <motion.button 
-              type="submit"
-              className="submit-button"
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={registrationInProgress}
-            >
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Institute Name</label>
+              <div className="flex items-center gap-2">
+                <Building2 size={18} className="text-bw-62" />
+                <input
+                  type="text"
+                  name="instituteName"
+                  placeholder="Institute Name"
+                  value={formData.instituteName}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.instituteName && <div className="text-bw-62 text-sm mt-1">{errors.instituteName}</div>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Address</label>
+              <div className="flex items-center gap-2">
+                <MapPin size={18} className="text-bw-62" />
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="Address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.address && <div className="text-bw-62 text-sm mt-1">{errors.address}</div>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Contact Number</label>
+              <div className="flex items-center gap-2">
+                <Phone size={18} className="text-bw-62" />
+                <input
+                  type="text"
+                  name="contactNumber"
+                  placeholder="Contact Number"
+                  value={formData.contactNumber}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.contactNumber && <div className="text-bw-62 text-sm mt-1">{errors.contactNumber}</div>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Email</label>
+              <div className="flex items-center gap-2">
+                <Mail size={18} className="text-bw-62" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  readOnly
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white"
+                />
+                <span className="text-bw-75 text-sm">✓ Verified</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Password</label>
+              <div className="flex items-center gap-2">
+                <Lock size={18} className="text-bw-62" />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.password && <div className="text-bw-62 text-sm mt-1">{errors.password}</div>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Courses</label>
+              <div className="flex items-center gap-2">
+                <BookOpen size={18} className="text-bw-62" />
+                <input
+                  type="text"
+                  name="courses"
+                  placeholder="Courses (comma separated)"
+                  value={formData.courses}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.courses && <div className="text-bw-62 text-sm mt-1">{errors.courses}</div>}
+            </div>
+
+            <Button type="submit" fullWidth disabled={registrationInProgress}>
               {registrationInProgress ? 'Registering...' : 'Complete Registration'}
-            </motion.button>
+            </Button>
           </form>
         )}
 
         {/* Registration Success */}
         {isRegistered && (
-          <motion.div variants={itemVariants}>
-            {/* Success message is shown briefly before redirect */}
-            <p className="success-message">
-              Registration successful! Redirecting to dashboard...
-            </p>
-          </motion.div>
+          <div>
+            <p className="text-bw-75">Registration successful! Redirecting to dashboard...</p>
+          </div>
         )}
-      </motion.div>
+      </Card>
     </div>
   );
 };
