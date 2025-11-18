@@ -4,7 +4,7 @@ const Joi = require('joi');
 const { generateOTP, getOTPExpiry } = require('../utils/otp');
 const { sendOTPEmail, sendPasswordResetOTP } = require('../utils/email');
 const { generateToken, generateVerificationToken, generateResetToken } = require('../utils/jwt');
-const { verifyEmailToken, verifyResetToken, authenticate } = require('../middleware/auth');
+const { verifyEmailToken, verifyResetToken, authenticate, requireInstitute } = require('../middleware/auth');
 
 module.exports = (db) => {
   const router = express.Router();
@@ -189,9 +189,10 @@ module.exports = (db) => {
 
       // Generate JWT token (using _id for internal auth, but return custom ID)
       const token = generateToken({
-        instituteId: result.insertedId.toString(),  // Internal ObjectId for auth
+        instituteId: result.insertedId.toString(),
         email,
-        name
+        name,
+        role: 'admin'
       });
 
       res.status(201).json({
@@ -240,7 +241,8 @@ module.exports = (db) => {
       const token = generateToken({
         instituteId: institute._id.toString(),
         email: institute.email,
-        name: institute.name
+        name: institute.name,
+        role: 'admin'
       });
 
       res.status(200).json({
@@ -402,7 +404,7 @@ module.exports = (db) => {
   });
 
   // Get institute profile (protected route)
-  router.get('/profile', authenticate, async (req, res) => {
+  router.get('/profile', authenticate, requireInstitute, async (req, res) => {
     try {
       const { ObjectId } = require('mongodb');
       const institute = await institutesCollection.findOne(
@@ -422,7 +424,7 @@ module.exports = (db) => {
   });
 
   // Update institute profile (protected route)
-  router.put('/profile', authenticate, async (req, res) => {
+  router.put('/profile', authenticate, requireInstitute, async (req, res) => {
     try {
       const updateSchema = Joi.object({
         name: Joi.string().min(3).max(50),

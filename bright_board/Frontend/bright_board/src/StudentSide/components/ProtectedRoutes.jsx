@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("studentToken");
   console.log("Token in ProtectedRoute:", token);
 
   if (!token) {
@@ -22,8 +22,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
       return <Navigate to="/role" replace />;
     }
 
-    // Check if role exists in the token, if not, use a default based on the token content
-    const userRole = decoded.role || (decoded.instituteId?.startsWith('INST') ? 'admin' : 'student');
+    const userRole = decoded.role || (decoded.studentId ? 'student' : (decoded.instituteId ? 'admin' : 'student'));
     console.log("User Role:", userRole, "Allowed Roles:", allowedRoles);
 
     if (allowedRoles.includes(userRole)) {

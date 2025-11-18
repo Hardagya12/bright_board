@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import AdminSidebar from '../components/AdminSidebar';
 import { listStudents } from '../../utils/services/students';
+import { getAttendanceStats, listAttendance, uploadAttendanceBulk } from '../../utils/services/attendance';
+import { listBatches } from '../../utils/services/batches';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const AttendanceManagement = () => {
   const [selectedBatch, setSelectedBatch] = useState('');
@@ -18,8 +22,25 @@ const AttendanceManagement = () => {
   const fileInputRef = useRef(null);
 
   const [students, setStudents] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [managerOpen, setManagerOpen] = useState(false);
+  const [managerLoading, setManagerLoading] = useState(false);
+  const [managerError, setManagerError] = useState('');
+  const [managerSuccess, setManagerSuccess] = useState('');
+  const [managerStudents, setManagerStudents] = useState([]);
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
+  const batchSelectRef = useRef(null);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [dateError, setDateError] = useState('');
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewError, setOverviewError] = useState('');
+  const [overviewRows, setOverviewRows] = useState([]);
+  const [studentNameMap, setStudentNameMap] = useState(new Map());
 
   useEffect(() => {
     const load = async () => {
@@ -27,8 +48,15 @@ const AttendanceManagement = () => {
       setError('');
       try {
         const { data } = await listStudents({ limit: 100 });
-        const mapped = (data.students || []).map(s => ({ id: s._id || s.id, name: s.name, status: 'present', attendance: 90 }));
+        const mapped = (data.students || []).map(s => ({ id: s.studentId || s.id || s._id, name: s.name, status: 'present', attendance: 90 }));
         setStudents(mapped);
+        try {
+          const { data: b } = await listBatches({ limit: 100 });
+          setBatches((b.batches || []).map(x => ({ id: x.batchId || x._id, name: x.name })));
+        } catch {}
+        const statsRes = await getAttendanceStats({ range: 'week' });
+        setWeeklyData(statsRes.data.weekly || []);
+        setMonthlyData(statsRes.data.monthly || []);
       } catch (err) {
         setError(err.response?.data?.error || err.message);
       } finally {
@@ -38,21 +66,166 @@ const AttendanceManagement = () => {
     load();
   }, []);
 
-  // Mock data for charts
-  const attendanceData = [
-    { name: 'Mon', attendance: 95 },
-    { name: 'Tue', attendance: 88 },
-    { name: 'Wed', attendance: 92 },
-    { name: 'Thu', attendance: 85 },
-    { name: 'Fri', attendance: 90 },
-  ];
+  const attendanceData = weeklyData;
 
-  const monthlyData = [
-    { month: 'Jan', present: 90, absent: 10 },
-    { month: 'Feb', present: 85, absent: 15 },
-    { month: 'Mar', present: 88, absent: 12 },
-    { month: 'Apr', present: 92, absent: 8 },
-  ];
+  useEffect(() => {
+    if (!managerOpen) return;
+    setTimeout(() => {
+      batchSelectRef.current?.focus();
+    }, 0);
+  }, [managerOpen]);
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const handleDateChange = (val) => {
+    setSelectedDate(val);
+    if (val > todayStr) {
+      setDateError('Future dates are not allowed');
+    } else {
+      setDateError('');
+    }
+    loadDraftIfAvailable(selectedBatch, val);
+    loadAttendanceHistory(selectedBatch);
+  };
+
+  const handleBatchChangeManager = async (val) => {
+    setSelectedBatch(val);
+    setManagerLoading(true);
+    setManagerError('');
+    try {
+      const { data } = await listStudents({ limit: 500, batchId: val });
+      const mapped = (data.students || []).map(s => ({ id: s.studentId || s._id || s.id, name: s.name, status: 'present', reason: '' }));
+      setManagerStudents(mapped);
+      setStudentNameMap(new Map(mapped.map(s => [s.id, s.name])));
+      loadDraftIfAvailable(val, selectedDate);
+      loadAttendanceHistory(val);
+      await loadOverview(val);
+    } catch (err) {
+      setManagerError(err.response?.data?.error || err.message);
+    } finally {
+      setManagerLoading(false);
+    }
+  };
+
+  const loadAttendanceHistory = async (batchIdVal) => {
+    if (!batchIdVal) { setAttendanceHistory([]); return; }
+    try {
+      const { data } = await listAttendance({ batchId: batchIdVal });
+      const grouped = (data.attendance || []).reduce((acc, log) => {
+        acc[log.date] = acc[log.date] || { date: log.date, present: 0, absent: 0, excused: 0 };
+        if (log.status === 'present') acc[log.date].present++;
+        if (log.status === 'absent') acc[log.date].absent++;
+        if (log.status === 'excused') acc[log.date].excused++;
+        return acc;
+      }, {});
+      const sorted = Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date)).slice(-5);
+      setAttendanceHistory(sorted);
+    } catch {}
+  };
+
+  const draftKey = (batchIdVal, dateVal) => `attendanceDraft:${batchIdVal}:${dateVal}`;
+  const saveDraft = () => {
+    if (!selectedBatch) return;
+    const draft = managerStudents.map(s => ({ studentId: s.id, status: s.status, reason: s.reason || '' }));
+    localStorage.setItem(draftKey(selectedBatch, selectedDate), JSON.stringify(draft));
+    setDraftSaved(true);
+    setTimeout(() => setDraftSaved(false), 2000);
+  };
+  const loadDraftIfAvailable = (batchIdVal, dateVal) => {
+    const raw = localStorage.getItem(draftKey(batchIdVal, dateVal));
+    if (!raw) return;
+    try {
+      const entries = JSON.parse(raw);
+      const map = new Map(entries.map(e => [e.studentId, e]));
+      setManagerStudents(prev => prev.map(s => {
+        const d = map.get(s.id);
+        return d ? { ...s, status: d.status, reason: d.reason } : s;
+      }));
+    } catch {}
+  };
+
+  const markAll = (status) => {
+    setManagerStudents(prev => prev.map(s => ({ ...s, status })));
+  };
+
+  const filteredManagerStudents = managerStudents.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const submitAttendance = async () => {
+    setManagerSuccess('');
+    setManagerError('');
+    if (!selectedBatch) {
+      setManagerError('Please select a batch');
+      return;
+    }
+    if (dateError) {
+      setManagerError('Please fix date errors before submitting');
+      return;
+    }
+    const entries = managerStudents.map(s => ({ studentId: s.id, status: s.status === 'on_leave' ? 'excused' : s.status, reason: s.reason || '' }));
+    if (entries.length === 0) {
+      setManagerError('No students to submit');
+      return;
+    }
+    setManagerLoading(true);
+    try {
+      const { data } = await uploadAttendanceBulk({ date: selectedDate, batchId: selectedBatch || '', entries });
+      setManagerSuccess(`Attendance submitted successfully (${data.count})`);
+    } catch (err) {
+      setManagerError(err.response?.data?.error || err.message);
+    } finally {
+      setManagerLoading(false);
+    }
+  };
+
+  const loadOverview = async (batchIdVal) => {
+    if (!batchIdVal) { setOverviewRows([]); return; }
+    setOverviewLoading(true);
+    setOverviewError('');
+    try {
+      const [{ data: attendanceData }, { data: studentsData }] = await Promise.all([
+        listAttendance({ batchId: batchIdVal }),
+        listStudents({ limit: 1000, batchId: batchIdVal })
+      ]);
+      const map = new Map((studentsData.students || []).map(s => [s.studentId || s._id || s.id, s.name]));
+      setStudentNameMap(map);
+      const grouped = (attendanceData.attendance || []).reduce((acc, log) => {
+        const arr = acc.get(log.date) || [];
+        arr.push(log);
+        acc.set(log.date, arr);
+        return acc;
+      }, new Map());
+      const rows = Array.from(grouped.entries()).map(([date, logs]) => {
+        const present = logs.filter(l => l.status === 'present').length;
+        const absentLogs = logs.filter(l => l.status === 'absent');
+        const excused = logs.filter(l => l.status === 'excused').length;
+        const absentNames = absentLogs.map(l => map.get(l.studentId) || l.studentId);
+        return { date, present, absent: absentLogs.length, excused, absentNames };
+      }).sort((a, b) => a.date.localeCompare(b.date));
+      setOverviewRows(rows);
+    } catch (err) {
+      setOverviewError(err.response?.data?.error || err.message);
+    } finally {
+      setOverviewLoading(false);
+    }
+  };
+
+  const exportOverviewPdf = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text('Attendance Overview', 14, 16);
+    const head = [['Date', 'Present', 'Absent', 'On Leave']];
+    const body = overviewRows.map(r => [r.date, String(r.present), String(r.absent), String(r.excused)]);
+    autoTable(doc, { head, body, startY: 22 });
+    let y = doc.lastAutoTable.finalY + 8;
+    doc.setFontSize(12);
+    doc.text('Absent Students by Date', 14, y);
+    y += 4;
+    overviewRows.forEach(r => {
+      const names = r.absentNames && r.absentNames.length ? r.absentNames.join(', ') : '-';
+      autoTable(doc, { head: [[r.date]], body: [[names]], startY: y, styles: { fontSize: 10 }, columnStyles: { 0: { cellWidth: 180 } } });
+      y = doc.lastAutoTable.finalY + 6;
+    });
+    doc.save(`attendance_overview_${selectedBatch || 'all'}.pdf`);
+  };
 
   const handleStatusChange = (studentId, newStatus) => {
     setStudents(prevStudents =>
@@ -193,35 +366,38 @@ const AttendanceManagement = () => {
           </motion.div>
         </div>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <div className="border border-bw-37 rounded-lg bg-black p-4">
-            <h3 className="font-comic mb-2">Weekly Attendance Trend</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={attendanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="attendance" stroke="#a5b4fc" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="border border-bw-37 rounded-lg bg-black p-4">
-            <h3 className="font-comic mb-2">Monthly Overview</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="present" stackId="1" stroke="#34d399" fill="#34d399" fillOpacity={0.6} />
-                <Area type="monotone" dataKey="absent" stackId="1" stroke="#f87171" fill="#f87171" fillOpacity={0.6} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="flex items-center gap-3 mt-4">
+          <motion.button 
+            className="border border-bw-37 rounded px-3 py-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setManagerOpen(true);
+              const defaultBatch = selectedBatch || (batches[0]?.id || '');
+              if (defaultBatch) handleBatchChangeManager(defaultBatch);
+              loadAttendanceHistory(defaultBatch);
+            }}
+            aria-haspopup="dialog"
+          >
+            Open Attendance Manager
+          </motion.button>
+          <motion.button 
+            className="border border-bw-37 rounded px-3 py-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => loadOverview(selectedBatch || (batches[0]?.id || ''))}
+          >
+            Load Batch Overview
+          </motion.button>
+          <motion.button 
+            className="border border-bw-37 rounded px-3 py-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={exportOverviewPdf}
+            disabled={!overviewRows.length}
+          >
+            Export Overview PDF
+          </motion.button>
         </div>
       </motion.div>
 
@@ -239,8 +415,8 @@ const AttendanceManagement = () => {
             className="bg-black border border-bw-37 rounded px-3 py-2"
           >
             <option value="">Select Batch</option>
-            {['Batch 2024A', 'Batch 2024B', 'Batch 2024C'].map(batch => (
-              <option key={batch} value={batch}>{batch}</option>
+            {batches.map(batch => (
+              <option key={batch.id} value={batch.id}>{batch.name}</option>
             ))}
           </select>
           <input
@@ -292,6 +468,28 @@ const AttendanceManagement = () => {
           >
             Mark All Present
           </motion.button>
+          <motion.button 
+            className="border border-bw-37 rounded px-3 py-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={async () => {
+              try {
+                setLoading(true);
+                setError('');
+                setSaveMessage('');
+                const entries = students.map(s => ({ studentId: s.id, status: s.status }));
+                const payload = { date: selectedDate, batchId: selectedBatch || '', entries };
+                const { data } = await uploadAttendanceBulk(payload);
+                setSaveMessage(`Attendance saved (${data.count})`);
+              } catch (err) {
+                setError(err.response?.data?.error || err.message);
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            Save Attendance
+          </motion.button>
           <div className="flex items-center gap-2">
             <motion.button 
               className={`border border-bw-37 rounded px-3 py-2 ${view === 'list' ? 'bg-bw-12' : ''}`}
@@ -312,109 +510,45 @@ const AttendanceManagement = () => {
           </div>
         </div>
       </motion.div>
+      {saveMessage && (
+        <div className="border border-bw-37 rounded-lg bg-black p-3 text-bw-62">{saveMessage}</div>
+      )}
 
-      {/* Attendance List */}
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={view}
-          className={`border border-bw-37 rounded-lg bg-black p-4 ${view === 'grid' ? 'grid grid-cols-1 md:grid-cols-3 gap-4' : ''}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          {view === 'list' ? (
-            <table>
+      {/* Batch Overview Table */}
+      <div className="border border-bw-37 rounded-lg bg-black p-4">
+        <h3 className="font-comic mb-2">Batch Overview</h3>
+        {overviewLoading && <div className="text-bw-62">Loading overview...</div>}
+        {overviewError && <div className="text-bw-62">{overviewError}</div>}
+        {!overviewLoading && !overviewError && overviewRows.length === 0 && (
+          <div className="text-bw-62">No attendance records for selected batch</div>
+        )}
+        {overviewRows.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left">
               <thead>
                 <tr>
-                  <th>Student Name</th>
-                  <th>Status</th>
-                  <th>Attendance %</th>
-                  <th>Actions</th>
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Present</th>
+                  <th className="px-3 py-2">Absent</th>
+                  <th className="px-3 py-2">On Leave</th>
+                  <th className="px-3 py-2">Absent Students</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredStudents.map(student => (
-                  <motion.tr 
-                    key={student.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <td className="px-3 py-2">{student.name}</td>
-                    <td>
-                      <select
-                        value={student.status}
-                        onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                        className={`bg-black border border-bw-37 rounded px-2 py-1 ${student.status}`}
-                      >
-                        <option value="present">Present</option>
-                        <option value="absent">Absent</option>
-                        <option value="late">Late</option>
-                        <option value="excused">Excused</option>
-                      </select>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <motion.div 
-                          className="h-2 bg-bw-12 rounded"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${student.attendance}%` }}
-                          transition={{ duration: 0.5 }}
-                        ></motion.div>
-                        <span>{student.attendance}%</span>
-                      </div>
-                    </td>
-                    <td>
-                      <motion.button 
-                        className="border border-bw-37 rounded p-2"
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <X size={16} />
-                      </motion.button>
-                    </td>
-                  </motion.tr>
+                {overviewRows.map(r => (
+                  <tr key={r.date}>
+                    <td className="px-3 py-2">{r.date}</td>
+                    <td className="px-3 py-2">{r.present}</td>
+                    <td className="px-3 py-2">{r.absent}</td>
+                    <td className="px-3 py-2">{r.excused}</td>
+                    <td className="px-3 py-2">{(r.absentNames || []).join(', ') || '-'}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
-          ) : (
-            <div>
-              {filteredStudents.map(student => (
-                <motion.div 
-                  key={student.id}
-                  className="border border-bw-37 rounded-lg bg-black p-4"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <h3>{student.name}</h3>
-                  <select
-                    value={student.status}
-                    onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                    className={`bg-black border border-bw-37 rounded px-2 py-1 ${student.status}`}
-                  >
-                    <option value="present">Present</option>
-                    <option value="absent">Absent</option>
-                    <option value="late">Late</option>
-                    <option value="excused">Excused</option>
-                  </select>
-                  <div className="flex items-center gap-2 mt-2">
-                    <motion.div 
-                      className="h-2 bg-bw-12 rounded"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${student.attendance}%` }}
-                      transition={{ duration: 0.5 }}
-                    ></motion.div>
-                    <span>{student.attendance}%</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+          </div>
+        )}
+      </div>
 
       {/* Export Section */}
       <motion.div 
@@ -545,6 +679,113 @@ const AttendanceManagement = () => {
                 >
                   Upload
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Attendance Manager Modal */}
+      <AnimatePresence>
+        {managerOpen && (
+          <motion.div 
+            className="fixed inset-0 bg-black/60 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onKeyDown={(e) => { if (e.key === 'Escape') setManagerOpen(false); }}
+          >
+            <motion.div 
+              role="dialog" aria-modal="true" aria-labelledby="attendance-manager-title"
+              className="border border-bw-37 bg-black text-white rounded-lg p-6 w-full max-w-4xl"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 id="attendance-manager-title" className="font-comic text-xl">Attendance Manager</h2>
+                <button className="border border-bw-37 rounded p-2" onClick={() => setManagerOpen(false)} aria-label="Close"><X size={20} /></button>
+              </div>
+              {managerError && <div className="border border-bw-37 rounded p-3 mb-3 text-bw-62">{managerError}</div>}
+              {managerSuccess && <div className="border border-bw-75 rounded p-3 mb-3 text-bw-75">{managerSuccess}</div>}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <div>
+                  <label className="block text-sm mb-1">Batch</label>
+                  <select ref={batchSelectRef} value={selectedBatch} onChange={(e) => handleBatchChangeManager(e.target.value)} className="bg-black border border-bw-37 rounded px-3 py-2 w-full" aria-label="Select batch">
+                    <option value="">Select Batch</option>
+                    {batches.map(b => (<option key={b.id} value={b.id}>{b.name}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">Date</label>
+                  <input type="date" value={selectedDate} onChange={(e) => handleDateChange(e.target.value)} className="bg-black border border-bw-37 rounded px-3 py-2 w-full" aria-label="Select date" />
+                  {dateError && <div className="text-bw-62 text-sm mt-1" role="alert">{dateError}</div>}
+                </div>
+                <div className="flex items-end gap-2">
+                  <button className="border border-bw-37 rounded px-3 py-2" onClick={() => markAll('present')}>Mark All Present</button>
+                  <button className="border border-bw-37 rounded px-3 py-2" onClick={() => markAll('absent')}>Mark All Absent</button>
+                  <button className="border border-bw-37 rounded px-3 py-2" onClick={() => markAll('on_leave')}>Mark All On Leave</button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mb-3">
+                <Search size={18} />
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search students" className="bg-black border border-bw-37 rounded px-3 py-2 w-full" aria-label="Search students" />
+              </div>
+              <div className="border border-bw-37 rounded">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr>
+                      <th className="px-3 py-2">Name</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Reason (optional)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {managerLoading ? (
+                      <tr><td className="px-3 py-2" colSpan="3">Loading students...</td></tr>
+                    ) : filteredManagerStudents.length ? (
+                      filteredManagerStudents.map(s => (
+                        <tr key={s.id}>
+                          <td className="px-3 py-2">{s.name}</td>
+                          <td className="px-3 py-2">
+                            <select value={s.status} onChange={(e) => setManagerStudents(prev => prev.map(x => x.id === s.id ? { ...x, status: e.target.value } : x))} className="bg-black border border-bw-37 rounded px-2 py-1">
+                              <option value="present">Present</option>
+                              <option value="absent">Absent</option>
+                              <option value="on_leave">On Leave</option>
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <input type="text" value={s.reason || ''} onChange={(e) => setManagerStudents(prev => prev.map(x => x.id === s.id ? { ...x, reason: e.target.value } : x))} className="bg-black border border-bw-37 rounded px-2 py-1 w-full" placeholder="Optional" />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td className="px-3 py-2" colSpan="3">No students found for selected batch</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex items-center gap-2 mt-4">
+                <button className="border border-bw-37 rounded px-3 py-2" onClick={saveDraft}>Save Draft</button>
+                {draftSaved && <span className="text-bw-62">Draft saved</span>}
+                <button className="border border-bw-37 rounded px-3 py-2" onClick={submitAttendance} disabled={managerLoading || !!dateError}>Submit Attendance</button>
+              </div>
+              <div className="mt-6">
+                <h3 className="font-comic mb-2">Attendance History</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {attendanceHistory.map(h => (
+                    <div key={h.date} className="border border-bw-37 rounded p-3">
+                      <div className="text-sm text-bw-75">{h.date}</div>
+                      <div className="flex gap-3 text-sm">
+                        <span>Present: {h.present}</span>
+                        <span>Absent: {h.absent}</span>
+                        <span>On Leave: {h.excused}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {!attendanceHistory.length && (
+                    <div className="text-bw-62">No history for this batch</div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </motion.div>

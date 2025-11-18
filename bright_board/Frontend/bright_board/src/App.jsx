@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import ErrorBoundary from './components/ErrorBoundary';
+import ProtectedRoute from './StudentSide/components/ProtectedRoutes';
 import HomePage from './StudentSide/components/HomePage';
 import StudentSignIn from './StudentSide/pages/SigninStudent';
 import StudentSignUp from './StudentSide/pages/StudentSignup';
@@ -44,23 +45,23 @@ function AnimatedRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/role" element={<RoleSelection />} />
 
-        {/* Unprotected Routes */}
-        <Route path="/s/dashboard" element={<DashboardStudent />} />
-        <Route path="/a/sidebar" element={<AdminSidebar />} />
-        <Route path="/s/profile" element={<StudentProfile />} />
-        <Route path="/s/result" element={<Result />} />
-        <Route path="/s/exams" element={<Exams />} />
-        <Route path="/s/exams/:id" element={<ExamAttempt />} />
-        <Route path="/a/dashboard" element={<AdminDashboard />} />
-        <Route path="/a/students" element={<StudentManagementPage />} />
-        <Route path="/a/attendance" element={<AttendanceManagement />} />
-        <Route path="/a/materials" element={<StudyMaterialManagement />} />
-        <Route path="/a/exams" element={<AdminExam />} />
-        <Route path="/a/results" element={<AdminResult />} />
-        <Route path="/a/payments" element={<PaymentAdmin />} /> 
-        <Route path="/a/support" element={<Support />} />
-        <Route path="/a/settings" element={<Settings />} />
-        <Route path="/a/feedback" element={<Feedback />} />
+        {/* Protected Student Routes */}
+        <Route path="/s/dashboard" element={<ProtectedRoute allowedRoles={["student"]}><DashboardStudent /></ProtectedRoute>} />
+        <Route path="/s/profile" element={<ProtectedRoute allowedRoles={["student"]}><StudentProfile /></ProtectedRoute>} />
+        <Route path="/s/result" element={<ProtectedRoute allowedRoles={["student"]}><Result /></ProtectedRoute>} />
+        <Route path="/s/exams" element={<ProtectedRoute allowedRoles={["student"]}><Exams /></ProtectedRoute>} />
+        <Route path="/s/exams/:id" element={<ProtectedRoute allowedRoles={["student"]}><ExamAttempt /></ProtectedRoute>} />
+        {/* Protected Admin Routes */}
+        <Route path="/a/dashboard" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/a/students" element={<ProtectedRoute allowedRoles={["admin"]}><StudentManagementPage /></ProtectedRoute>} />
+        <Route path="/a/attendance" element={<ProtectedRoute allowedRoles={["admin"]}><AttendanceManagement /></ProtectedRoute>} />
+        <Route path="/a/materials" element={<ProtectedRoute allowedRoles={["admin"]}><StudyMaterialManagement /></ProtectedRoute>} />
+        <Route path="/a/exams" element={<ProtectedRoute allowedRoles={["admin"]}><AdminExam /></ProtectedRoute>} />
+        <Route path="/a/results" element={<ProtectedRoute allowedRoles={["admin"]}><AdminResult /></ProtectedRoute>} />
+        <Route path="/a/payments" element={<ProtectedRoute allowedRoles={["admin"]}><PaymentAdmin /></ProtectedRoute>} /> 
+        <Route path="/a/support" element={<ProtectedRoute allowedRoles={["admin"]}><Support /></ProtectedRoute>} />
+        <Route path="/a/settings" element={<ProtectedRoute allowedRoles={["admin"]}><Settings /></ProtectedRoute>} />
+        <Route path="/a/feedback" element={<ProtectedRoute allowedRoles={["admin"]}><Feedback /></ProtectedRoute>} />
         </Routes>
       </CSSTransition>
     </TransitionGroup>

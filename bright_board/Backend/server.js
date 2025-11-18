@@ -51,6 +51,7 @@ async function initializeDatabase() {
         // Create indexes for better performance
         await db.collection('institutes').createIndex({ email: 1 }, { unique: true });
         await db.collection('students').createIndex({ email: 1, instituteId: 1 }, { unique: true });
+        await db.collection('students').createIndex({ instituteId: 1, studentId: 1 }, { unique: true });
         await db.collection('otps').createIndex({ email: 1, type: 1 });
         await db.collection('otps').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
         // New indexes for batches
@@ -61,6 +62,10 @@ async function initializeDatabase() {
         await db.collection('exams').createIndex({ instituteId: 1, published: 1 });
         await db.collection('questions').createIndex({ examId: 1 });
         await db.collection('student_exam_attempts').createIndex({ examId: 1, studentId: 1 }, { unique: true });
+        // Indexes for attendance/materials/payments
+        await db.collection('attendance_logs').createIndex({ instituteId: 1, date: 1, batchId: 1, studentId: 1 });
+        await db.collection('materials').createIndex({ instituteId: 1, subject: 1, batch: 1 });
+        await db.collection('payments').createIndex({ instituteId: 1, date: 1, status: 1 });
 
 
         console.log("Database indexes created");
@@ -69,6 +74,10 @@ async function initializeDatabase() {
         app.use('/students', require('./routes/students')(db));
         app.use('/batches', require('./routes/batches')(db));
         app.use('/support', require('./routes/support')(db));
+        app.use('/', require('./routes/attendance')(db));
+        app.use('/', require('./routes/materials')(db));
+        app.use('/', require('./routes/payments')(db));
+        app.use('/', require('./routes/results')(db));
         app.use('/users', require('./routes/users')(db));
         // Exams routes
         app.use('/', require('./routes/exams')(db));

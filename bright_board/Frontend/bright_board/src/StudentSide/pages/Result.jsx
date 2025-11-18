@@ -4,6 +4,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Download, Share2, Search, SortAsc, SortDesc, Book, TrendingUp, TrendingDown, CheckCircle, XCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { downloadPDF, downloadCSV } from '../utils/download';
+import { listStudentResults, getStudentResultsAnalytics } from '../../utils/services/results';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Skeleton from '../../components/ui/Skeleton';
@@ -16,40 +17,41 @@ const Result = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [analytics, setAnalytics] = useState({ trend: [], distribution: [] });
 
   useEffect(() => {
-    // Simulating API call
-    setTimeout(() => {
-      const mockData = generateMockData();
-      setStudentData(mockData);
-      setIsLoading(false);
-    }, 1500);
-  }, []);
-
-  const generateMockData = () => {
-    const subjects = ['Mathematics', 'Science', 'English', 'History', 'Computer Science'];
-    const data = {
-      name: 'John Doe',
-      rollNumber: 'A12345',
-      class: '10th Grade',
-      totalSubjects: subjects.length,
-      subjects: subjects.map(subject => ({
-        name: subject,
-        marksObtained: Math.floor(Math.random() * 41) + 60, // 60 to 100
-        totalMarks: 100,
-        grade: calculateGrade(Math.floor(Math.random() * 41) + 60),
-      })),
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const { data } = await listStudentResults();
+        const results = data.results || [];
+        const subjects = Array.from(new Set(results.map(r => r.subjectName).filter(Boolean)));
+        const subjectsData = subjects.map(name => {
+          const entry = results.filter(r => r.subjectName === name).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+          return {
+            name,
+            marksObtained: Math.round(entry.percentage),
+            totalMarks: 100,
+            grade: entry.grade,
+          };
+        });
+        const cgpa = (subjectsData.reduce((sum, s) => sum + s.marksObtained / 10, 0) / (subjectsData.length || 1)).toFixed(2);
+        const passPercentage = (results.filter(r => r.status === 'Pass').length / (results.length || 1)) * 100;
+        const bestSubject = [...subjectsData].sort((a,b) => b.marksObtained - a.marksObtained)[0] || null;
+        const worstSubject = [...subjectsData].sort((a,b) => a.marksObtained - b.marksObtained)[0] || null;
+        setStudentData({ subjects: subjectsData, cgpa, passPercentage, bestSubject, worstSubject });
+        try {
+          const { data: an } = await getStudentResultsAnalytics();
+          setAnalytics(an);
+        } catch {}
+      } catch (err) {
+        setStudentData({ subjects: [], cgpa: 0, passPercentage: 0 });
+      } finally {
+        setIsLoading(false);
+      }
     };
-
-    data.cgpa = calculateCGPA(data.subjects);
-    data.passPercentage = (data.subjects.filter(s => s.grade !== 'F').length / data.totalSubjects) * 100;
-    data.rank = Math.floor(Math.random() * 50) + 1; // 1 to 50
-    data.performanceIndicator = getPerformanceIndicator(data.cgpa);
-    data.bestSubject = [...data.subjects].sort((a, b) => b.marksObtained - a.marksObtained)[0];
-    data.worstSubject = [...data.subjects].sort((a, b) => a.marksObtained - b.marksObtained)[0];
-
-    return data;
-  };
+    load();
+  }, []);
 
   const calculateGrade = (marks) => {
     if (marks >= 90) return 'A+';
@@ -58,14 +60,6 @@ const Result = () => {
     if (marks >= 60) return 'C';
     if (marks >= 50) return 'D';
     return 'F';
-  };
-
-  const calculateCGPA = (subjects) => {
-    const totalGradePoints = subjects.reduce((sum, subject) => {
-      const gradePoint = subject.marksObtained / 10;
-      return sum + gradePoint;
-    }, 0);
-    return (totalGradePoints / subjects.length).toFixed(2);
   };
 
   const getPerformanceIndicator = (cgpa) => {
@@ -111,17 +105,10 @@ const Result = () => {
   };
 
   const pieChartData = {
-    labels: ['A+', 'A', 'B', 'C', 'D', 'F'],
+    labels: analytics.distribution.map(d => d.name),
     datasets: [
       {
-        data: [
-          studentData?.subjects.filter(s => s.grade === 'A+').length || 0,
-          studentData?.subjects.filter(s => s.grade === 'A').length || 0,
-          studentData?.subjects.filter(s => s.grade === 'B').length || 0,
-          studentData?.subjects.filter(s => s.grade === 'C').length || 0,
-          studentData?.subjects.filter(s => s.grade === 'D').length || 0,
-          studentData?.subjects.filter(s => s.grade === 'F').length || 0,
-        ],
+        data: analytics.distribution.map(d => d.value),
         backgroundColor: ['#DEDEDE', '#BFBFBF', '#9E9E9E', '#808080', '#616161', '#404040'],
         borderColor: '#ffffff',
         borderWidth: 2,
@@ -199,8 +186,8 @@ const Result = () => {
               </Card>
               <Card className="p-4">
                 <h3 className="font-comic text-lg mb-2">Rank & Performance</h3>
-                <p className="text-3xl font-comic">#{studentData.rank}</p>
-                <p className="text-bw-75 mt-1">{studentData.performanceIndicator}</p>
+                <p className="text-3xl font-comic">{getPerformanceIndicator(studentData.cgpa)}</p>
+                <p className="text-bw-75 mt-1">Performance</p>
               </Card>
               <Card className="p-4">
                 <h3 className="font-comic text-lg mb-2">Subject Analysis</h3>

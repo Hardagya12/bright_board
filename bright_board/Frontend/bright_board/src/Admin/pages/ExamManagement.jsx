@@ -6,15 +6,17 @@ import { ChevronDown, Search, Edit2, Trash2, Plus, X } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
 import Button from '../../components/ui/Button';
 import { listExamsTutor, createExam, updateExam, deleteExam } from '../../utils/services/exams';
+import { listBatches } from '../../utils/services/batches';
 
-const mockBatches = ['A', 'B', 'C'];
-const mockSubjects = ['Mathematics', 'Physics', 'Chemistry', 'Biology'];
+const mockSubjects = [];
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#14b8a6'];
 
 const ExamManagement = () => {
-  const [selectedBatch, setSelectedBatch] = useState(mockBatches[0]);
+  const [selectedBatch, setSelectedBatch] = useState('');
   const [exams, setExams] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingExam, setEditingExam] = useState(null);
@@ -46,6 +48,13 @@ const ExamManagement = () => {
           published: e.published,
         }));
         setExams(mapped);
+        setSubjects(Array.from(new Set(mapped.map(e => e.subject).filter(Boolean))));
+        try {
+          const { data: b } = await listBatches({ limit: 100 });
+          const bb = (b.batches || []).map(x => ({ id: x.batchId || x._id, name: x.name }));
+          setBatches(bb);
+          if (!selectedBatch && bb.length) setSelectedBatch(bb[0].id);
+        } catch {}
       } catch (err) {
         setError(err.response?.data?.error || err.message);
       } finally {
@@ -122,7 +131,7 @@ const ExamManagement = () => {
     }
   };
 
-  const subjectData = mockSubjects.map(subject => ({
+  const subjectData = subjects.map(subject => ({
     name: subject,
     count: exams.filter(exam => exam.subject === subject).length
   }));
@@ -159,19 +168,19 @@ const ExamManagement = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  {mockBatches.map(batch => (
-                    <motion.div
-                      key={batch}
+                {batches.map(batch => (
+                  <motion.div
+                      key={batch.id}
                       className="px-3 py-2 rounded hover:bg-bw-12 cursor-pointer"
                       onClick={() => {
-                        setSelectedBatch(batch);
+                        setSelectedBatch(batch.id);
                         setShowBatchDropdown(false);
                       }}
                       whileHover={{ scale: 1.05, backgroundColor: 'rgba(99, 102, 241, 0.2)' }}
                     >
-                      {batch}
+                      {batch.name}
                     </motion.div>
-                  ))}
+                ))}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -341,7 +350,7 @@ const ExamManagement = () => {
                       className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none"
                     >
                       <option value="" className="examadmin-select-placeholder">Select Subject</option>
-                      {mockSubjects.map(subject => (
+                      {subjects.map(subject => (
                         <option key={subject} value={subject} className="examadmin-select-placeholder">{subject}</option>
                       ))}
                     </select>
@@ -377,8 +386,8 @@ const ExamManagement = () => {
                       className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none"
                     >
                       <option value="">Select Batch</option>
-                      {mockBatches.map(batch => (
-                        <option key={batch} value={batch}>{batch}</option>
+                      {batches.map(batch => (
+                        <option key={batch.id} value={batch.id}>{batch.name}</option>
                       ))}
                     </select>
                   </div>

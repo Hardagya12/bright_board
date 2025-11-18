@@ -7,7 +7,8 @@ import Button from '../../components/ui/Button';
 const SigninStudent = () => {
   // State
   const [formData, setFormData] = useState({
-    email: '',
+    instituteId: '',
+    studentId: '',
     password: ''
   });
   const [errors, setErrors] = useState({});
@@ -23,8 +24,10 @@ const SigninStudent = () => {
   // Validate individual field
   const validateField = (name, value) => {
     switch (name) {
-      case 'email':
-        return !/\S+@\S+\.\S+/.test(value) ? 'Please enter a valid email address' : null;
+      case 'instituteId':
+        return !value ? 'Institute ID is required' : null;
+      case 'studentId':
+        return !value ? 'Student ID is required' : null;
       case 'password':
         return !value ? 'Password is required' : null;
       default:
@@ -69,11 +72,12 @@ const SigninStudent = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/students/signin`, {
+      const response = await fetch(`${API_BASE_URL}/students/auth/signin-id`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: formData.email,
+          instituteId: formData.instituteId,
+          studentId: formData.studentId,
           password: formData.password
         })
       });
@@ -90,7 +94,7 @@ const SigninStudent = () => {
       
       // Store auth token in localStorage
       localStorage.setItem('token', data.token);
-      localStorage.setItem('studentName', data.name);
+      localStorage.setItem('studentName', data.student?.name || '');
       localStorage.setItem('instituteId', data.instituteId);
       
       // Redirect to dashboard after a short delay
@@ -129,19 +133,35 @@ const SigninStudent = () => {
         {!loginSuccess && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm text-bw-75 mb-1">Email</label>
+              <label className="block text-sm text-bw-75 mb-1">Institute ID</label>
               <div className="flex items-center gap-2">
                 <Mail size={18} className="text-bw-62" />
                 <input
-                  type="email"
-                  name="email"
-                  placeholder="email@example.com"
-                  value={formData.email}
+                  type="text"
+                  name="instituteId"
+                  placeholder="INST0001"
+                  value={formData.instituteId}
                   onChange={handleChange}
                   className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
                 />
               </div>
-              {errors.email && <div className="text-bw-62 text-sm mt-1">{errors.email}</div>}
+              {errors.instituteId && <div className="text-bw-62 text-sm mt-1">{errors.instituteId}</div>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-bw-75 mb-1">Student ID</label>
+              <div className="flex items-center gap-2">
+                <Mail size={18} className="text-bw-62" />
+                <input
+                  type="text"
+                  name="studentId"
+                  placeholder="60d21b4667d0d8992e610c85"
+                  value={formData.studentId}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                />
+              </div>
+              {errors.studentId && <div className="text-bw-62 text-sm mt-1">{errors.studentId}</div>}
             </div>
 
             <div>

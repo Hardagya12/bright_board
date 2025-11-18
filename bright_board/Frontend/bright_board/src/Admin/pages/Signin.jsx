@@ -86,6 +86,7 @@ const SigninPage = () => {
       
       // Store auth token in localStorage
       localStorage.setItem('authToken', data.token);
+      localStorage.setItem('token', data.token);
       localStorage.setItem('instituteId', data.instituteId);
       
       // Redirect to dashboard after a short delay

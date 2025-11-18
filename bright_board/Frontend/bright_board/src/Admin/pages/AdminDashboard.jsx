@@ -4,109 +4,87 @@ import { Users, Calendar, Star, ChevronDown } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
 import { getInstituteProfile } from '../../utils/services/institute';
 import { listStudents } from '../../utils/services/students';
-const getDashboardData = () => ({
-  batches: {
-    'Batch A': {
-      totalStudents: 250,
-      totalClasses: 80,
-      pendingPayments: 1500,
-      revenueThisMonth: 5000,
-      avgAttendance: 85,
-      attendanceData: [
-        { name: 'Present', value: 82 },
-        { name: 'Absent', value: 10 },
-        { name: 'Late', value: 8 },
-      ],
-      examScores: [
-        { name: '90-100', value: 35 },
-        { name: '70-89', value: 50 },
-        { name: 'Below 70', value: 15 },
-      ],
-      paymentStatus: [
-        { name: 'Paid', value: 70 },
-        { name: 'Overdue', value: 20 },
-        { name: 'Pending', value: 10 },
-      ],
-      feedback: [
-        { course: 'Mathematics', rating: 4.8, comment: 'Very engaging!' },
-        { course: 'Physics', rating: 4.5, comment: 'Clear concepts.' },
-        { course: 'Platform', rating: 4.6, comment: 'Smooth navigation.' },
-      ],
-    },
-    'Batch B': {
-      totalStudents: 300,
-      totalClasses: 90,
-      pendingPayments: 2500,
-      revenueThisMonth: 4500,
-      avgAttendance: 78,
-      attendanceData: [
-        { name: 'Present', value: 72 },
-        { name: 'Absent', value: 18 },
-        { name: 'Late', value: 10 },
-      ],
-      examScores: [
-        { name: '90-100', value: 20 },
-        { name: '70-89', value: 40 },
-        { name: 'Below 70', value: 40 },
-      ],
-      paymentStatus: [
-        { name: 'Paid', value: 55 },
-        { name: 'Overdue', value: 35 },
-        { name: 'Pending', value: 10 },
-      ],
-      feedback: [
-        { course: 'Mathematics', rating: 4.1, comment: 'Needs slower pace.' },
-        { course: 'Chemistry', rating: 3.9, comment: 'More labs needed.' },
-        { course: 'Platform', rating: 4.3, comment: 'Decent usability.' },
-      ],
-    },
-    'Batch C': {
-      totalStudents: 230,
-      totalClasses: 75,
-      pendingPayments: 1200,
-      revenueThisMonth: 6000,
-      avgAttendance: 90,
-      attendanceData: [
-        { name: 'Present', value: 90 },
-        { name: 'Absent', value: 6 },
-        { name: 'Late', value: 4 },
-      ],
-      examScores: [
-        { name: '90-100', value: 45 },
-        { name: '70-89', value: 40 },
-        { name: 'Below 70', value: 15 },
-      ],
-      paymentStatus: [
-        { name: 'Paid', value: 80 },
-        { name: 'Overdue', value: 10 },
-        { name: 'Pending', value: 10 },
-      ],
-      feedback: [
-        { course: 'Biology', rating: 4.9, comment: 'Fantastic content!' },
-        { course: 'Physics', rating: 4.7, comment: 'Well-organized.' },
-        { course: 'Platform', rating: 4.8, comment: 'Top-notch experience.' },
-      ],
-    },
-  },
-  COLORS: ['#ffffff', '#cccccc', '#666666'],
-});
+import { listBatches } from '../../utils/services/batches';
+import { getAttendanceStats, listAttendance } from '../../utils/services/attendance';
+import { getPaymentsSummary } from '../../utils/services/payments';
+import { getResultsAnalytics } from '../../utils/services/results';
+import { listTickets } from '../../utils/services/support';
+const COLORS = ['#ffffff', '#cccccc', '#666666'];
 
 const AdminDashboard = () => {
-  const [selectedBatch, setSelectedBatch] = useState('Batch A');
+  const [selectedBatch, setSelectedBatch] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dashboardData = getDashboardData();
-  const batches = Object.keys(dashboardData.batches);
+  const [batches, setBatches] = useState([]);
   const [live, setLive] = useState({ instituteName: '', studentCount: 0 });
+  const [cards, setCards] = useState({ totalStudents: 0, totalClasses: 0, pendingPayments: 0, revenueThisMonth: 0, avgAttendance: 0 });
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [paymentStatus, setPaymentStatus] = useState([]);
+  const [examScores, setExamScores] = useState([]);
+  const [feedback, setFeedback] = useState([]);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [p, s] = await Promise.all([getInstituteProfile(), listStudents({ limit: 1 })]);
-        setLive({ instituteName: p.data.institute?.name || '', studentCount: s.data.pagination?.total || (s.data.students?.length || 0) });
+        const [{ data: p }, { data: s }, { data: b }] = await Promise.all([
+          getInstituteProfile(),
+          listStudents({ limit: 1 }),
+          listBatches({ limit: 100 })
+        ]);
+        setLive({ instituteName: p.institute?.name || '', studentCount: s.pagination?.total || (s.students?.length || 0) });
+        const bb = (b.batches || []).map(x => ({ id: x.batchId || x._id, name: x.name || x.batchId }));
+        setBatches(bb);
+        if (bb.length) setSelectedBatch(bb[0].id);
       } catch (e) {}
     };
     load();
   }, []);
+
+  useEffect(() => {
+    const loadMetrics = async () => {
+      try {
+        const [{ data: att }, { data: pay }, { data: res }, { data: t}] = await Promise.all([
+          getAttendanceStats({ range: 'week' }),
+          getPaymentsSummary(),
+          getResultsAnalytics(),
+          listTickets({ limit: 5 })
+        ]);
+        const weekly = att.weekly || [];
+        const avgAttendance = weekly.length ? Math.round(weekly.reduce((a, c) => a + (c.attendance || 0), 0) / weekly.length) : 0;
+        const totalClasses = weekly.length;
+        setCards(c => ({ ...c, totalClasses, pendingPayments: pay.pendingPayments || 0, revenueThisMonth: (pay.monthlyData || []).slice(-1)[0]?.revenue || pay.revenue || 0, avgAttendance }));
+        setPaymentStatus(pay.paymentStats || []);
+        setExamScores((res.distribution || []).map(d => ({ name: d.name, value: d.value })));
+        setFeedback(((t.tickets || []).slice(0, 5)).map(it => ({ course: (it.category || 'general'), rating: 0, comment: it.subject })));
+      } catch (e) {}
+    };
+    loadMetrics();
+  }, []);
+
+  useEffect(() => {
+    const loadBatchSpecific = async () => {
+      if (!selectedBatch) return;
+      try {
+        const [{ data: s }, { data: a }] = await Promise.all([
+          listStudents({ batchId: selectedBatch, limit: 1 }),
+          listAttendance({ batchId: selectedBatch })
+        ]);
+        const totalStudents = s.pagination?.total || (s.students?.length || 0);
+        const logs = a.attendance || [];
+        const latestDate = logs[0]?.date || null;
+        const latestLogs = latestDate ? logs.filter(l => l.date === latestDate) : [];
+        const present = latestLogs.filter(l => l.status === 'present').length;
+        const absent = latestLogs.filter(l => l.status === 'absent').length;
+        const late = latestLogs.filter(l => l.status === 'late').length;
+        setCards(c => ({ ...c, totalStudents }));
+        setAttendanceData([
+          { name: 'Present', value: present },
+          { name: 'Absent', value: absent },
+          { name: 'Late', value: late },
+        ]);
+      } catch (e) {}
+    };
+    loadBatchSpecific();
+  }, [selectedBatch]);
 
   const StatCard = ({ icon: Icon, value, label, isRupee }) => (
     <div className="p-6 rounded-xl bg-white/5 border border-white/10 text-center hover:bg-white/15 hover:-translate-y-1 transition-transform duration-300">
@@ -135,7 +113,7 @@ const AdminDashboard = () => {
           labelLine={true}
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={dashboardData.COLORS[index % dashboardData.COLORS.length]} />
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip />
@@ -154,7 +132,7 @@ const AdminDashboard = () => {
         >
           <Star className="w-7 h-7 text-white drop-shadow-[0_2px_4px_rgba(255,255,255,0.3)]" />
           <div>
-            <p className="font-medium text-white text-base">{item.course}: {item.rating}/5</p>
+            <p className="font-medium text-white text-base">{item.course}</p>
             <span className="text-sm font-medium text-gray-300">{item.comment}</span>
           </div>
         </div>
@@ -162,7 +140,17 @@ const AdminDashboard = () => {
     </div>
   );
 
-  const batchData = dashboardData.batches[selectedBatch];
+  const batchData = {
+    totalStudents: cards.totalStudents,
+    totalClasses: cards.totalClasses,
+    pendingPayments: cards.pendingPayments,
+    revenueThisMonth: cards.revenueThisMonth,
+    avgAttendance: cards.avgAttendance,
+    attendanceData,
+    paymentStatus,
+    examScores,
+    feedback,
+  };
 
   return (
     <div className="min-h-screen flex font-inter bg-black text-white bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.05)_0%,transparent_50%)]">
@@ -187,14 +175,14 @@ const AdminDashboard = () => {
               <ul className="absolute top-full left-0 w-full bg-white/5 border border-white/10 rounded-lg mt-2 p-2 z-10">
                 {batches.map((batch) => (
                   <li
-                    key={batch}
+                    key={batch.id}
                     className="p-3 text-white text-base font-medium cursor-pointer hover:bg-white hover:text-black hover:pl-6 transition-all duration-300"
                     onClick={() => {
-                      setSelectedBatch(batch);
+                      setSelectedBatch(batch.id);
                       setIsDropdownOpen(false);
                     }}
                   >
-                    {batch}
+                    {batch.name}
                   </li>
                 ))}
               </ul>

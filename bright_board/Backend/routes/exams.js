@@ -1,6 +1,6 @@
 const express = require('express');
 const Joi = require('joi');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, requireInstitute, requireStudent } = require('../middleware/auth');
 
 module.exports = (db) => {
   const router = express.Router();
@@ -33,9 +33,9 @@ module.exports = (db) => {
   });
 
   // Tutor: Create exam
-  router.post('/tutor/exams', authenticate, async (req, res) => {
+  router.post('/tutor/exams', authenticate, requireInstitute, async (req, res) => {
     try {
-      if (req.user.studentId) return res.status(403).json({ error: 'Only institutes can create exams' });
+      
       const { error, value } = examSchema.validate(req.body);
       if (error) return res.status(400).json({ error: error.details[0].message });
 
@@ -65,9 +65,9 @@ module.exports = (db) => {
   });
 
   // Tutor: List exams
-  router.get('/tutor/exams', authenticate, async (req, res) => {
+  router.get('/tutor/exams', authenticate, requireInstitute, async (req, res) => {
     try {
-      if (req.user.studentId) return res.status(403).json({ error: 'Only institutes can list exams' });
+      
       const instituteId = new ObjectId(req.user.instituteId);
       const docs = await exams.find({ instituteId }).sort({ createdAt: -1 }).toArray();
       res.status(200).json({ exams: docs.map(d => ({ ...d, id: d._id.toString() })) });
@@ -78,9 +78,9 @@ module.exports = (db) => {
   });
 
   // Tutor: Get single exam (with questions)
-  router.get('/tutor/exams/:id', authenticate, async (req, res) => {
+  router.get('/tutor/exams/:id', authenticate, requireInstitute, async (req, res) => {
     try {
-      if (req.user.studentId) return res.status(403).json({ error: 'Only institutes can view exam' });
+      
       const instituteId = new ObjectId(req.user.instituteId);
       const examId = new ObjectId(req.params.id);
       const exam = await exams.findOne({ _id: examId, instituteId });
@@ -94,9 +94,9 @@ module.exports = (db) => {
   });
 
   // Tutor: Update exam
-  router.put('/tutor/exams/:id', authenticate, async (req, res) => {
+  router.put('/tutor/exams/:id', authenticate, requireInstitute, async (req, res) => {
     try {
-      if (req.user.studentId) return res.status(403).json({ error: 'Only institutes can update exam' });
+      
       const { error, value } = examSchema.min(1).validate(req.body);
       if (error) return res.status(400).json({ error: error.details[0].message });
       const instituteId = new ObjectId(req.user.instituteId);
@@ -113,9 +113,9 @@ module.exports = (db) => {
   });
 
   // Tutor: Delete exam
-  router.delete('/tutor/exams/:id', authenticate, async (req, res) => {
+  router.delete('/tutor/exams/:id', authenticate, requireInstitute, async (req, res) => {
     try {
-      if (req.user.studentId) return res.status(403).json({ error: 'Only institutes can delete exam' });
+      
       const instituteId = new ObjectId(req.user.instituteId);
       const examId = new ObjectId(req.params.id);
       const delExam = await exams.deleteOne({ _id: examId, instituteId });
@@ -130,9 +130,9 @@ module.exports = (db) => {
   });
 
   // Tutor: Add question
-  router.post('/tutor/exams/:id/questions', authenticate, async (req, res) => {
+  router.post('/tutor/exams/:id/questions', authenticate, requireInstitute, async (req, res) => {
     try {
-      if (req.user.studentId) return res.status(403).json({ error: 'Only institutes can add questions' });
+      
       const { error, value } = questionSchema.validate(req.body);
       if (error) return res.status(400).json({ error: error.details[0].message });
       const instituteId = new ObjectId(req.user.instituteId);
@@ -150,9 +150,9 @@ module.exports = (db) => {
   });
 
   // Tutor: Update question
-  router.put('/tutor/exams/:id/questions/:qid', authenticate, async (req, res) => {
+  router.put('/tutor/exams/:id/questions/:qid', authenticate, requireInstitute, async (req, res) => {
     try {
-      if (req.user.studentId) return res.status(403).json({ error: 'Only institutes can update questions' });
+      
       const { error, value } = questionSchema.min(1).validate(req.body);
       if (error) return res.status(400).json({ error: error.details[0].message });
       const instituteId = new ObjectId(req.user.instituteId);
@@ -174,9 +174,9 @@ module.exports = (db) => {
   });
 
   // Tutor: Delete question
-  router.delete('/tutor/exams/:id/questions/:qid', authenticate, async (req, res) => {
+  router.delete('/tutor/exams/:id/questions/:qid', authenticate, requireInstitute, async (req, res) => {
     try {
-      if (req.user.studentId) return res.status(403).json({ error: 'Only institutes can delete questions' });
+      
       const examId = new ObjectId(req.params.id);
       const qid = new ObjectId(req.params.qid);
       const del = await questions.deleteOne({ _id: qid, examId });
@@ -189,9 +189,9 @@ module.exports = (db) => {
   });
 
   // Student: List exams (published, same institute, optional batch filter)
-  router.get('/student/exams', authenticate, async (req, res) => {
+  router.get('/student/exams', authenticate, requireStudent, async (req, res) => {
     try {
-      if (!req.user.studentId) return res.status(403).json({ error: 'Only students can view exams' });
+      
       const instituteId = new ObjectId(req.user.instituteId);
       const { batchId } = req.query;
       const query = { instituteId, published: true };
@@ -205,9 +205,9 @@ module.exports = (db) => {
   });
 
   // Student: Get exam questions
-  router.get('/student/exams/:id', authenticate, async (req, res) => {
+  router.get('/student/exams/:id', authenticate, requireStudent, async (req, res) => {
     try {
-      if (!req.user.studentId) return res.status(403).json({ error: 'Only students can view exam' });
+      
       const instituteId = new ObjectId(req.user.instituteId);
       const examId = new ObjectId(req.params.id);
       const exam = await exams.findOne({ _id: examId, instituteId, published: true });
@@ -221,9 +221,9 @@ module.exports = (db) => {
   });
 
   // Student: Submit exam
-  router.post('/student/exams/:id/submit', authenticate, async (req, res) => {
+  router.post('/student/exams/:id/submit', authenticate, requireStudent, async (req, res) => {
     try {
-      if (!req.user.studentId) return res.status(403).json({ error: 'Only students can submit' });
+      
       const { error, value } = submitSchema.validate(req.body);
       if (error) return res.status(400).json({ error: error.details[0].message });
       const instituteId = new ObjectId(req.user.instituteId);
