@@ -1,6 +1,6 @@
 const express = require('express');
 const Joi = require('joi');
-const { authenticate, requireInstitute } = require('../middleware/auth');
+const { authenticate, requireInstitute, requireStudent } = require('../middleware/auth');
 
 module.exports = (db) => {
   const router = express.Router();
@@ -91,6 +91,32 @@ module.exports = (db) => {
     } catch (err) {
       console.error('Attendance stats error:', err);
       res.status(500).json({ error: err.message || 'Failed to fetch stats' });
+    }
+  });
+
+  // Student: Get own attendance logs
+  router.get('/attendance/student', authenticate, requireStudent, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const internalStudentId = req.user.studentId; // ObjectId string
+      const students = db.collection('students');
+      const stu = await students.findOne({ _id: new ObjectId(internalStudentId), instituteId });
+      if (!stu) return res.status(404).json({ error: 'Student not found' });
+      const keys = [internalStudentId];
+      if (stu.studentId) keys.push(stu.studentId);
+      const { from, to } = req.query;
+      const query = { instituteId, studentId: { $in: keys } };
+      if (from || to) {
+        const range = {};
+        if (from) range.$gte = from;
+        if (to) range.$lte = to;
+        query.date = range;
+      }
+      const docs = await logs.find(query).sort({ date: 1 }).toArray();
+      res.status(200).json({ attendance: docs.map(d => ({ date: d.date, status: d.status, reason: d.reason || null })) });
+    } catch (err) {
+      console.error('Student attendance error:', err);
+      res.status(500).json({ error: err.message || 'Failed to fetch attendance' });
     }
   });
 

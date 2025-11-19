@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
-const { authenticate, requireInstitute } = require('../middleware/auth');
+const { authenticate, requireInstitute, requireStudent } = require('../middleware/auth');
 const { generateToken } = require('../utils/jwt');
 
 module.exports = (db) => {
@@ -355,6 +355,42 @@ module.exports = (db) => {
     } catch (error) {
       console.error('Get student error:', error);
       res.status(500).json({ error: error.message || 'Failed to fetch student' });
+    }
+  });
+
+  // Student: get own profile
+  router.get('/me', authenticate, requireStudent, async (req, res) => {
+    try {
+      const sid = new ObjectId(req.user.studentId);
+      const instituteId = new ObjectId(req.user.instituteId);
+      const student = await studentsCollection.findOne(
+        { _id: sid, instituteId },
+        { projection: { password: 0 } }
+      );
+      if (!student) return res.status(404).json({ error: 'Student not found' });
+      res.status(200).json({ student });
+    } catch (error) {
+      console.error('Get me error:', error);
+      res.status(500).json({ error: error.message || 'Failed to fetch profile' });
+    }
+  });
+
+  // Student: get own profile by custom studentId (security-checked)
+  router.get('/by-student-id/:sid', authenticate, requireStudent, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const sidInternal = new ObjectId(req.user.studentId);
+      const sidCustom = req.params.sid;
+      const student = await studentsCollection.findOne(
+        { studentId: sidCustom, instituteId },
+        { projection: { password: 0 } }
+      );
+      if (!student) return res.status(404).json({ error: 'Student not found' });
+      if (!student._id.equals(sidInternal)) return res.status(403).json({ error: 'Access denied' });
+      res.status(200).json({ student });
+    } catch (error) {
+      console.error('Get by studentId error:', error);
+      res.status(500).json({ error: error.message || 'Failed to fetch profile' });
     }
   });
 

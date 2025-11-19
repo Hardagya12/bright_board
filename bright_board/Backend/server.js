@@ -35,6 +35,23 @@ app.use((req, res, next) => {
     next();
 });
 
+// Health endpoints
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
+app.get('/api', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+app.get('/api/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 async function initializeDatabase() {
     let client;
     try {
