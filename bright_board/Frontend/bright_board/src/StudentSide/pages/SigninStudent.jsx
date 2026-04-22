@@ -94,8 +94,11 @@ const SigninStudent = () => {
       
       // Store auth token in localStorage
       localStorage.setItem('token', data.token);
+      localStorage.setItem('studentToken', data.token);
+      localStorage.removeItem('authToken');
       localStorage.setItem('studentName', data.student?.name || '');
       localStorage.setItem('instituteId', data.instituteId);
+      localStorage.setItem('studentId', data.studentId);
       
       // Redirect to dashboard after a short delay
       setTimeout(() => {
