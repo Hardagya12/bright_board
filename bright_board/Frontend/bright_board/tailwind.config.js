@@ -28,6 +28,21 @@ export default {
           75: '#BFBFBF',
           87: '#DEDEDE',
           100: '#FFFFFF'
+        },
+        accent: {
+          primary: '#3B82F6',
+          primaryDark: '#2563EB',
+          primaryLight: '#60A5FA',
+          success: '#10B981',
+          successDark: '#059669',
+          warning: '#F59E0B',
+          warningDark: '#D97706',
+          error: '#EF4444',
+          errorDark: '#DC2626',
+          info: '#8B5CF6',
+          infoDark: '#7C3AED',
+          teal: '#14B8A6',
+          tealDark: '#0D9488',
         }
       },
       keyframes: {
