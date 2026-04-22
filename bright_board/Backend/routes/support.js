@@ -208,5 +208,124 @@ module.exports = (db) => {
     }
   });
 
+  // ─── TUTOR: List student feedback ──────────────────────────────────────────
+  router.get('/student-feedback', authenticate, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const feedbackCol = db.collection('feedback');
+      const docs = await feedbackCol.aggregate([
+        { $match: { instituteId } },
+        { $lookup: { from: 'students', localField: 'studentId', foreignField: '_id', as: 'student' } },
+        { $unwind: { path: '$student', preserveNullAndEmptyArrays: true } },
+        { $sort: { createdAt: -1 } },
+        { $project: {
+          _id: 1, type: 1, subject: 1, message: 1, rating: 1, isRead: 1, reply: 1, repliedAt: 1, createdAt: 1,
+          studentName: '$student.name', studentEmail: '$student.email',
+        } }
+      ]).toArray();
+      res.status(200).json({ feedback: docs.map(d => ({ ...d, id: d._id.toString() })) });
+    } catch (err) {
+      console.error('List student feedback error:', err);
+      res.status(500).json({ error: err.message || 'Failed' });
+    }
+  });
+
+  // ─── TUTOR: Reply to student feedback ─────────────────────────────────────
+  router.post('/student-feedback/:id/reply', authenticate, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const id = new ObjectId(req.params.id);
+      const { reply } = req.body;
+      if (!reply) return res.status(400).json({ error: 'Reply required' });
+
+      const feedbackCol = db.collection('feedback');
+      const result = await feedbackCol.updateOne(
+        { _id: id, instituteId },
+        { $set: { reply, repliedAt: new Date(), isRead: true } }
+      );
+      if (result.matchedCount === 0) return res.status(404).json({ error: 'Feedback not found' });
+      res.status(200).json({ message: 'Reply sent' });
+    } catch (err) {
+      res.status(500).json({ error: err.message || 'Failed' });
+    }
+  });
+
+  // ─── TUTOR: Mark feedback as read ─────────────────────────────────────────
+  router.put('/student-feedback/:id/read', authenticate, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const id = new ObjectId(req.params.id);
+      const feedbackCol = db.collection('feedback');
+      await feedbackCol.updateOne({ _id: id, instituteId }, { $set: { isRead: true } });
+      res.status(200).json({ message: 'Marked as read' });
+    } catch (err) {
+      res.status(500).json({ error: err.message || 'Failed' });
+    }
+  });
+
+  // ─── TUTOR: List student support tickets ──────────────────────────────────
+  router.get('/student-tickets', authenticate, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const ticketsCol = db.collection('support_tickets');
+      const docs = await ticketsCol.aggregate([
+        { $match: { instituteId } },
+        { $lookup: { from: 'students', localField: 'studentId', foreignField: '_id', as: 'student' } },
+        { $unwind: { path: '$student', preserveNullAndEmptyArrays: true } },
+        { $sort: { updatedAt: -1 } },
+        { $project: {
+          _id: 1, ticketId: 1, subject: 1, description: 1, category: 1, priority: 1, status: 1,
+          messages: 1, createdAt: 1, updatedAt: 1,
+          studentName: '$student.name', studentEmail: '$student.email',
+        } }
+      ]).toArray();
+      res.status(200).json({ tickets: docs.map(d => ({ ...d, id: d._id.toString() })) });
+    } catch (err) {
+      console.error('List student tickets error:', err);
+      res.status(500).json({ error: err.message || 'Failed' });
+    }
+  });
+
+  // ─── TUTOR: Reply to student support ticket ───────────────────────────────
+  router.post('/student-tickets/:id/reply', authenticate, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const id = new ObjectId(req.params.id);
+      const { message } = req.body;
+      if (!message) return res.status(400).json({ error: 'Message required' });
+
+      const ticketsCol = db.collection('support_tickets');
+      const result = await ticketsCol.updateOne(
+        { _id: id, instituteId },
+        {
+          $push: { messages: { sender: 'tutor', message, sentAt: new Date() } },
+          $set: { updatedAt: new Date(), status: 'in-progress' }
+        }
+      );
+      if (result.matchedCount === 0) return res.status(404).json({ error: 'Ticket not found' });
+      res.status(200).json({ message: 'Reply sent' });
+    } catch (err) {
+      res.status(500).json({ error: err.message || 'Failed' });
+    }
+  });
+
+  // ─── TUTOR: Update student support ticket status ──────────────────────────
+  router.put('/student-tickets/:id/status', authenticate, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const id = new ObjectId(req.params.id);
+      const { status } = req.body;
+      if (!['open', 'in-progress', 'resolved', 'closed'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+      }
+
+      const ticketsCol = db.collection('support_tickets');
+      await ticketsCol.updateOne({ _id: id, instituteId }, { $set: { status, updatedAt: new Date() } });
+      res.status(200).json({ message: 'Status updated' });
+    } catch (err) {
+      res.status(500).json({ error: err.message || 'Failed' });
+    }
+  });
+
   return router;
 };

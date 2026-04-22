@@ -21,7 +21,7 @@ const RoleSelection = () => {
             <GraduationCap size={20} />
             I am a Tutor
           </Button>
-          <Button fullWidth variant="outline" onClick={() => navigate('/s/signup')} className="flex gap-2 justify-center">
+          <Button fullWidth variant="outline" onClick={() => navigate('/s/signin')} className="flex gap-2 justify-center">
             <School size={20} />
             I am a Student
           </Button>

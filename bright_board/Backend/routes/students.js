@@ -11,7 +11,6 @@ module.exports = (db) => {
   const batchesCollection = db.collection('batches');
   const { ObjectId } = require('mongodb');
 
-  // Validation schemas
   const createStudentSchema = Joi.object({
     name: Joi.string().min(2).max(50).required(),
     email: Joi.string().email().required(),
@@ -20,20 +19,7 @@ module.exports = (db) => {
     address: Joi.string().min(5).max(200).required(),
     course: Joi.string().required(),
     batchId: Joi.string().optional(),
-    password: Joi.string().min(6).required()
-  });
-
-  // Updated: Schema for student self-registration (requires instituteId and batchId)
-  const registerStudentSchema = Joi.object({
-    name: Joi.string().min(2).max(50).required(),
-    email: Joi.string().email().required(),
-    phone: Joi.string().pattern(/^\d{10}$/).required(),
-    dateOfBirth: Joi.date().required(),
-    address: Joi.string().min(5).max(200).required(),
-    course: Joi.string().required(),
-    instituteId: Joi.string().required().min(5),  // Custom string, e.g., "INST0001"
-    batchId: Joi.string().required().min(5),  // Custom string, e.g., "BATCH0001"
-    password: Joi.string().min(6).required()
+    password: Joi.string().min(6).optional()
   });
 
   const updateStudentSchema = Joi.object({
@@ -65,7 +51,8 @@ module.exports = (db) => {
         return res.status(400).json({ error: error.details[0].message });
       }
 
-      const { name, email, phone, dateOfBirth, address, course, batchId, password } = req.body;
+      const { name, email, phone, dateOfBirth, address, course, batchId } = req.body;
+      const defaultPassword = req.body.password || '123456';
       const instituteId = req.user.instituteId;  // Internal ObjectId from auth
 
       await session.withTransaction(async () => {
@@ -96,7 +83,7 @@ module.exports = (db) => {
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
         // Generate custom studentId: YYMM + 4-digit sequence per institute
         const now = new Date();
@@ -160,136 +147,6 @@ module.exports = (db) => {
         return res.status(400).json({ error: error.message });
       }
       res.status(500).json({ error: 'Failed to add student' });
-    } finally {
-      await session.endSession();
-    }
-  });
-
-  // Updated: Student self-registration using instituteId and batchId (public)
-  router.post('/register', async (req, res) => {
-    const session = studentsCollection.client.startSession();
-    try {
-      const { error } = registerStudentSchema.validate(req.body);
-      if (error) {
-        return res.status(400).json({ error: error.details[0].message });
-      }
-
-      const { name, email, phone, dateOfBirth, address, course, instituteId: customInstituteId, batchId, password } = req.body;
-
-      await session.withTransaction(async () => {
-        // Find institute by custom instituteId (string)
-        const institute = await institutesCollection.findOne({ instituteId: customInstituteId });
-        if (!institute) {
-          throw new Error('Invalid instituteId. Institute not found.');
-        }
-        const internalInstituteId = institute._id;  // ObjectId
-
-        // Find batch by custom batchId (string) and ensure it belongs to this institute
-        const batch = await batchesCollection.findOne({ 
-          batchId,
-          instituteId: internalInstituteId 
-        }, { session });
-        if (!batch) {
-          throw new Error('Invalid batchId or batch does not belong to the specified institute.');
-        }
-        if (batch.course !== course) {
-          throw new Error('Course does not match the batch course.');
-        }
-        if (batch.status !== 'active') {
-          throw new Error('Batch is not active for registration.');
-        }
-        if (batch.currentEnrollment >= batch.capacity) {
-          throw new Error('Batch is full.');
-        }
-
-        // Check if student email already exists for this institute
-        const existingStudent = await studentsCollection.findOne({
-          email,
-          instituteId: internalInstituteId
-        }, { session });
-
-        if (existingStudent) {
-          throw new Error('Student with this email already exists in this institute');
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Generate custom studentId: YYMM + 4-digit sequence per institute
-        const now = new Date();
-        const yy = String(now.getFullYear()).slice(2);
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const prefix = `${yy}${mm}`;
-        const monthlyCount = await studentsCollection.countDocuments({
-          instituteId: internalInstituteId,
-          studentId: { $regex: `^${prefix}` }
-        }, { session });
-        const seq = String(monthlyCount + 1).padStart(4, '0');
-        const customStudentId = `${prefix}${seq}`;
-
-        // Create student
-        const student = {
-          instituteId: internalInstituteId,
-          studentId: customStudentId,
-          name,
-          email,
-          phone,
-          dateOfBirth: new Date(dateOfBirth),
-          address,
-          course,
-          batchId,  // String
-          password: hashedPassword,
-          enrollmentDate: new Date(),
-          status: 'active',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-
-        const result = await studentsCollection.insertOne(student, { session });
-
-        // Increment batch enrollment
-        await batchesCollection.updateOne({ batchId }, { $inc: { currentEnrollment: 1 } }, { session });
-
-        // Add student to institute's student list
-        await institutesCollection.updateOne(
-          { _id: internalInstituteId },
-          {
-            $push: { students: result.insertedId },
-            $set: { updatedAt: new Date() }
-          },
-          { session }
-        );
-
-        // Generate JWT token
-        const token = generateToken({
-          studentId: result.insertedId.toString(),
-          instituteId: internalInstituteId.toString(),
-          email: student.email,
-          name: student.name,
-          role: 'student'
-        });
-
-        res.status(201).json({
-          message: 'Student registered successfully',
-          token,
-          studentId: customStudentId,
-          student: {
-            id: customStudentId,
-            name,
-            email,
-            phone,
-            course,
-            batchId,
-            enrollmentDate: student.enrollmentDate
-          }
-        });
-      });
-    } catch (error) {
-      console.error('Student register error:', error);
-      if (error.message) {
-        return res.status(400).json({ error: error.message });
-      }
-      res.status(500).json({ error: 'Failed to register student' });
     } finally {
       await session.endSession();
     }
@@ -594,6 +451,120 @@ module.exports = (db) => {
     } catch (error) {
       console.error('Student signin by id error:', error);
       res.status(500).json({ error: error.message || 'Login failed' });
+    }
+  });
+
+  // Student change password (protected - student only)
+  router.put('/auth/password', authenticate, requireStudent, async (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      
+      if (!oldPassword || !newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: 'Valid old password and a new password (min 6 chars) are required' });
+      }
+
+      const instituteId = req.user.instituteId;
+      const studentId = req.user.studentId;
+
+      const student = await studentsCollection.findOne({
+        _id: new ObjectId(studentId),
+        instituteId: new ObjectId(instituteId)
+      });
+
+      if (!student) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+
+      const isValidPassword = await bcrypt.compare(oldPassword, student.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Incorrect old password' });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      await studentsCollection.updateOne(
+        { _id: new ObjectId(studentId) },
+        { $set: { password: hashedPassword, updatedAt: new Date() } }
+      );
+
+      res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ error: error.message || 'Failed to change password' });
+    }
+  });
+
+  // ─── Bulk CSV Import ───────────────────────────────────────────────────────
+  router.post('/bulk-import', authenticate, requireInstitute, async (req, res) => {
+    try {
+      const { students: studentsList } = req.body;
+      if (!Array.isArray(studentsList) || studentsList.length === 0) {
+        return res.status(400).json({ error: 'students array is required' });
+      }
+
+      const instituteId = new ObjectId(req.user.instituteId);
+      const institute = await institutesCollection.findOne({ _id: instituteId });
+      if (!institute) return res.status(404).json({ error: 'Institute not found' });
+
+      const defaultPassword = '123456';
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+      const results = { created: 0, skipped: 0, errors: [] };
+
+      for (let i = 0; i < studentsList.length; i++) {
+        const s = studentsList[i];
+        const row = i + 1;
+        try {
+          // Validate minimum required fields
+          if (!s.name || !s.email || !s.phone) {
+            results.errors.push({ row, error: 'Missing name, email, or phone' });
+            results.skipped++;
+            continue;
+          }
+
+          // Check for existing student
+          const exists = await studentsCollection.findOne({ email: s.email.toLowerCase(), instituteId });
+          if (exists) {
+            results.errors.push({ row, error: `Email ${s.email} already exists` });
+            results.skipped++;
+            continue;
+          }
+
+          // Generate unique student ID
+          const count = await studentsCollection.countDocuments({ instituteId });
+          const studentId = String(10000001 + count);
+
+          const doc = {
+            instituteId,
+            studentId,
+            name: s.name.trim(),
+            email: s.email.toLowerCase().trim(),
+            phone: String(s.phone).trim(),
+            dateOfBirth: s.dateOfBirth ? new Date(s.dateOfBirth) : new Date('2000-01-01'),
+            address: s.address || '',
+            course: s.course || institute.coursesOffered?.[0] || 'General',
+            batchId: s.batchId || null,
+            password: hashedPassword,
+            enrollmentDate: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          await studentsCollection.insertOne(doc);
+          results.created++;
+        } catch (err) {
+          results.errors.push({ row, error: err.message });
+          results.skipped++;
+        }
+      }
+
+      res.status(200).json({
+        message: `Imported ${results.created} students, ${results.skipped} skipped`,
+        ...results,
+      });
+    } catch (error) {
+      console.error('Bulk import error:', error);
+      res.status(500).json({ error: error.message || 'Failed to import' });
     }
   });
 
