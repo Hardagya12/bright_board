@@ -10,6 +10,21 @@ export const palette = {
     87: '#DEDEDE',
     100: '#FFFFFF',
   },
+  accent: {
+    primary: '#3B82F6',      // Vibrant blue for CTAs
+    primaryDark: '#2563EB',  // Darker blue for hover
+    primaryLight: '#60A5FA', // Light blue for subtle accents
+    success: '#10B981',      // Green for success states
+    successDark: '#059669',  // Dark green for hover
+    warning: '#F59E0B',      // Amber for warnings
+    warningDark: '#D97706',  // Dark amber for hover
+    error: '#EF4444',        // Red for errors
+    errorDark: '#DC2626',    // Dark red for hover
+    info: '#8B5CF6',         // Purple for info
+    infoDark: '#7C3AED',     // Dark purple for hover
+    teal: '#14B8A6',         // Teal accent
+    tealDark: '#0D9488',     // Dark teal for hover
+  },
 };
 
 export const typography = {

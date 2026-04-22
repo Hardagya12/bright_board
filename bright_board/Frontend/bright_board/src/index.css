@@ -12,6 +12,21 @@
   --bw-75: #BFBFBF;
   --bw-87: #DEDEDE;
   --bw-100: #FFFFFF;
+  
+  /* Accent colors */
+  --accent-primary: #3B82F6;
+  --accent-primary-dark: #2563EB;
+  --accent-primary-light: #60A5FA;
+  --accent-success: #10B981;
+  --accent-success-dark: #059669;
+  --accent-warning: #F59E0B;
+  --accent-warning-dark: #D97706;
+  --accent-error: #EF4444;
+  --accent-error-dark: #DC2626;
+  --accent-info: #8B5CF6;
+  --accent-info-dark: #7C3AED;
+  --accent-teal: #14B8A6;
+  --accent-teal-dark: #0D9488;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -22,7 +37,36 @@
   }
 }
 
+
 html, body, #root {
   height: 100%;
+  background-color: #000000;
+  color: #ffffff;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f1f1f; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #404040; 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #616161; 
+}
+
+/* Selection Color */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3); /* accent-primary with opacity */
+  color: white;
 }
 
