@@ -29,6 +29,20 @@ const dbName = "bright_board";
 app.use(cors());
 app.use(express.json());
 
+// Security Middleware
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+app.use(helmet());
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 100000, // 100k requests
+    message: 'Too many requests from this IP, please try again later.'
+});
+
+// app.use(limiter); // DISABLED temporarily to guarantee no 429 errors during dev
+
 // Request logging middleware
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -56,8 +70,8 @@ async function initializeDatabase() {
     let client;
     try {
         client = new MongoClient(uri, {
-            useUnifiedTopology: true,
             serverSelectionTimeoutMS: 5000,
+            family: 4
         });
 
         await client.connect();
@@ -83,7 +97,11 @@ async function initializeDatabase() {
         await db.collection('attendance_logs').createIndex({ instituteId: 1, date: 1, batchId: 1, studentId: 1 });
         await db.collection('materials').createIndex({ instituteId: 1, subject: 1, batch: 1 });
         await db.collection('payments').createIndex({ instituteId: 1, date: 1, status: 1 });
-
+        // Indexes for student-side features
+        await db.collection('feedback').createIndex({ studentId: 1, instituteId: 1 });
+        await db.collection('feedback').createIndex({ instituteId: 1, isRead: 1 });
+        await db.collection('support_tickets').createIndex({ studentId: 1, instituteId: 1 });
+        await db.collection('exams').createIndex({ instituteId: 1, status: 1 });
 
         console.log("Database indexes created");
         // API routes
@@ -98,6 +116,8 @@ async function initializeDatabase() {
         app.use('/users', require('./routes/users')(db));
         // Exams routes
         app.use('/', require('./routes/exams')(db));
+        // Student-side data routes (batches, materials, payments, feedback, support, dashboard)
+        app.use('/student', require('./routes/student-data')(db));
 
         // 404 handler
         app.use((req, res) => {
