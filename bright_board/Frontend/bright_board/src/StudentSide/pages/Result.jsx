@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Bar, Pie, Line } from 'react-chartjs-2';
+import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title } from 'chart.js';
-import { Download, Share2, Search, SortAsc, SortDesc, Book, TrendingUp, TrendingDown, CheckCircle, XCircle } from 'lucide-react';
+import { Download, Share2, Search, SortAsc, SortDesc, Book, TrendingUp, TrendingDown, CheckCircle, XCircle, Award, BarChart2, PieChart } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
 import { downloadPDF, downloadCSV } from '../utils/download';
 import { listStudentResults, getStudentResultsAnalytics } from '../../utils/services/results';
@@ -27,7 +28,7 @@ const Result = () => {
         const results = data.results || [];
         const subjects = Array.from(new Set(results.map(r => r.subjectName).filter(Boolean)));
         const subjectsData = subjects.map(name => {
-          const entry = results.filter(r => r.subjectName === name).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+          const entry = results.filter(r => r.subjectName === name).sort((a, b) => new Date(b.date) - new Date(a.date))[0];
           return {
             name,
             marksObtained: Math.round(entry.percentage),
@@ -37,13 +38,13 @@ const Result = () => {
         });
         const cgpa = (subjectsData.reduce((sum, s) => sum + s.marksObtained / 10, 0) / (subjectsData.length || 1)).toFixed(2);
         const passPercentage = (results.filter(r => r.status === 'Pass').length / (results.length || 1)) * 100;
-        const bestSubject = [...subjectsData].sort((a,b) => b.marksObtained - a.marksObtained)[0] || null;
-        const worstSubject = [...subjectsData].sort((a,b) => a.marksObtained - b.marksObtained)[0] || null;
+        const bestSubject = [...subjectsData].sort((a, b) => b.marksObtained - a.marksObtained)[0] || null;
+        const worstSubject = [...subjectsData].sort((a, b) => a.marksObtained - b.marksObtained)[0] || null;
         setStudentData({ subjects: subjectsData, cgpa, passPercentage, bestSubject, worstSubject });
         try {
           const { data: an } = await getStudentResultsAnalytics();
           setAnalytics(an);
-        } catch {}
+        } catch { }
       } catch (err) {
         setStudentData({ subjects: [], cgpa: 0, passPercentage: 0 });
       } finally {
@@ -53,20 +54,11 @@ const Result = () => {
     load();
   }, []);
 
-  const calculateGrade = (marks) => {
-    if (marks >= 90) return 'A+';
-    if (marks >= 80) return 'A';
-    if (marks >= 70) return 'B';
-    if (marks >= 60) return 'C';
-    if (marks >= 50) return 'D';
-    return 'F';
-  };
-
   const getPerformanceIndicator = (cgpa) => {
-    if (cgpa >= 9) return 'Excellent';
-    if (cgpa >= 7) return 'Good';
-    if (cgpa >= 5) return 'Average';
-    return 'Needs Improvement';
+    if (cgpa >= 9) return { label: 'Excellent', color: 'text-emerald-400' };
+    if (cgpa >= 7) return { label: 'Good', color: 'text-blue-400' };
+    if (cgpa >= 5) return { label: 'Average', color: 'text-amber-400' };
+    return { label: 'Needs Improvement', color: 'text-rose-400' };
   };
 
   const sortData = (key) => {
@@ -91,202 +83,291 @@ const Result = () => {
     return 0;
   });
 
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#94a3b8', font: { family: "'Inter', sans-serif" } } },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#fff',
+        bodyColor: '#cbd5e1',
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: false,
+      }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+      y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } }
+    }
+  };
+
   const barChartData = {
     labels: studentData?.subjects.map(s => s.name) || [],
-    datasets: [
-      {
-        label: 'Marks Obtained',
-        data: studentData?.subjects.map(s => s.marksObtained) || [],
-        backgroundColor: '#6366F1',
-        borderColor: '#8B5CF6',
-        borderWidth: 1,
-      },
-    ],
+    datasets: [{
+      label: 'Marks Obtained',
+      data: studentData?.subjects.map(s => s.marksObtained) || [],
+      backgroundColor: 'rgba(59, 130, 246, 0.5)',
+      borderColor: '#3b82f6',
+      borderWidth: 1,
+      borderRadius: 6,
+    }],
   };
 
   const pieChartData = {
     labels: analytics.distribution.map(d => d.name),
-    datasets: [
-      {
-        data: analytics.distribution.map(d => d.value),
-        backgroundColor: ['#6366F1', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#A855F7'],
-        borderColor: '#ffffff',
-        borderWidth: 2,
-      },
-    ],
-  };
-
-  const handleDownloadPDF = () => {
-    if (studentData) {
-      downloadPDF(studentData.subjects);
-    }
-  };
-
-  const handleDownloadCSV = () => {
-    if (studentData) {
-      downloadCSV(studentData.subjects);
-    }
-  };
-
-  const handleShareResults = () => {
-    const shareUrl = window.location.href; // Replace with the specific URL you want to share
-    const shareText = `Check out my results on Bright Board: ${shareUrl}`;
-
-    if (navigator.share) {
-      // Use Web Share API if available
-      navigator.share({
-        title: 'Bright Board Results',
-        text: shareText,
-        url: shareUrl,
-      }).catch(err => console.log('Error sharing:', err));
-    } else {
-      // Fallback to opening a new tab with the share URL
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank');
-    }
+    datasets: [{
+      data: analytics.distribution.map(d => d.value),
+      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'],
+      borderColor: 'rgba(0,0,0,0.2)',
+      borderWidth: 2,
+    }],
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 flex">
+    <div className="flex h-screen overflow-hidden bg-transparent">
       <Sidebar />
-      <div className="flex-1 p-6 space-y-6">
-        <h1 className="font-comic text-2xl text-indigo-300">Student Result Dashboard</h1>
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <div className="max-w-7xl mx-auto space-y-8">
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Skeleton height="8rem" />
-            <Skeleton height="8rem" />
-            <Skeleton height="8rem" />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-4xl font-bold text-white tracking-tight mb-2">Results & Analytics</h1>
+              <p className="text-white/50">Track your academic performance and progress.</p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => studentData && downloadPDF(studentData.subjects)}>
+                <Download size={16} className="mr-2" /> PDF
+              </Button>
+              <Button variant="outline" onClick={() => studentData && downloadCSV(studentData.subjects)}>
+                <Download size={16} className="mr-2" /> CSV
+              </Button>
+            </div>
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="p-4 text-center bg-slate-900/60 border border-indigo-700/30 shadow-lg shadow-indigo-900/20">
-                <h3 className="font-comic text-lg mb-2 text-indigo-300">Overall Performance</h3>
-                <div className="relative w-32 h-32 mx-auto">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    <circle cx="50" cy="50" r="45" style={{ strokeWidth: 10, fill: 'none', stroke: '#334155' }}></circle>
-                    <circle cx="50" cy="50" r="45" style={{
-                      strokeDasharray: `${2 * Math.PI * 45}`,
-                      strokeDashoffset: `${2 * Math.PI * 45 * (1 - studentData.cgpa / 10)}`,
-                      strokeWidth: 10,
-                      fill: 'none',
-                      stroke: '#6366F1'
-                    }}></circle>
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center font-comic text-xl">{studentData.cgpa}</span>
-                </div>
-                <p className="text-indigo-300/80 mt-2">CGPA</p>
-              </Card>
-              <Card className="p-4 bg-slate-900/60 border border-indigo-700/30 shadow-lg shadow-indigo-900/20">
-                <h3 className="font-comic text-lg mb-2 text-indigo-300">Pass Percentage</h3>
-                <p className="text-3xl font-comic text-sky-300">{studentData.passPercentage.toFixed(2)}%</p>
-                <div className="mt-2 space-y-1 text-sm">
-                  <div className="flex items-center gap-2 text-indigo-300/80"><CheckCircle size={16} className="text-emerald-400" /> Passed: {studentData.subjects.filter(s => s.grade !== 'F').length}</div>
-                  <div className="flex items-center gap-2 text-indigo-300/80"><XCircle size={16} className="text-rose-400" /> Failed: {studentData.subjects.filter(s => s.grade === 'F').length}</div>
-                </div>
-              </Card>
-              <Card className="p-4 bg-slate-900/60 border border-indigo-700/30 shadow-lg shadow-indigo-900/20">
-                <h3 className="font-comic text-lg mb-2 text-indigo-300">Rank & Performance</h3>
-                <p className="text-3xl font-comic text-amber-300">{getPerformanceIndicator(studentData.cgpa)}</p>
-                <p className="text-indigo-300/80 mt-1">Performance</p>
-              </Card>
-              <Card className="p-4 bg-slate-900/60 border border-indigo-700/30 shadow-lg shadow-indigo-900/20">
-                <h3 className="font-comic text-lg mb-2 text-indigo-300">Subject Analysis</h3>
-                <div className="space-y-2 text-sm">
-                  {studentData.bestSubject ? (
-                    <div className="flex items-center gap-2"><TrendingUp size={16} className="text-emerald-400" /><span>Best: {studentData.bestSubject.name} ({studentData.bestSubject.marksObtained}%)</span></div>
-                  ) : (
-                    <div className="flex items-center gap-2"><TrendingUp size={16} className="text-emerald-400" /><span>Best: N/A</span></div>
-                  )}
-                  {studentData.worstSubject ? (
-                    <div className="flex items-center gap-2"><TrendingDown size={16} className="text-rose-400" /><span>Needs Improvement: {studentData.worstSubject.name} ({studentData.worstSubject.marksObtained}%)</span></div>
-                  ) : (
-                    <div className="flex items-center gap-2"><TrendingDown size={16} className="text-rose-400" /><span>Needs Improvement: N/A</span></div>
-                  )}
-                </div>
-              </Card>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="p-4 bg-slate-900/60 border border-indigo-700/30 shadow-lg shadow-indigo-900/20">
-                <h3 className="font-comic text-lg mb-2 text-indigo-300">Subject-wise Performance</h3>
-                <div className="h-64"><Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e5e7eb' } } }, scales: { x: { ticks: { color: '#e5e7eb' } }, y: { ticks: { color: '#e5e7eb' } } } }} /></div>
-              </Card>
-              <Card className="p-4 bg-slate-900/60 border border-indigo-700/30 shadow-lg shadow-indigo-900/20">
-                <h3 className="font-comic text-lg mb-2 text-indigo-300">Grade Distribution</h3>
-                <div className="h-64"><Pie data={pieChartData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e5e7eb' } } } }} /></div>
-              </Card>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Skeleton className="h-40 rounded-2xl bg-white/5" />
+              <Skeleton className="h-40 rounded-2xl bg-white/5" />
+              <Skeleton className="h-40 rounded-2xl bg-white/5" />
             </div>
+          ) : (
+            <>
+              {/* Key Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card variant="glass" className="p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-blue-400">
+                    <Award size={80} />
+                  </div>
+                  <h3 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">CGPA</h3>
+                  <div className="flex items-end gap-2">
+                    <span className="text-4xl font-bold text-white">{studentData.cgpa}</span>
+                    <span className="text-white/40 mb-1">/ 10.0</span>
+                  </div>
+                  <div className="mt-4 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(studentData.cgpa / 10) * 100}%` }} />
+                  </div>
+                </Card>
 
-            <Card className="p-4 bg-slate-900/60 border border-indigo-700/30 shadow-lg shadow-indigo-900/20">
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                <div className="flex items-center gap-2 border border-indigo-700/40 rounded px-3 py-2">
-                  <Search size={16} className="text-indigo-300" />
-                  <input
-                    type="text"
-                    placeholder="Search subjects..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-transparent text-slate-100 focus:outline-none placeholder:text-slate-400"
-                  />
-                </div>
-                <Button variant="outline" onClick={handleDownloadPDF}><Download size={16} className="mr-2" />Download PDF</Button>
-                <Button variant="outline" onClick={handleDownloadCSV}><Download size={16} className="mr-2" />Download CSV</Button>
-                <Button variant="outline" onClick={handleShareResults}><Share2 size={16} className="mr-2" />Share Results</Button>
+                <Card variant="glass" className="p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-emerald-400">
+                    <CheckCircle size={80} />
+                  </div>
+                  <h3 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Pass Percentage</h3>
+                  <div className="flex items-end gap-2">
+                    <span className="text-4xl font-bold text-white">{studentData.passPercentage.toFixed(0)}%</span>
+                  </div>
+                  <div className="mt-4 flex gap-4 text-xs">
+                    <span className="text-emerald-400 flex items-center gap-1"><CheckCircle size={12} /> Passed: {studentData.subjects.filter(s => s.grade !== 'F').length}</span>
+                    <span className="text-rose-400 flex items-center gap-1"><XCircle size={12} /> Failed: {studentData.subjects.filter(s => s.grade === 'F').length}</span>
+                  </div>
+                </Card>
+
+                <Card variant="glass" className="p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400">
+                    <TrendingUp size={80} />
+                  </div>
+                  <h3 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Performance</h3>
+                  <div className={`text-3xl font-bold ${getPerformanceIndicator(studentData.cgpa).color}`}>
+                    {getPerformanceIndicator(studentData.cgpa).label}
+                  </div>
+                  <p className="text-white/40 text-xs mt-2">Based on overall CGPA</p>
+                </Card>
+
+                <Card variant="glass" className="p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400">
+                    <Book size={80} />
+                  </div>
+                  <h3 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Best Subject</h3>
+                  <div className="text-xl font-bold text-white truncate" title={studentData.bestSubject?.name}>
+                    {studentData.bestSubject?.name || 'N/A'}
+                  </div>
+                  <div className="text-emerald-400 text-sm font-medium mt-1">
+                    {studentData.bestSubject?.marksObtained}% Score
+                  </div>
+                </Card>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left border border-slate-700 rounded">
-                  <thead className="bg-slate-800">
-                    <tr>
-                      <th className="px-3 py-2 cursor-pointer" onClick={() => sortData('name')}>
-                        Subject {sortConfig.key === 'name' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
-                      </th>
-                      <th className="px-3 py-2 cursor-pointer" onClick={() => sortData('marksObtained')}>
-                        Marks {sortConfig.key === 'marksObtained' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
-                      </th>
-                      <th className="px-3 py-2 cursor-pointer" onClick={() => sortData('grade')}>
-                        Grade {sortConfig.key === 'grade' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedSubjects?.map((subject) => (
-                      <tr key={subject.name} className="hover:bg-slate-800/60 transition-colors" onClick={() => setSelectedSubject(subject)}>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2"><Book size={16} /> {subject.name}</div>
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            <div className="h-2 w-40 bg-slate-700 rounded">
-                              <div className="h-2 bg-indigo-500 rounded" style={{ width: `${subject.marksObtained}%` }}></div>
-                            </div>
-                            <span>{subject.marksObtained} / {subject.totalMarks}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2">
-                          <span className="px-2 py-1 border border-indigo-700/40 rounded text-sm text-indigo-300">{subject.grade}</span>
-                        </td>
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card variant="glass" className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <BarChart2 className="text-blue-400" size={20} /> Subject Performance
+                    </h3>
+                  </div>
+                  <div className="h-64">
+                    <Bar data={barChartData} options={chartOptions} />
+                  </div>
+                </Card>
+
+                <Card variant="glass" className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <PieChart className="text-purple-400" size={20} /> Grade Distribution
+                    </h3>
+                  </div>
+                  <div className="h-64 flex justify-center">
+                    <Pie data={pieChartData} options={{ ...chartOptions, scales: {} }} />
+                  </div>
+                </Card>
+              </div>
+
+              {/* Detailed Results Table */}
+              <Card variant="glass" className="overflow-hidden">
+                <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                  <h3 className="text-lg font-bold text-white">Detailed Subject Analysis</h3>
+                  <div className="relative w-full md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search subjects..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-white/5 border-b border-white/10 text-xs uppercase tracking-wider text-white/60">
+                        <th className="p-4 cursor-pointer hover:text-white transition-colors" onClick={() => sortData('name')}>
+                          <div className="flex items-center gap-2">Subject {sortConfig.key === 'name' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}</div>
+                        </th>
+                        <th className="p-4 cursor-pointer hover:text-white transition-colors" onClick={() => sortData('marksObtained')}>
+                          <div className="flex items-center gap-2">Score {sortConfig.key === 'marksObtained' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}</div>
+                        </th>
+                        <th className="p-4 cursor-pointer hover:text-white transition-colors" onClick={() => sortData('grade')}>
+                          <div className="flex items-center gap-2">Grade {sortConfig.key === 'grade' && (sortConfig.direction === 'ascending' ? <SortAsc size={14} /> : <SortDesc size={14} />)}</div>
+                        </th>
+                        <th className="p-4 text-right">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-
-            {selectedSubject && (
-              <div className="fixed inset-0 bg-black/60 flex items-center justify-center animate-fade-in">
-                <div className="border border-indigo-700/40 bg-slate-900 text-slate-100 rounded-lg p-6 w-full max-w-md">
-                  <h2 className="font-comic text-xl mb-2">{selectedSubject.name}</h2>
-                  <p>Marks: {selectedSubject.marksObtained} / {selectedSubject.totalMarks}</p>
-                  <p>Grade: {selectedSubject.grade}</p>
-                  <p>Performance: {selectedSubject.marksObtained >= 80 ? 'Excellent' : selectedSubject.marksObtained >= 60 ? 'Good' : 'Needs Improvement'}</p>
-                  <div className="mt-4 flex justify-end"><Button variant="outline" onClick={() => setSelectedSubject(null)}>Close</Button></div>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {sortedSubjects?.map((subject) => (
+                        <tr
+                          key={subject.name}
+                          onClick={() => setSelectedSubject(subject)}
+                          className="hover:bg-white/5 transition-colors cursor-pointer group"
+                        >
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 group-hover:text-white group-hover:bg-blue-500/20 transition-all">
+                                <Book size={16} />
+                              </div>
+                              <span className="font-medium text-white">{subject.name}</span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-white font-bold">{subject.marksObtained} / {subject.totalMarks}</span>
+                              <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${subject.marksObtained >= 80 ? 'bg-emerald-500' : subject.marksObtained >= 60 ? 'bg-blue-500' : 'bg-rose-500'}`}
+                                  style={{ width: `${subject.marksObtained}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${subject.grade === 'F'
+                                ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                              }`}>
+                              {subject.grade}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right">
+                            {subject.grade === 'F' ? (
+                              <span className="text-rose-400 text-sm flex items-center justify-end gap-1"><XCircle size={14} /> Fail</span>
+                            ) : (
+                              <span className="text-emerald-400 text-sm flex items-center justify-end gap-1"><CheckCircle size={14} /> Pass</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
+              </Card>
+            </>
+          )}
+
+          <AnimatePresence>
+            {selectedSubject && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                onClick={() => setSelectedSubject(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, y: 20 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.9, y: 20 }}
+                  className="w-full max-w-md"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <Card variant="glass" className="p-8 border-blue-500/30 shadow-2xl shadow-blue-500/10">
+                    <div className="text-center mb-6">
+                      <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4 text-blue-400">
+                        <Book size={32} />
+                      </div>
+                      <h2 className="text-2xl font-bold text-white">{selectedSubject.name}</h2>
+                      <p className="text-white/50">Detailed Performance Report</p>
+                    </div>
+
+                    <div className="space-y-4 mb-8">
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
+                        <span className="text-white/60">Marks Obtained</span>
+                        <span className="text-white font-bold">{selectedSubject.marksObtained} / {selectedSubject.totalMarks}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
+                        <span className="text-white/60">Grade Awarded</span>
+                        <span className={`font-bold ${selectedSubject.grade === 'F' ? 'text-rose-400' : 'text-emerald-400'}`}>{selectedSubject.grade}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
+                        <span className="text-white/60">Performance</span>
+                        <span className="text-blue-400 font-medium">
+                          {selectedSubject.marksObtained >= 80 ? 'Excellent' : selectedSubject.marksObtained >= 60 ? 'Good' : 'Needs Improvement'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button variant="accent" fullWidth onClick={() => setSelectedSubject(null)}>
+                      Close Report
+                    </Button>
+                  </Card>
+                </motion.div>
+              </motion.div>
             )}
-          </>
-        )}
+          </AnimatePresence>
+
+        </div>
       </div>
     </div>
   );
