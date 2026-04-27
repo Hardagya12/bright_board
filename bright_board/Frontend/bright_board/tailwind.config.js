@@ -14,50 +14,79 @@ export default {
     },
     extend: {
       fontFamily: {
-        'gill-sans': ['"Gill Sans"','"Gill Sans MT"','Calibri','"Trebuchet MS"','sans-serif'],
-        'comic': ['"Comic Sans MS"','Comic Sans','"Comic Neue"','cursive']
+        'display': ['"Lilita One"', '"Inter"', 'sans-serif'],
+        'body': ['"Inter"', 'sans-serif'],
+        'hand': ['"Caveat"', 'cursive'],
       },
       colors: {
-        bw: {
-          0: '#000000',
-          12: '#1F1F1F',
-          25: '#404040',
-          37: '#616161',
-          50: '#808080',
-          62: '#9E9E9E',
-          75: '#BFBFBF',
-          87: '#DEDEDE',
-          100: '#FFFFFF'
+        bb: {
+          black: '#0e0f0c',
+          green: '#9fe870',
+          'green-dark': '#163300',
+          'green-light': '#e2f6d5',
+          'green-pastel': '#cdffad',
+          white: '#ffffff',
+          offwhite: '#f9faf6',
+          danger: '#d03238',
+          warning: '#ffd11a',
+          orange: '#ffc091',
+          positive: '#054d28',
         },
-        accent: {
-          primary: '#3B82F6',
-          primaryDark: '#2563EB',
-          primaryLight: '#60A5FA',
-          success: '#10B981',
-          successDark: '#059669',
-          warning: '#F59E0B',
-          warningDark: '#D97706',
-          error: '#EF4444',
-          errorDark: '#DC2626',
-          info: '#8B5CF6',
-          infoDark: '#7C3AED',
-          teal: '#14B8A6',
-          tealDark: '#0D9488',
+        gray: {
+          dark: '#454745',
+          mid: '#868685',
+          light: '#e8ebe6',
         }
       },
+      borderRadius: {
+        'card': '30px',
+        'card-sm': '16px',
+        'card-lg': '40px',
+        'pill': '9999px',
+      },
+      boxShadow: {
+        'ring': 'rgba(14,15,12,0.12) 0px 0px 0px 1px',
+        'card': '0 2px 16px rgba(14,15,12,0.06)',
+        'card-hover': '0 8px 30px rgba(159,232,112,0.15)',
+        'green-glow': '0 4px 20px rgba(159,232,112,0.3)',
+      },
       keyframes: {
-        'fade-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-        'fade-up': { '0%': { opacity: '0', transform: 'translateY(12px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-        'float': { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-4px)' } },
-        'blur-in': { '0%': { filter: 'blur(12px)', opacity: '0' }, '100%': { filter: 'blur(0)', opacity: '1' } },
-        'shimmer': { '0%': { backgroundPosition: '-1000px 0' }, '100%': { backgroundPosition: '1000px 0' } }
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        },
+        'float': {
+          '0%,100%': { transform: 'translateY(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-12px) rotate(2deg)' }
+        },
+        'wiggle': {
+          '0%,100%': { transform: 'rotate(-3deg)' },
+          '50%': { transform: 'rotate(3deg)' }
+        },
+        'pop-in': {
+          '0%': { transform: 'scale(0)', opacity: '0' },
+          '60%': { transform: 'scale(1.15)' },
+          '100%': { transform: 'scale(1)', opacity: '1' }
+        },
+        'bounce-gentle': {
+          '0%,100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' }
+        },
+        'pencil': {
+          '0%': { transform: 'translateX(0) rotate(-5deg)' },
+          '25%': { transform: 'translateX(4px) rotate(0deg)' },
+          '50%': { transform: 'translateX(0) rotate(5deg)' },
+          '75%': { transform: 'translateX(-4px) rotate(0deg)' },
+          '100%': { transform: 'translateX(0) rotate(-5deg)' },
+        }
       },
       animation: {
-        'fade-in': 'fade-in 600ms ease-out',
-        'fade-up': 'fade-up 600ms ease-out',
-        'float': 'float 3s ease-in-out infinite',
-        'blur-in': 'blur-in 700ms ease-out',
-        'shimmer': 'shimmer 2s linear infinite'
+        'fade-up': 'fade-up 600ms ease-out forwards',
+        'float': 'float 4s ease-in-out infinite',
+        'wiggle': 'wiggle 2s ease-in-out infinite',
+        'pop-in': 'pop-in 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
+        'bounce-gentle': 'bounce-gentle 2.5s ease-in-out infinite',
+        'pencil': 'pencil 3s ease-in-out infinite',
       }
     },
   },
