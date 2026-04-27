@@ -295,6 +295,155 @@ module.exports = (db) => {
     }
   });
 
+  // Bulk add questions
+  router.post('/tutor/exams/:id/questions/bulk', authenticate, requireInstitute, async (req, res) => {
+    try {
+      const instituteId = new ObjectId(req.user.instituteId);
+      const examId = new ObjectId(req.params.id);
+      const exists = await exams.findOne({ _id: examId, instituteId });
+      if (!exists) return res.status(404).json({ error: 'Exam not found' });
+
+      const questionsToInsert = [];
+      const incomingQuestions = Array.isArray(req.body.questions) ? req.body.questions : [];
+      let existingCount = await questions.countDocuments({ examId });
+
+      for (const item of incomingQuestions) {
+        const { error, value } = questionSchema.validate(item);
+        if (error) return res.status(400).json({ error: `Validation error: ${error.details[0].message}` });
+        
+        if (value.type === 'mcq') {
+          if (!value.options || value.options.length < 2) return res.status(400).json({ error: 'MCQ requires at least 2 options' });
+          if (value.correctIndex == null || value.correctIndex < 0 || value.correctIndex >= value.options.length)
+            return res.status(400).json({ error: 'correctIndex out of range for MCQ' });
+        } else if (value.type === 'true-false') {
+          value.options = ['True', 'False'];
+          if (value.correctIndex == null) value.correctIndex = 0;
+          if (value.correctIndex < 0 || value.correctIndex > 1)
+            return res.status(400).json({ error: 'correctIndex must be 0 (True) or 1 (False)' });
+        } else if (value.type === 'short') {
+          if (!value.correctAnswer || value.correctAnswer.trim() === '')
+            return res.status(400).json({ error: 'Short answer requires correctAnswer' });
+          value.options = [];
+          value.correctIndex = null;
+        }
+
+        questionsToInsert.push({
+          examId,
+          type: value.type,
+          text: value.text,
+          options: value.options,
+          correctIndex: value.correctIndex,
+          correctAnswer: value.correctAnswer || '',
+          marks: value.marks,
+          negativeMarks: value.negativeMarks,
+          questionImage: value.questionImage,
+          order: value.order != null ? value.order : existingCount++,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+
+      if (questionsToInsert.length === 0) {
+        return res.status(400).json({ error: 'No valid questions provided' });
+      }
+
+      await questions.insertMany(questionsToInsert);
+      res.status(201).json({ message: `${questionsToInsert.length} questions added successfully` });
+    } catch (err) {
+      console.error('Bulk add questions error:', err);
+      res.status(500).json({ error: err.message || 'Failed to bulk add questions' });
+    }
+  });
+
+  // Upload PDF and parse via Gemini API
+  router.post('/tutor/exams/:id/questions/upload-pdf', authenticate, requireInstitute, async (req, res) => {
+    try {
+      const { pdfBase64 } = req.body;
+      if (!pdfBase64) return res.status(400).json({ error: 'No PDF data provided' });
+
+      const geminiKey = process.env.GEMINI_API_KEY;
+      if (!geminiKey) {
+        return res.status(500).json({ error: 'GEMINI_API_KEY is not configured in backend .env' });
+      }
+
+      const instituteId = new ObjectId(req.user.instituteId);
+      const examId = new ObjectId(req.params.id);
+      
+      const exam = await exams.findOne({ _id: examId, instituteId });
+      if (!exam) return res.status(404).json({ error: 'Exam not found' });
+
+      // Call Gemini API
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: "Extract all the questions from this document and output them as a JSON array of objects. Schema for each object: { \"type\": \"mcq\"|\"true-false\"|\"short\", \"text\": \"Question text\", \"options\": [\"A\", \"B\", \"C\", \"D\"] (only if mcq or true-false), \"correctIndex\": 0 (0-based index of correct option, make best guess if not explicitly stated), \"correctAnswer\": \"string\" (only if short), \"marks\": 1, \"negativeMarks\": 0 }. Only output a valid JSON array, without any markdown code blocks or additional text."
+                },
+                {
+                  inlineData: {
+                    mimeType: "application/pdf",
+                    data: pdfBase64.includes(',') ? pdfBase64.split(',')[1] : pdfBase64
+                  }
+                }
+              ]
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('Gemini API Error:', data);
+        throw new Error(data.error?.message || 'Failed to parse PDF with AI');
+      }
+
+      const aiText = data.candidates[0].content.parts[0].text;
+      
+      // Attempt to parse JSON from AI response
+      let extractedQuestions = [];
+      try {
+        const cleanJson = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+        extractedQuestions = JSON.parse(cleanJson);
+      } catch (e) {
+        console.error("Failed to parse JSON from Gemini:", aiText);
+        throw new Error('AI did not return valid JSON. Please try again.');
+      }
+
+      if (!Array.isArray(extractedQuestions)) {
+        throw new Error('AI output is not an array of questions.');
+      }
+
+      const questionsToInsert = extractedQuestions.map(q => {
+        let cleanQ = {
+          examId,
+          type: q.type || 'mcq',
+          text: q.text || 'Untitled Question',
+          marks: q.marks || 1,
+          negativeMarks: q.negativeMarks || 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        if (cleanQ.type === 'short') {
+          cleanQ.correctAnswer = q.correctAnswer || '';
+        } else {
+          cleanQ.options = q.options || (cleanQ.type === 'true-false' ? ['True', 'False'] : ['A', 'B', 'C', 'D']);
+          cleanQ.correctIndex = q.correctIndex || 0;
+        }
+        return cleanQ;
+      });
+
+      await questions.insertMany(questionsToInsert);
+      res.status(201).json({ message: `${questionsToInsert.length} questions parsed from PDF and added`, count: questionsToInsert.length });
+    } catch (err) {
+      console.error('PDF Upload Error:', err);
+      res.status(500).json({ error: err.message || 'Server error during PDF processing' });
+    }
+  });
+
   // Update question
   router.put('/tutor/exams/:id/questions/:qid', authenticate, requireInstitute, async (req, res) => {
     try {
