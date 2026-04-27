@@ -11,24 +11,33 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
+    // In production, send to error reporting service
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
-          <div className="max-w-xl w-full border border-bw-37 rounded-lg p-6 shadow-lg">
-            <h1 className="font-comic text-2xl mb-2">Something went wrong</h1>
-            <p className="font-gill-sans text-bw-75 mb-4">The UI crashed unexpectedly. Please try again.</p>
-            <pre className="text-bw-62 text-sm overflow-auto max-h-48 whitespace-pre-wrap">{String(this.state.error)}</pre>
+        <div className="min-h-screen bg-[#f9faf6] flex items-center justify-center p-6 font-body">
+          <div className="max-w-lg w-full bg-white border border-[#e8ebe6] rounded-[30px] p-10 shadow-sm text-center">
+            <div className="w-20 h-20 rounded-full bg-[#ffeaea] flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">💥</span>
+            </div>
+            <h1 className="font-display text-3xl text-[#0e0f0c] mb-3">Something went wrong</h1>
+            <p className="text-[#868685] mb-6 text-sm leading-relaxed">
+              The page crashed unexpectedly. Don't worry — your data is safe. Try reloading the page.
+            </p>
+            <pre className="text-[#d03238] text-xs bg-[#ffeaea] rounded-[16px] p-4 overflow-auto max-h-32 whitespace-pre-wrap mb-6 text-left border border-[#d03238]/10">
+              {String(this.state.error)}
+            </pre>
             <button
               type="button"
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-bw-12 text-white border border-bw-37 rounded hover:bg-bw-25 transition-colors"
+              className="btn-wise px-8 py-3"
               onClick={() => {
                 this.setState({ hasError: false, error: null });
+                window.location.reload();
               }}
             >
-              Retry
+              Reload Page
             </button>
           </div>
         </div>
