@@ -414,20 +414,20 @@ const AttendanceManagement = () => {
     value,
     icon: Icon,
     subtext,
-    color = "text-bw-100",
+    color = "text-[#0e0f0c]",
   }) => (
     <motion.div
-      className="bg-bw-12 border border-bw-25 rounded-xl p-5 flex items-center gap-4 hover:border-bw-37 transition-colors"
+      className="bg-white border border-[#e8ebe6] rounded-xl p-5 flex items-center gap-4 hover:border-[#e8ebe6] transition-colors"
       whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.5)" }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <div className={`p-3 rounded-lg bg-bw-25/50 ${color}`}>
+      <div className={`p-3 rounded-lg bg-[#e8ebe6] ${color}`}>
         <Icon size={24} />
       </div>
       <div>
-        <h3 className="text-sm text-bw-75 font-medium">{title}</h3>
-        <p className="text-2xl font-bold text-white">{value}</p>
-        {subtext && <p className="text-xs text-bw-50 mt-1">{subtext}</p>}
+        <h3 className="text-sm text-[#454745] font-medium">{title}</h3>
+        <p className="text-2xl font-bold text-[#0e0f0c]">{value}</p>
+        {subtext && <p className="text-xs text-[#868685] mt-1">{subtext}</p>}
       </div>
     </motion.div>
   );
@@ -439,15 +439,15 @@ const AttendanceManagement = () => {
     ...props
   }) => {
     const variants = {
-      primary: "bg-white text-black hover:bg-bw-87 border border-transparent",
+      primary: "bg-white text-black hover:bg-[#f9faf6] border border-transparent",
       secondary:
-        "bg-bw-12 text-bw-100 border border-bw-25 hover:bg-bw-25 hover:border-bw-37",
+        "bg-white text-[#0e0f0c] border border-[#e8ebe6] hover:bg-[#e8ebe6] hover:border-[#e8ebe6]",
       accent:
-        "bg-accent-primary text-white hover:bg-accent-primaryDark border border-transparent",
+        "bg-bb-green text-[#0e0f0c] hover:bg-bb-green-dark border border-transparent",
       danger:
-        "bg-accent-error/10 text-accent-error border border-accent-error/20 hover:bg-accent-error/20",
+        "bg-bb-danger/10 text-bb-danger border border-bb-danger/20 hover:bg-bb-danger/20",
       success:
-        "bg-accent-success/10 text-accent-success border border-accent-success/20 hover:bg-accent-success/20",
+        "bg-bb-positive/10 text-bb-positive border border-bb-positive/20 hover:bg-bb-positive/20",
     };
 
     return (
@@ -464,12 +464,12 @@ const AttendanceManagement = () => {
   const Badge = ({ status }) => {
     const styles = {
       present:
-        "bg-accent-success/10 text-accent-success border-accent-success/20",
-      absent: "bg-accent-error/10 text-accent-error border-accent-error/20",
+        "bg-bb-positive/10 text-bb-positive border-bb-positive/20",
+      absent: "bg-bb-danger/10 text-bb-danger border-bb-danger/20",
       excused:
-        "bg-accent-warning/10 text-accent-warning border-accent-warning/20",
+        "bg-bb-warning/10 text-bb-warning border-bb-warning/20",
       on_leave:
-        "bg-accent-warning/10 text-accent-warning border-accent-warning/20",
+        "bg-bb-warning/10 text-bb-warning border-bb-warning/20",
     };
 
     const key = status?.toLowerCase().replace(" ", "_") || "present";
@@ -484,7 +484,7 @@ const AttendanceManagement = () => {
   };
 
   return (
-    <div className="flex h-screen bg-black text-white font-gill-sans overflow-hidden">
+    <div className="flex h-screen bg-[var(--bb-offwhite)] text-[#0e0f0c] font-body overflow-hidden">
       <AdminSidebar />
 
       <motion.main
@@ -497,10 +497,10 @@ const AttendanceManagement = () => {
           {/* Header */}
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-white font-comic tracking-tight">
+              <h1 className="text-3xl font-bold text-[#0e0f0c] font-display tracking-tight tracking-tight">
                 Attendance Management
               </h1>
-              <p className="text-bw-62 mt-1">
+              <p className="text-[#868685] mt-1">
                 Manage student attendance, batches, and generate reports
               </p>
             </div>
@@ -527,27 +527,27 @@ const AttendanceManagement = () => {
               title="Total Students"
               value={students.length}
               icon={Users}
-              color="text-accent-primary"
+              color="text-bb-green"
               subtext="Across all batches"
             />
             <StatCard
               title="Present Today"
               value={`${Math.round((students.filter((s) => s.status === "present").length / (students.length || 1)) * 100)}%`}
               icon={Clock}
-              color="text-accent-success"
+              color="text-bb-positive"
               subtext={`${students.filter((s) => s.status === "present").length} students checked in`}
             />
             <StatCard
               title="Monthly Average"
               value="92%"
               icon={Calendar}
-              color="text-accent-info"
+              color="text-text-[#38c8ff]"
               subtext="+2.4% from last month"
             />
           </section>
 
           {/* Toolbar Section */}
-          <section className="bg-bw-12/50 border border-bw-25 rounded-xl p-4 backdrop-blur-sm">
+          <section className="bg-white/80 border border-[#e8ebe6] rounded-xl p-4 backdrop-blur-sm">
             <div className="flex flex-col xl:flex-row justify-between gap-4">
               <div className="flex flex-1 flex-col md:flex-row gap-4">
                 {/* Batch & Date Selectors */}
@@ -556,7 +556,7 @@ const AttendanceManagement = () => {
                     <select
                       value={selectedBatch}
                       onChange={(e) => setSelectedBatch(e.target.value)}
-                      className="w-full appearance-none bg-bw-12 border border-bw-25 text-white rounded-lg px-4 py-2.5 pr-10 focus:ring-1 focus:ring-accent-primary focus:border-accent-primary transition-all outline-none"
+                      className="w-full appearance-none bg-white border border-[#e8ebe6] text-[#0e0f0c] rounded-lg px-4 py-2.5 pr-10 focus:ring-1 focus:ring-bb-green focus:border-bb-green transition-all outline-none"
                     >
                       <option value="">Select Batch</option>
                       {batches.map((batch) => (
@@ -566,7 +566,7 @@ const AttendanceManagement = () => {
                       ))}
                     </select>
                     <ChevronDown
-                      className="absolute right-3 top-3 text-bw-50 pointer-events-none"
+                      className="absolute right-3 top-3 text-[#868685] pointer-events-none"
                       size={16}
                     />
                   </div>
@@ -575,14 +575,14 @@ const AttendanceManagement = () => {
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="bg-bw-12 border border-bw-25 text-white rounded-lg px-4 py-2.5 focus:ring-1 focus:ring-accent-primary focus:border-accent-primary outline-none"
+                    className="bg-white border border-[#e8ebe6] text-[#0e0f0c] rounded-lg px-4 py-2.5 focus:ring-1 focus:ring-bb-green focus:border-bb-green outline-none"
                   />
                 </div>
 
                 {/* Search */}
                 <div className="relative flex-1 max-w-md">
                   <Search
-                    className="absolute left-3 top-3 text-bw-50"
+                    className="absolute left-3 top-3 text-[#868685]"
                     size={18}
                   />
                   <input
@@ -590,7 +590,7 @@ const AttendanceManagement = () => {
                     placeholder="Search students..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-bw-12 border border-bw-25 text-white rounded-lg pl-10 pr-4 py-2.5 focus:ring-1 focus:ring-accent-primary focus:border-accent-primary outline-none placeholder:text-bw-62"
+                    className="w-full bg-white border border-[#e8ebe6] text-[#0e0f0c] rounded-lg pl-10 pr-4 py-2.5 focus:ring-1 focus:ring-bb-green focus:border-bb-green outline-none placeholder:text-[#868685]"
                   />
                 </div>
               </div>
@@ -609,18 +609,18 @@ const AttendanceManagement = () => {
                   <span className="hidden sm:inline">Bulk Upload</span>
                 </Button>
 
-                <div className="h-8 w-px bg-bw-25 mx-2 hidden md:block"></div>
+                <div className="h-8 w-px bg-[#e8ebe6] mx-2 hidden md:block"></div>
 
-                <div className="flex bg-bw-12 border border-bw-25 rounded-lg p-1">
+                <div className="flex bg-white border border-[#e8ebe6] rounded-lg p-1">
                   <button
                     onClick={() => setView("list")}
-                    className={`p-1.5 rounded transition-colors ${view === "list" ? "bg-bw-25 text-white" : "text-bw-50 hover:text-white"}`}
+                    className={`p-1.5 rounded transition-colors ${view === "list" ? "bg-[#e8ebe6] text-[#0e0f0c]" : "text-[#868685] hover:text-[#0e0f0c]"}`}
                   >
                     <List size={18} />
                   </button>
                   <button
                     onClick={() => setView("grid")}
-                    className={`p-1.5 rounded transition-colors ${view === "grid" ? "bg-bw-25 text-white" : "text-bw-50 hover:text-white"}`}
+                    className={`p-1.5 rounded transition-colors ${view === "grid" ? "bg-[#e8ebe6] text-[#0e0f0c]" : "text-[#868685] hover:text-[#0e0f0c]"}`}
                   >
                     <Grid size={18} />
                   </button>
@@ -634,7 +634,7 @@ const AttendanceManagement = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-accent-success/10 border border-accent-success/20 text-accent-success px-4 py-3 rounded-lg flex items-center gap-2"
+              className="bg-bb-positive/10 border border-bb-positive/20 text-bb-positive px-4 py-3 rounded-lg flex items-center gap-2"
             >
               <CheckCircle size={18} />
               {saveMessage}
@@ -645,7 +645,7 @@ const AttendanceManagement = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-accent-error/10 border border-accent-error/20 text-accent-error px-4 py-3 rounded-lg flex items-center gap-2"
+              className="bg-bb-danger/10 border border-bb-danger/20 text-bb-danger px-4 py-3 rounded-lg flex items-center gap-2"
             >
               <AlertCircle size={18} />
               {error}
@@ -655,8 +655,8 @@ const AttendanceManagement = () => {
           {/* Main Content Area */}
           <div className="space-y-6">
             {/* Batch Overview Panel */}
-            <div className="bg-bw-12 border border-bw-25 rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-bw-25 flex justify-between items-center">
+            <div className="bg-white border border-[#e8ebe6] rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-[#e8ebe6] flex justify-between items-center">
                 <h3 className="font-medium text-lg">Batch Overview</h3>
                 <div className="flex gap-2">
                   <Button
@@ -680,16 +680,16 @@ const AttendanceManagement = () => {
               </div>
 
               {overviewLoading ? (
-                <div className="p-8 text-center text-bw-62">
+                <div className="p-8 text-center text-[#868685]">
                   Loading overview data...
                 </div>
               ) : overviewError ? (
-                <div className="p-8 text-center text-accent-error">
+                <div className="p-8 text-center text-bb-danger">
                   {overviewError}
                 </div>
               ) : overviewRows.length === 0 ? (
-                <div className="p-8 text-center text-bw-62">
-                  <div className="inline-flex p-4 rounded-full bg-bw-12 border border-bw-25 mb-3 text-bw-50">
+                <div className="p-8 text-center text-[#868685]">
+                  <div className="inline-flex p-4 rounded-full bg-white border border-[#e8ebe6] mb-3 text-[#868685]">
                     <FileSpreadsheet size={24} />
                   </div>
                   <p>No attendance records found for the selected batch.</p>
@@ -697,7 +697,7 @@ const AttendanceManagement = () => {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
-                    <thead className="bg-bw-12 text-bw-62 text-xs uppercase tracking-wider font-medium">
+                    <thead className="bg-white text-[#868685] text-xs uppercase tracking-wider font-medium">
                       <tr>
                         <th className="px-6 py-4">Date</th>
                         <th className="px-6 py-4">Present</th>
@@ -706,24 +706,24 @@ const AttendanceManagement = () => {
                         <th className="px-6 py-4 w-1/3">Absent Students</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-bw-25">
+                    <tbody className="divide-y divide-[#e8ebe6]">
                       {overviewRows.map((r) => (
                         <tr
                           key={r.date}
-                          className="hover:bg-bw-25/20 transition-colors"
+                          className="hover:bg-[#f9faf6] transition-colors"
                         >
                           <td className="px-6 py-4 font-medium">{r.date}</td>
-                          <td className="px-6 py-4 text-accent-success font-medium">
+                          <td className="px-6 py-4 text-bb-positive font-medium">
                             {r.present}
                           </td>
-                          <td className="px-6 py-4 text-accent-error font-medium">
+                          <td className="px-6 py-4 text-bb-danger font-medium">
                             {r.absent}
                           </td>
-                          <td className="px-6 py-4 text-accent-warning font-medium">
+                          <td className="px-6 py-4 text-bb-warning font-medium">
                             {r.excused}
                           </td>
                           <td
-                            className="px-6 py-4 text-bw-62 text-sm truncate max-w-xs"
+                            className="px-6 py-4 text-[#868685] text-sm truncate max-w-xs"
                             title={(r.absentNames || []).join(", ")}
                           >
                             {(r.absentNames || []).join(", ") || "-"}
@@ -739,7 +739,7 @@ const AttendanceManagement = () => {
             {/* Student List/Grid Section */}
             <div className="space-y-4">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <h3 className="text-xl font-bold text-white font-comic">
+                <h3 className="text-xl font-bold text-[#0e0f0c] font-display tracking-tight">
                   Student Attendance
                 </h3>
                 <div className="flex gap-2">
@@ -782,17 +782,17 @@ const AttendanceManagement = () => {
               </div>
 
               {loading ? (
-                <div className="text-bw-62 text-center p-8">
+                <div className="text-[#868685] text-center p-8">
                   Loading students...
                 </div>
               ) : filteredStudents.length === 0 ? (
-                <div className="text-bw-62 text-center p-8">
+                <div className="text-[#868685] text-center p-8">
                   No students found.
                 </div>
               ) : view === "list" ? (
-                <div className="bg-bw-12 border border-bw-25 rounded-xl overflow-hidden">
+                <div className="bg-white border border-[#e8ebe6] rounded-xl overflow-hidden">
                   <table className="w-full text-left border-collapse">
-                    <thead className="bg-bw-12 text-bw-62 text-xs uppercase tracking-wider font-medium border-b border-bw-25">
+                    <thead className="bg-white text-[#868685] text-xs uppercase tracking-wider font-medium border-b border-[#e8ebe6]">
                       <tr>
                         <th className="px-6 py-4">Name</th>
                         <th className="px-6 py-4">Attendance %</th>
@@ -800,11 +800,11 @@ const AttendanceManagement = () => {
                         <th className="px-6 py-4">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-bw-25">
+                    <tbody className="divide-y divide-[#e8ebe6]">
                       {filteredStudents.map((student) => (
                         <tr
                           key={student.id}
-                          className="hover:bg-bw-25/20 transition-colors"
+                          className="hover:bg-[#f9faf6] transition-colors"
                         >
                           <td className="px-6 py-4 font-medium">
                             {student.name}
@@ -819,7 +819,7 @@ const AttendanceManagement = () => {
                               onChange={(e) =>
                                 handleStatusChange(student.id, e.target.value)
                               }
-                              className="bg-black border border-bw-25 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-accent-primary outline-none"
+                              className="bg-[var(--bb-offwhite)] border border-[#e8ebe6] rounded px-2 py-1 text-sm focus:ring-1 focus:ring-bb-green outline-none"
                             >
                               <option value="present">Present</option>
                               <option value="absent">Absent</option>
@@ -836,7 +836,7 @@ const AttendanceManagement = () => {
                   {filteredStudents.map((student) => (
                     <motion.div
                       key={student.id}
-                      className="bg-bw-12 border border-bw-25 rounded-xl p-4 flex flex-col gap-3"
+                      className="bg-white border border-[#e8ebe6] rounded-xl p-4 flex flex-col gap-3"
                       whileHover={{ y: -4 }}
                     >
                       <div className="flex justify-between items-start">
@@ -848,16 +848,16 @@ const AttendanceManagement = () => {
                         </h4>
                         <Badge status={student.status} />
                       </div>
-                      <div className="text-sm text-bw-62">
+                      <div className="text-sm text-[#868685]">
                         Attendance: {student.attendance}%
                       </div>
-                      <div className="mt-auto pt-3 border-t border-bw-25">
+                      <div className="mt-auto pt-3 border-t border-[#e8ebe6]">
                         <select
                           value={student.status}
                           onChange={(e) =>
                             handleStatusChange(student.id, e.target.value)
                           }
-                          className="w-full bg-black border border-bw-25 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-accent-primary outline-none"
+                          className="w-full bg-[var(--bb-offwhite)] border border-[#e8ebe6] rounded px-2 py-1 text-sm focus:ring-1 focus:ring-bb-green outline-none"
                         >
                           <option value="present">Present</option>
                           <option value="absent">Absent</option>
@@ -877,24 +877,24 @@ const AttendanceManagement = () => {
       <AnimatePresence>
         {showUploadModal && (
           <motion.div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-[var(--bb-offwhite)]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowUploadModal(false)}
           >
             <motion.div
-              className="bg-bw-12 border border-bw-25 rounded-xl w-full max-w-lg overflow-hidden shadow-2xl"
+              className="bg-white border border-[#e8ebe6] rounded-xl w-full max-w-lg overflow-hidden shadow-2xl"
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 border-b border-bw-25 flex justify-between items-center">
+              <div className="p-6 border-b border-[#e8ebe6] flex justify-between items-center">
                 <h2 className="text-xl font-bold">Bulk Upload Attendance</h2>
                 <button
                   onClick={() => setShowUploadModal(false)}
-                  className="text-bw-50 hover:text-white transition-colors"
+                  className="text-[#868685] hover:text-[#0e0f0c] transition-colors"
                 >
                   <X size={24} />
                 </button>
@@ -904,8 +904,8 @@ const AttendanceManagement = () => {
                 <div
                   className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${
                     dragActive
-                      ? "border-accent-primary bg-accent-primary/5"
-                      : "border-bw-37 hover:border-bw-50 hover:bg-bw-12"
+                      ? "border-bb-green bg-bb-green/5"
+                      : "border-[#e8ebe6] hover:border-[#9fe870] hover:bg-white"
                   }`}
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
@@ -916,9 +916,9 @@ const AttendanceManagement = () => {
                     <motion.div
                       initial={{ scale: 0.5, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="flex flex-col items-center text-accent-success"
+                      className="flex flex-col items-center text-bb-positive"
                     >
-                      <div className="w-16 h-16 rounded-full bg-accent-success/20 flex items-center justify-center mb-4">
+                      <div className="w-16 h-16 rounded-full bg-bb-positive/20 flex items-center justify-center mb-4">
                         <CheckCircle size={32} />
                       </div>
                       <p className="font-medium">Upload Successful!</p>
@@ -927,24 +927,24 @@ const AttendanceManagement = () => {
                     <div className="flex flex-col items-center">
                       <FileSpreadsheet
                         size={48}
-                        className="text-accent-primary mb-4"
+                        className="text-bb-green mb-4"
                       />
-                      <p className="font-medium text-white">
+                      <p className="font-medium text-[#0e0f0c]">
                         {uploadedFile.name}
                       </p>
-                      <p className="text-sm text-bw-62 mt-1">
+                      <p className="text-sm text-[#868685] mt-1">
                         {(uploadedFile.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <div className="w-16 h-16 rounded-full bg-bw-12 border border-bw-25 flex items-center justify-center mb-4 text-bw-50">
+                      <div className="w-16 h-16 rounded-full bg-white border border-[#e8ebe6] flex items-center justify-center mb-4 text-[#868685]">
                         <Upload size={28} />
                       </div>
-                      <p className="text-white font-medium mb-2">
+                      <p className="text-[#0e0f0c] font-medium mb-2">
                         Drag & drop file here
                       </p>
-                      <p className="text-bw-62 text-sm mb-4">
+                      <p className="text-[#868685] text-sm mb-4">
                         or click to browse
                       </p>
                       <Button
@@ -966,10 +966,10 @@ const AttendanceManagement = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-sm text-bw-62 bg-bw-12 p-3 rounded-lg border border-bw-25">
+                  <div className="flex items-center gap-3 text-sm text-[#868685] bg-white p-3 rounded-lg border border-[#e8ebe6]">
                     <AlertCircle
                       size={18}
-                      className="text-accent-info shrink-0"
+                      className="text-text-[#38c8ff] shrink-0"
                     />
                     <p>Accepted formats: .csv, .xlsx, .xls (Max 5MB)</p>
                   </div>
@@ -1007,7 +1007,7 @@ const AttendanceManagement = () => {
       <AnimatePresence>
         {managerOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-8"
+            className="fixed inset-0 bg-[var(--bb-offwhite)]/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1016,34 +1016,34 @@ const AttendanceManagement = () => {
             }}
           >
             <motion.div
-              className="bg-bw-12 border border-bw-25 rounded-xl w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+              className="bg-white border border-[#e8ebe6] rounded-xl w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
             >
-              <div className="px-6 py-4 border-b border-bw-25 flex justify-between items-center bg-bw-12 z-10">
+              <div className="px-6 py-4 border-b border-[#e8ebe6] flex justify-between items-center bg-white z-10">
                 <div>
-                  <h2 className="text-xl font-bold text-white font-comic">
+                  <h2 className="text-xl font-bold text-[#0e0f0c] font-display tracking-tight">
                     Attendance Manager
                   </h2>
-                  <p className="text-sm text-bw-62">
+                  <p className="text-sm text-[#868685]">
                     Mark attendance for specific batches and dates
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
                   {managerError && (
-                    <span className="text-accent-error text-sm">
+                    <span className="text-bb-danger text-sm">
                       {managerError}
                     </span>
                   )}
                   {managerSuccess && (
-                    <span className="text-accent-success text-sm">
+                    <span className="text-bb-positive text-sm">
                       {managerSuccess}
                     </span>
                   )}
                   <button
                     onClick={() => setManagerOpen(false)}
-                    className="p-2 hover:bg-bw-25 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#e8ebe6] rounded-lg transition-colors"
                   >
                     <X size={20} />
                   </button>
@@ -1051,10 +1051,10 @@ const AttendanceManagement = () => {
               </div>
 
               <div className="flex flex-1 overflow-hidden">
-                <div className="w-80 bg-bw-12/50 border-r border-bw-25 p-5 overflow-y-auto space-y-6">
+                <div className="w-80 bg-white/80 border-r border-[#e8ebe6] p-5 overflow-y-auto space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-medium text-bw-62 uppercase mb-1.5">
+                      <label className="block text-xs font-medium text-[#868685] uppercase mb-1.5">
                         Select Batch
                       </label>
                       <div className="relative">
@@ -1064,7 +1064,7 @@ const AttendanceManagement = () => {
                           onChange={(e) =>
                             handleBatchChangeManager(e.target.value)
                           }
-                          className="w-full appearance-none bg-black border border-bw-25 text-white rounded-lg px-3 py-2 pr-10 text-sm focus:ring-1 focus:ring-accent-primary outline-none"
+                          className="w-full appearance-none bg-[var(--bb-offwhite)] border border-[#e8ebe6] text-[#0e0f0c] rounded-lg px-3 py-2 pr-10 text-sm focus:ring-1 focus:ring-bb-green outline-none"
                         >
                           <option value="">Select Batch</option>
                           {batches.map((b) => (
@@ -1074,34 +1074,34 @@ const AttendanceManagement = () => {
                           ))}
                         </select>
                         <ChevronDown
-                          className="absolute right-3 top-2.5 text-bw-50 pointer-events-none"
+                          className="absolute right-3 top-2.5 text-[#868685] pointer-events-none"
                           size={14}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-bw-62 uppercase mb-1.5">
+                      <label className="block text-xs font-medium text-[#868685] uppercase mb-1.5">
                         Select Date
                       </label>
                       <input
                         type="date"
                         value={selectedDate}
                         onChange={(e) => handleDateChange(e.target.value)}
-                        className={`w-full bg-black border ${dateError ? "border-accent-error" : "border-bw-25"} text-white rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-accent-primary outline-none`}
+                        className={`w-full bg-[var(--bb-offwhite)] border ${dateError ? "border-bb-danger" : "border-[#e8ebe6]"} text-[#0e0f0c] rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-bb-green outline-none`}
                       />
                       {dateError && (
-                        <p className="text-xs text-accent-error mt-1">
+                        <p className="text-xs text-bb-danger mt-1">
                           {dateError}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="h-px bg-bw-25"></div>
+                  <div className="h-px bg-[#e8ebe6]"></div>
 
                   <div className="space-y-2">
-                    <label className="block text-xs font-medium text-bw-62 uppercase mb-1.5">
+                    <label className="block text-xs font-medium text-[#868685] uppercase mb-1.5">
                       Quick Actions
                     </label>
                     <Button
@@ -1109,7 +1109,7 @@ const AttendanceManagement = () => {
                       className="w-full justify-start text-xs"
                       onClick={() => markAll("present")}
                     >
-                      <CheckCircle size={14} className="text-accent-success" />{" "}
+                      <CheckCircle size={14} className="text-bb-positive" />{" "}
                       Mark All Present
                     </Button>
                     <Button
@@ -1117,7 +1117,7 @@ const AttendanceManagement = () => {
                       className="w-full justify-start text-xs"
                       onClick={() => markAll("absent")}
                     >
-                      <X size={14} className="text-accent-error" /> Mark All
+                      <X size={14} className="text-bb-danger" /> Mark All
                       Absent
                     </Button>
                     <Button
@@ -1125,15 +1125,15 @@ const AttendanceManagement = () => {
                       className="w-full justify-start text-xs"
                       onClick={() => markAll("on_leave")}
                     >
-                      <Clock size={14} className="text-accent-warning" /> Mark
+                      <Clock size={14} className="text-bb-warning" /> Mark
                       All On Leave
                     </Button>
                   </div>
 
-                  <div className="h-px bg-bw-25"></div>
+                  <div className="h-px bg-[#e8ebe6]"></div>
 
                   <div>
-                    <label className="block text-xs font-medium text-bw-62 uppercase mb-3">
+                    <label className="block text-xs font-medium text-[#868685] uppercase mb-3">
                       Recent History
                     </label>
                     <div className="space-y-2">
@@ -1141,28 +1141,28 @@ const AttendanceManagement = () => {
                         attendanceHistory.map((h) => (
                           <div
                             key={h.date}
-                            className="bg-black border border-bw-25 rounded-lg p-3 text-xs"
+                            className="bg-[var(--bb-offwhite)] border border-[#e8ebe6] rounded-lg p-3 text-xs"
                           >
                             <div className="flex justify-between mb-2">
-                              <span className="text-bw-87 font-medium">
+                              <span className="text-[#454745] font-medium">
                                 {h.date}
                               </span>
                             </div>
-                            <div className="flex gap-2 text-bw-62">
-                              <span className="text-accent-success">
+                            <div className="flex gap-2 text-[#868685]">
+                              <span className="text-bb-positive">
                                 P: {h.present}
                               </span>
-                              <span className="text-accent-error">
+                              <span className="text-bb-danger">
                                 A: {h.absent}
                               </span>
-                              <span className="text-accent-warning">
+                              <span className="text-bb-warning">
                                 L: {h.excused}
                               </span>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <p className="text-bw-62 text-sm italic">
+                        <p className="text-[#868685] text-sm italic">
                           No recent history
                         </p>
                       )}
@@ -1170,11 +1170,11 @@ const AttendanceManagement = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 flex flex-col bg-black overflow-hidden">
-                  <div className="p-4 border-b border-bw-25 bg-bw-12/30 flex gap-4 items-center">
+                <div className="flex-1 flex flex-col bg-[var(--bb-offwhite)] overflow-hidden">
+                  <div className="p-4 border-b border-[#e8ebe6] bg-white/60 flex gap-4 items-center">
                     <div className="relative flex-1">
                       <Search
-                        className="absolute left-3 top-2.5 text-bw-50"
+                        className="absolute left-3 top-2.5 text-[#868685]"
                         size={16}
                       />
                       <input
@@ -1182,34 +1182,34 @@ const AttendanceManagement = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search students within batch..."
-                        className="w-full bg-black border border-bw-25 text-white rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-accent-primary outline-none"
+                        className="w-full bg-[var(--bb-offwhite)] border border-[#e8ebe6] text-[#0e0f0c] rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-bb-green outline-none"
                       />
                     </div>
-                    <div className="text-sm text-bw-62">
+                    <div className="text-sm text-[#868685]">
                       {filteredManagerStudents.length} students
                     </div>
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-0">
                     <table className="w-full text-left border-collapse">
-                      <thead className="bg-bw-12 text-bw-62 text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+                      <thead className="bg-white text-[#868685] text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                         <tr>
-                          <th className="px-6 py-3 font-medium border-b border-bw-25">
+                          <th className="px-6 py-3 font-medium border-b border-[#e8ebe6]">
                             Name
                           </th>
-                          <th className="px-6 py-3 font-medium border-b border-bw-25">
+                          <th className="px-6 py-3 font-medium border-b border-[#e8ebe6]">
                             Status
                           </th>
-                          <th className="px-6 py-3 font-medium border-b border-bw-25">
+                          <th className="px-6 py-3 font-medium border-b border-[#e8ebe6]">
                             Reason / Note
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-bw-25">
+                      <tbody className="divide-y divide-[#e8ebe6]">
                         {managerLoading ? (
                           <tr>
                             <td
-                              className="px-6 py-8 text-center text-bw-62"
+                              className="px-6 py-8 text-center text-[#868685]"
                               colSpan="3"
                             >
                               Loading students...
@@ -1219,7 +1219,7 @@ const AttendanceManagement = () => {
                           filteredManagerStudents.map((s) => (
                             <tr
                               key={s.id}
-                              className="hover:bg-bw-12/40 transition-colors group"
+                              className="hover:bg-white/80 transition-colors group"
                             >
                               <td className="px-6 py-3 text-sm font-medium">
                                 {s.name}
@@ -1252,8 +1252,8 @@ const AttendanceManagement = () => {
                                       }
                                       className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all ${
                                         s.status === opt.val
-                                          ? `bg-accent-${opt.col} text-white shadow-lg scale-110`
-                                          : "bg-bw-12 text-bw-62 border border-bw-25 hover:border-bw-50"
+                                          ? `bg-accent-${opt.col} text-[#0e0f0c] shadow-lg scale-110`
+                                          : "bg-white text-[#868685] border border-[#e8ebe6] hover:border-[#9fe870]"
                                       }`}
                                       title={opt.val.replace("_", " ")}
                                     >
@@ -1275,7 +1275,7 @@ const AttendanceManagement = () => {
                                       ),
                                     )
                                   }
-                                  className="w-full bg-transparent border-b border-transparent focus:border-accent-primary text-sm py-1 px-0 outline-none transition-colors placeholder:text-bw-25 group-hover:placeholder:text-bw-50"
+                                  className="w-full bg-transparent border-b border-transparent focus:border-bb-green text-sm py-1 px-0 outline-none transition-colors placeholder:text-[#e8ebe6] group-hover:placeholder:text-[#868685]"
                                   placeholder="Add a note..."
                                 />
                               </td>
@@ -1284,7 +1284,7 @@ const AttendanceManagement = () => {
                         ) : (
                           <tr>
                             <td
-                              className="px-6 py-8 text-center text-bw-62"
+                              className="px-6 py-8 text-center text-[#868685]"
                               colSpan="3"
                             >
                               No students found for selected batch
@@ -1297,7 +1297,7 @@ const AttendanceManagement = () => {
                 </div>
               </div>
 
-              <div className="px-6 py-4 bg-bw-12 border-t border-bw-25 flex justify-between items-center">
+              <div className="px-6 py-4 bg-white border-t border-[#e8ebe6] flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <Button
                     variant="secondary"
@@ -1307,7 +1307,7 @@ const AttendanceManagement = () => {
                     <Save size={16} /> Save Draft
                   </Button>
                   {draftSaved && (
-                    <span className="text-accent-success text-xs animate-fade-in">
+                    <span className="text-bb-positive text-xs animate-fade-in">
                       Draft saved
                     </span>
                   )}
