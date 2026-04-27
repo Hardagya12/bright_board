@@ -9,40 +9,39 @@ function Button({
   className = '',
   ...props
 }) {
-  const base = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm relative overflow-hidden';
+  const base = 'inline-flex items-center justify-center font-body font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#9fe870]/40 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden cursor-pointer';
 
   const variants = {
-    primary: 'bg-white text-black border border-transparent shadow-lg shadow-white/10 hover:bg-gray-200',
-    secondary: 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20',
-    outline: 'bg-transparent text-white border border-white/20 hover:bg-white/5 hover:border-white/40',
-    ghost: 'bg-transparent text-white border-transparent hover:bg-white/5',
-    accent: 'bg-blue-600 text-white border border-transparent shadow-lg shadow-blue-500/20 hover:bg-blue-700',
-    danger: 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20',
-    success: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20',
-    warning: 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20',
+    primary: 'btn-wise',
+    secondary: 'btn-wise-outline',
+    outline: 'bg-transparent text-[#0e0f0c] border-2 border-[#e8ebe6] hover:border-[#9fe870] hover:bg-[#e2f6d5] rounded-full',
+    ghost: 'bg-transparent text-[#454745] border-transparent hover:bg-[#e2f6d5] hover:text-[#163300] rounded-full',
+    accent: 'bg-[#9fe870] text-[#163300] border border-transparent rounded-full shadow-green-glow',
+    danger: 'btn-wise-danger',
+    success: 'bg-[#e2f6d5] text-[#054d28] border border-[#054d28]/15 hover:bg-[#cdffad] rounded-full',
+    warning: 'bg-[#fff8e0] text-[#8a6d00] border border-[#ffd11a]/20 hover:bg-[#ffd11a]/30 rounded-full',
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'px-4 py-2 text-sm',
+    md: 'px-6 py-3 text-sm',
+    lg: 'px-8 py-4 text-base',
   };
 
   const width = fullWidth ? 'w-full' : '';
-
-  // Fallback to primary if variant doesn't exist
   const variantClass = variants[variant] || variants.primary;
-
   const classes = [base, variantClass, sizes[size] || sizes.md, width, className].join(' ').trim();
 
   return (
     <motion.button
       className={classes}
-      whileTap={{ scale: 0.98 }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       {...props}
     >
-      {children}
+      <span className="relative z-10 flex items-center justify-center gap-2">
+        {children}
+      </span>
     </motion.button>
   );
 }
