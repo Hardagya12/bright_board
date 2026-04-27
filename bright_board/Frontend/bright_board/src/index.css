@@ -1,72 +1,511 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lilita+One&family=Caveat:wght@400..700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════
+   BRIGHT BOARD — Wise-Inspired Design System
+   School / Tuition Comic Vibe
+   ═══════════════════════════════════════════════ */
+
 :root {
-  --bw-0: #000000;
-  --bw-12: #1F1F1F;
-  --bw-25: #404040;
-  --bw-37: #616161;
-  --bw-50: #808080;
-  --bw-62: #9E9E9E;
-  --bw-75: #BFBFBF;
-  --bw-87: #DEDEDE;
-  --bw-100: #FFFFFF;
-  
-  /* Accent colors */
-  --accent-primary: #3B82F6;
-  --accent-primary-dark: #2563EB;
-  --accent-primary-light: #60A5FA;
-  --accent-success: #10B981;
-  --accent-success-dark: #059669;
-  --accent-warning: #F59E0B;
-  --accent-warning-dark: #D97706;
-  --accent-error: #EF4444;
-  --accent-error-dark: #DC2626;
-  --accent-info: #8B5CF6;
-  --accent-info-dark: #7C3AED;
-  --accent-teal: #14B8A6;
-  --accent-teal-dark: #0D9488;
+  /* Primary Brand */
+  --bb-black: #0e0f0c;
+  --bb-green: #9fe870;
+  --bb-green-dark: #163300;
+  --bb-green-light: #e2f6d5;
+  --bb-green-pastel: #cdffad;
+  --bb-white: #ffffff;
+  --bb-offwhite: #f9faf6;
+
+  /* Semantic */
+  --bb-positive: #054d28;
+  --bb-danger: #d03238;
+  --bb-warning: #ffd11a;
+  --bb-info: rgba(56,200,255,0.10);
+  --bb-orange: #ffc091;
+
+  /* Neutrals */
+  --bb-gray-dark: #454745;
+  --bb-gray: #868685;
+  --bb-gray-light: #e8ebe6;
+
+  /* Fonts */
+  --font-display: 'Lilita One', 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-hand: 'Caveat', cursive;
+
+  /* Radius — Wise scale */
+  --radius-sm: 16px;
+  --radius-md: 30px;
+  --radius-lg: 40px;
+  --radius-pill: 9999px;
+
+  /* Shadows — ring shadows only */
+  --shadow-ring: rgba(14,15,12,0.12) 0px 0px 0px 1px;
+  --shadow-card: 0 2px 16px rgba(14,15,12,0.06);
+  --shadow-hover: 0 8px 30px rgba(159,232,112,0.15);
+
+  /* Transitions */
+  --transition: 0.3s ease;
+  --spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
   * {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 }
 
-
 html, body, #root {
   height: 100%;
-  background-color: #000000;
-  color: #ffffff;
-  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  background-color: var(--bb-offwhite);
+  color: var(--bb-black);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-feature-settings: "calt" 1;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar — green themed */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #1f1f1f; 
+  background: var(--bb-offwhite);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #404040; 
-  border-radius: 4px;
+  background: var(--bb-green);
+  border-radius: var(--radius-pill);
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #616161; 
+  background: var(--bb-green-dark);
 }
 
-/* Selection Color */
+/* Selection */
 ::selection {
-  background-color: rgba(59, 130, 246, 0.3); /* accent-primary with opacity */
-  color: white;
+  background-color: rgba(159,232,112,0.35);
+  color: var(--bb-green-dark);
+}
+
+/* ═══════════════════════════════════════════════
+   CARD SYSTEM — Clean, large-radius, ring shadow
+   ═══════════════════════════════════════════════ */
+.bb-card {
+  background: var(--bb-white);
+  border: 1px solid rgba(14,15,12,0.08);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-ring), var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--spring), box-shadow var(--transition);
+}
+.bb-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: var(--shadow-ring), var(--shadow-hover);
+}
+
+.bb-card-flat {
+  background: var(--bb-white);
+  border: 1px solid rgba(14,15,12,0.08);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-ring);
+}
+
+/* Green accent border on top of cards */
+.bb-card-accent::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 3px;
+  background: var(--bb-green);
+  border-radius: 0 0 var(--radius-pill) var(--radius-pill);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS — Wise pill style
+   ═══════════════════════════════════════════════ */
+.btn-wise {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bb-green);
+  color: var(--bb-green-dark);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  padding: 12px 28px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  transition: transform var(--spring), box-shadow var(--transition);
+  font-feature-settings: "calt" 1;
+  letter-spacing: -0.02em;
+}
+.btn-wise:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(159,232,112,0.35);
+}
+.btn-wise:active {
+  transform: scale(0.95);
+}
+
+.btn-wise-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(22,51,0,0.06);
+  color: var(--bb-black);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(14,15,12,0.12);
+  cursor: pointer;
+  transition: transform var(--spring), box-shadow var(--transition), background var(--transition);
+}
+.btn-wise-outline:hover {
+  transform: scale(1.05);
+  background: rgba(22,51,0,0.10);
+}
+.btn-wise-outline:active {
+  transform: scale(0.95);
+}
+
+.btn-wise-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffeaea;
+  color: var(--bb-danger);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(208,50,56,0.15);
+  cursor: pointer;
+  transition: transform var(--spring), background var(--transition);
+}
+.btn-wise-danger:hover {
+  transform: scale(1.05);
+  background: #ffd4d4;
+}
+
+/* ═══════════════════════════════════════════════
+   INPUTS — pill-shaped
+   ═══════════════════════════════════════════════ */
+.input-wise {
+  width: 100%;
+  padding: 14px 20px;
+  background: var(--bb-white);
+  border: 1.5px solid var(--bb-gray-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--bb-black);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  font-feature-settings: "calt" 1;
+}
+.input-wise::placeholder {
+  color: var(--bb-gray);
+}
+.input-wise:focus {
+  border-color: var(--bb-green);
+  box-shadow: 0 0 0 3px rgba(159,232,112,0.2);
+}
+
+/* ═══════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════ */
+.text-display {
+  font-family: var(--font-display);
+  font-weight: 400; /* Lilita One only has 400 */
+  line-height: 0.95;
+  color: var(--bb-black);
+  font-feature-settings: "calt" 1;
+  letter-spacing: -0.01em;
+}
+
+.text-heading {
+  font-family: var(--font-body);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--bb-black);
+  font-feature-settings: "calt" 1;
+  letter-spacing: -0.02em;
+}
+
+.text-body {
+  font-family: var(--font-body);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--bb-gray-dark);
+  font-feature-settings: "calt" 1;
+}
+
+.text-hand {
+  font-family: var(--font-hand);
+  font-weight: 600;
+}
+
+/* Green gradient text */
+.text-green-gradient {
+  background: linear-gradient(135deg, var(--bb-green-dark), #2d6b00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══════════════════════════════════════════════
+   BADGE
+   ═══════════════════════════════════════════════ */
+.badge-green {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: var(--bb-green-light);
+  color: var(--bb-green-dark);
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: var(--radius-pill);
+}
+.badge-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: #ffeaea;
+  color: var(--bb-danger);
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: var(--radius-pill);
+}
+.badge-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: #fff8e0;
+  color: #8a6d00;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: var(--radius-pill);
+}
+.badge-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: #e8f4ff;
+  color: #0066cc;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: var(--radius-pill);
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATED ILLUSTRATIONS — comic school vibe
+   ═══════════════════════════════════════════════ */
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(12px) rotate(-2deg); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes dash-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes pop-in {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes pencil-write {
+  0% { transform: translateX(0) rotate(-5deg); }
+  25% { transform: translateX(4px) rotate(0deg); }
+  50% { transform: translateX(0) rotate(5deg); }
+  75% { transform: translateX(-4px) rotate(0deg); }
+  100% { transform: translateX(0) rotate(-5deg); }
+}
+@keyframes page-flip {
+  0%, 100% { transform: rotateY(0deg); }
+  50% { transform: rotateY(15deg); }
+}
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-float-reverse { animation: floatReverse 5s ease-in-out infinite; }
+.animate-wiggle { animation: wiggle 2s ease-in-out infinite; }
+.animate-bounce-gentle { animation: bounce-gentle 2.5s ease-in-out infinite; }
+.animate-pop-in { animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-pencil { animation: pencil-write 3s ease-in-out infinite; }
+.animate-page-flip { animation: page-flip 4s ease-in-out infinite; }
+.animate-sparkle { animation: sparkle 2s ease-in-out infinite; }
+
+/* Stagger children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+
+/* Ink draw for SVG paths */
+.ink-draw path, .ink-draw line, .ink-draw circle {
+  stroke-dasharray: var(--path-length, 500);
+  stroke-dashoffset: var(--path-length, 500);
+  animation: dash-draw 1.5s ease forwards;
+}
+
+/* Doodle underline */
+.doodle-underline {
+  position: relative;
+  display: inline-block;
+}
+.doodle-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: var(--bb-green);
+  border-radius: var(--radius-pill);
+  opacity: 0.5;
+  transform: skewX(-5deg);
+}
+
+/* Comic speech bubble */
+.speech-bubble {
+  position: relative;
+  background: var(--bb-white);
+  border: 2px solid var(--bb-black);
+  border-radius: 20px;
+  padding: 16px 24px;
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 30px;
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 12px solid var(--bb-black);
+}
+
+/* Notebook paper lines */
+.notebook-lines {
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(14,15,12,0.06) 31px,
+    rgba(14,15,12,0.06) 32px
+  );
+  background-size: 100% 32px;
+}
+
+/* Chalkboard style */
+.chalkboard {
+  background: #2d5016;
+  color: var(--bb-white);
+  border-radius: var(--radius-md);
+  border: 8px solid #8B6914;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.3);
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVENESS
+   ═══════════════════════════════════════════════ */
+
+/* Bottom nav safe area for student pages */
+@media (max-width: 767px) {
+  .flex-1.overflow-y-auto {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Ensure touch targets are large enough */
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Stack form fields on mobile */
+  .grid-cols-2, .grid-cols-3, .md\:grid-cols-2, .md\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Prevent horizontal scroll from tables */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Make modals bottom sheets on mobile */
+  .fixed.inset-0 > div[class*="rounded-[24px]"],
+  .fixed.inset-0 > div[class*="rounded-[32px]"] {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 20px 20px 0 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Tablet breakpoint refinements */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid-cols-5, .xl\:grid-cols-5 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* Ensure btn-primary always has good contrast */
+.btn-primary {
+  background: var(--bb-green);
+  color: var(--bb-green-dark);
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+}
+.btn-primary:hover {
+  box-shadow: 0 4px 20px rgba(159,232,112,0.35);
 }
 
