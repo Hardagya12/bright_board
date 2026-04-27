@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, AlertCircle, Clock, HelpCircle, Check, ArrowRight, Save } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CheckCircle2, AlertCircle, Clock, Check, Save, Flag, X as XIcon, Zap } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { getExamStudent, submitExam } from '../../utils/services/exams';
 
@@ -13,7 +12,6 @@ const ExamAttempt = ({ examId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   useEffect(() => {
     const id = window.location.pathname.split('/').pop();
@@ -60,81 +58,85 @@ const ExamAttempt = ({ examId }) => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-transparent">
+    <div className="flex h-screen overflow-hidden bg-[#f9faf6] font-body relative">
+      <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+            
       <Sidebar />
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-[#e8ebe6] scrollbar-track-transparent relative z-10 custom-scrollbar">
+        <div className="max-w-4xl mx-auto space-y-10">
 
           {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
-                {exam ? exam.title : 'Exam Session'}
+              <h1 className="text-3xl md:text-4xl font-bold text-[#0e0f0c] font-display tracking-tight mb-2">
+                {exam ? exam.title : 'Assessment Session'}
               </h1>
-              <p className="text-white/50 flex items-center gap-2">
-                <Clock size={14} /> {exam ? `${exam.durationMinutes} Minutes` : 'Loading...'}
+              <p className="text-[#868685] flex items-center gap-2 font-medium tracking-wide">
+                <Clock size={16} className="text-cyan-400" /> {exam ? `${exam.durationMinutes} Minutes` : 'Loading...'}
               </p>
             </div>
             {!submitted && exam && (
-              <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+              <div className="flex items-center gap-5 bg-white border border-[#e8ebe6] rounded-[24px] shadow-sm px-6 py-3 rounded-full border border-[#e8ebe6] shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                 <div className="text-right">
-                  <p className="text-xs text-white/40 uppercase tracking-wider">Progress</p>
-                  <p className="text-sm font-bold text-white">{Object.keys(answers).length} / {questions.length} Answered</p>
+                  <p className="text-[10px] text-[#868685] font-bold uppercase tracking-widest">Progress</p>
+                  <p className="text-sm font-bold text-[#0e0f0c] tracking-wide">{Object.keys(answers).length} / {questions.length} Answered</p>
                 </div>
                 <div className="w-12 h-12 relative flex items-center justify-center">
                   <svg className="w-full h-full transform -rotate-90">
-                    <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-white/10" />
-                    <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-blue-500" strokeDasharray={2 * Math.PI * 20} strokeDashoffset={2 * Math.PI * 20 * (1 - calculateProgress() / 100)} />
+                    <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-[#e8ebe6]" />
+                    <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-cyan-400 shadow-[0_0_10px_currentColor]" strokeDasharray={2 * Math.PI * 20} strokeDashoffset={2 * Math.PI * 20 * (1 - calculateProgress() / 100)} />
                   </svg>
-                  <span className="absolute text-xs font-bold text-white">{calculateProgress()}%</span>
+                  <span className="absolute text-[10px] font-bold text-[#0e0f0c]">{calculateProgress()}%</span>
                 </div>
               </div>
             )}
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-2">
+            <div className="p-5 rounded-[20px] bg-red-500/10 border border-red-500/30 text-red-400 flex items-center gap-3 shadow-[0_0_15px_rgba(248,113,113,0.15)] font-bold tracking-wide">
               <AlertCircle size={20} />
               {error}
             </div>
           )}
 
           {loading && !exam ? (
-            <div className="space-y-4">
-              <div className="h-8 bg-white/5 rounded w-1/3 animate-pulse" />
-              <div className="h-64 bg-white/5 rounded-2xl animate-pulse" />
+            <div className="space-y-6">
+              <div className="h-8 bg-white rounded-full w-1/3 animate-pulse" />
+              <div className="h-64 bg-white rounded-[32px] animate-pulse" />
             </div>
           ) : submitted ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="max-w-lg mx-auto"
+              className="max-w-lg mx-auto mt-10"
             >
-              <Card variant="glass" className="p-8 text-center border-emerald-500/30 shadow-2xl shadow-emerald-500/10">
-                <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6 text-emerald-400">
-                  <CheckCircle2 size={48} />
+              <div className="bg-white border border-[#e8ebe6] rounded-[24px] shadow-sm p-10 md:p-12 text-center border-emerald-400/30 shadow-[0_20px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] accent-top-green relative overflow-hidden">
+                <div className="absolute top-0 left-10 right-10 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-50 blur-sm rounded-full"></div>
+                
+                <div className="w-24 h-24 rounded-[24px] bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-8 text-emerald-400 shadow-[inset_0_0_20px_rgba(52,211,153,0.2)]">
+                  <CheckCircle2 size={48} className="drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
                 </div>
-                <h2 className="text-3xl font-bold text-white mb-2">Exam Submitted!</h2>
-                <p className="text-white/50 mb-8">Your answers have been recorded successfully.</p>
+                <h2 className="text-3xl font-bold text-[#0e0f0c] mb-2 font-display tracking-tight">Assessment Completed</h2>
+                <p className="text-[#868685] mb-10 text-sm tracking-wide">Your responses have been recorded successfully.</p>
 
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Score</p>
-                    <p className="text-3xl font-bold text-white">{submitted.score}%</p>
+                <div className="grid grid-cols-2 gap-5 mb-10">
+                  <div className="p-6 rounded-[24px] bg-[#f9faf6] border border-[#e8ebe6] relative overflow-hidden group hover:border-cyan-400 transition-colors">
+                    <p className="text-[#868685] text-[10px] font-bold uppercase tracking-widest mb-2 relative z-10">Final Score</p>
+                    <p className="text-4xl font-bold text-cyan-500 relative z-10">{submitted.score}%</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Correct Answers</p>
-                    <p className="text-3xl font-bold text-white">{submitted.correct} <span className="text-lg text-white/40">/ {submitted.total}</span></p>
+                  <div className="p-6 rounded-[24px] bg-[#f9faf6] border border-[#e8ebe6] relative overflow-hidden group hover:border-emerald-400 transition-colors">
+                    <p className="text-[#868685] text-[10px] font-bold uppercase tracking-widest mb-2 relative z-10">Correct Answers</p>
+                    <p className="text-4xl font-bold text-emerald-500 relative z-10">{submitted.correct} <span className="text-xl text-[#868685]">/ {submitted.total}</span></p>
                   </div>
                 </div>
 
-                <Button variant="accent" fullWidth onClick={() => window.location.href = '/s/dashboard'}>
+                <Button className="w-full py-4 rounded-full bg-white border border-[#e8ebe6] hover:bg-[#e2f6d5] text-[#0e0f0c] font-bold tracking-wide transition-all shadow-inner" onClick={() => window.location.href = '/s/dashboard'}>
                   Return to Dashboard
                 </Button>
-              </Card>
+              </div>
             </motion.div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {questions.map((q, idx) => (
                 <motion.div
                   key={q.id}
@@ -142,33 +144,36 @@ const ExamAttempt = ({ examId }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <Card variant="glass" className={`p-6 transition-all duration-300 ${answers[q.id] !== undefined ? 'border-blue-500/30 bg-blue-500/5' : ''}`}>
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold text-sm ${answers[q.id] !== undefined
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white/10 text-white/40'
+                  <div className={`bg-white border border-[#e8ebe6] rounded-[24px] shadow-sm p-8 md:p-10 transition-all duration-300 relative overflow-hidden ${answers[q.id] !== undefined ? 'border-cyan-200 bg-cyan-50/50' : ''}`}>
+                    {answers[q.id] !== undefined && (
+                      <div className="absolute top-0 left-10 right-10 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-30 rounded-full"></div>
+                    )}
+                    <div className="flex items-start gap-6 mb-8">
+                      <div className={`w-12 h-12 rounded-[16px] flex items-center justify-center shrink-0 font-bold text-lg border ${answers[q.id] !== undefined
+                          ? 'bg-cyan-100 text-cyan-600 border-cyan-300'
+                          : 'bg-white text-[#868685] border-[#e8ebe6]'
                         }`}>
                         {idx + 1}
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-medium text-white leading-relaxed">{q.text}</h3>
+                      <div className="flex-1 pt-1.5">
+                        <h3 className="text-xl font-medium text-[#0e0f0c] leading-relaxed tracking-wide">{q.text}</h3>
                       </div>
                     </div>
 
-                    <div className="space-y-3 pl-12">
+                    <div className="space-y-4 pl-0 md:pl-16">
                       {q.options.map((opt, optIdx) => (
                         <label
                           key={optIdx}
-                          className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-200 group ${answers[q.id] === optIdx
-                              ? 'bg-blue-500/20 border-blue-500/50'
-                              : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                          className={`flex items-center gap-5 p-5 rounded-[20px] border cursor-pointer transition-all duration-300 group ${answers[q.id] === optIdx
+                              ? 'bg-cyan-50 border-cyan-400 shadow-sm'
+                              : 'bg-[#f9faf6] border-[#e8ebe6] hover:bg-white hover:border-cyan-200'
                             }`}
                         >
-                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${answers[q.id] === optIdx
-                              ? 'border-blue-500 bg-blue-500'
-                              : 'border-white/30 group-hover:border-white/50'
+                          <div className={`w-6 h-6 rounded-full border-[2px] flex items-center justify-center transition-colors ${answers[q.id] === optIdx
+                              ? 'border-cyan-500'
+                              : 'border-[#e8ebe6] group-hover:border-cyan-300'
                             }`}>
-                            {answers[q.id] === optIdx && <Check size={12} className="text-white" />}
+                            {answers[q.id] === optIdx && <div className="w-3 h-3 rounded-full bg-cyan-500" />}
                           </div>
                           <input
                             type="radio"
@@ -177,28 +182,26 @@ const ExamAttempt = ({ examId }) => {
                             onChange={() => handleAnswer(q.id, optIdx)}
                             checked={answers[q.id] === optIdx}
                           />
-                          <span className={`text-sm ${answers[q.id] === optIdx ? 'text-white font-medium' : 'text-white/70'}`}>
+                          <span className={`text-base tracking-wide ${answers[q.id] === optIdx ? 'text-[#0e0f0c] font-bold' : 'text-[#0e0f0c]/70 font-medium group-hover:text-[#0e0f0c]/90'}`}>
                             {opt}
                           </span>
                         </label>
                       ))}
                     </div>
-                  </Card>
+                  </div>
                 </motion.div>
               ))}
 
-              <div className="sticky bottom-6 z-20 flex justify-end">
+              <div className="sticky bottom-8 z-20 flex justify-end">
                 <Button
-                  variant="accent"
-                  size="lg"
                   onClick={onSubmit}
                   disabled={loading}
-                  className="shadow-xl shadow-blue-500/20"
+                  className="py-4 px-8 btn-primary rounded-full shadow-md hover:shadow-lg font-bold tracking-wide disabled:opacity-50 text-lg flex items-center gap-3"
                 >
                   {loading ? 'Submitting...' : (
-                    <span className="flex items-center gap-2">
-                      Submit Exam <Save size={18} />
-                    </span>
+                    <>
+                      <Zap size={20} /> Submit Assessment
+                    </>
                   )}
                 </Button>
               </div>
