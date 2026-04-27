@@ -136,20 +136,20 @@ const ResetPasswordPage = () => {
   // Animation variants
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--bb-offwhite)] text-[#0e0f0c] flex items-center justify-center px-4">
       <Card className="w-full max-w-md p-6">
-        <h1 className="font-comic text-2xl mb-2">
+        <h1 className="font-display tracking-tight text-2xl mb-2">
           {isSuccess ? "Password Reset Successful" : "Reset Password"}
         </h1>
         {statusMessage && (
           <div
-            className={`border rounded p-3 mb-3 ${isSuccess ? "border-bw-75" : "border-bw-37"}`}
+            className={`border rounded p-3 mb-3 ${isSuccess ? "border-[#868685]" : "border-[#e8ebe6]"}`}
           >
             {statusMessage}
           </div>
         )}
         {errors.general && (
-          <div className="border border-bw-37 rounded p-3 mb-3 flex items-center gap-2">
+          <div className="border border-[#e8ebe6] rounded p-3 mb-3 flex items-center gap-2">
             <AlertCircle size={18} />
             <span>{errors.general}</span>
           </div>
@@ -157,41 +157,41 @@ const ResetPasswordPage = () => {
         {!isSuccess && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm text-bw-75 mb-1">
+              <label className="block text-sm text-[#454745] mb-1">
                 New Password
               </label>
               <div className="flex items-center gap-2">
-                <Lock size={18} className="text-bw-62" />
+                <Lock size={18} className="text-[#868685]" />
                 <input
                   type="password"
                   name="password"
                   placeholder="New Password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75"
+                  className="w-full px-3 py-2 bg-[var(--bb-offwhite)] border border-[#e8ebe6] rounded text-[#0e0f0c] focus:outline-none focus:border-[#868685]"
                 />
               </div>
               {errors.password && (
-                <div className="text-bw-62 text-sm mt-1">{errors.password}</div>
+                <div className="text-[#868685] text-sm mt-1">{errors.password}</div>
               )}
             </div>
             <div>
-              <label className="block text-sm text-bw-75 mb-1">
+              <label className="block text-sm text-[#454745] mb-1">
                 Confirm New Password
               </label>
               <div className="flex items-center gap-2">
-                <Lock size={18} className="text-bw-62" />
+                <Lock size={18} className="text-[#868685]" />
                 <input
                   type="password"
                   name="confirmPassword"
                   placeholder="Confirm New Password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75"
+                  className="w-full px-3 py-2 bg-[var(--bb-offwhite)] border border-[#e8ebe6] rounded text-[#0e0f0c] focus:outline-none focus:border-[#868685]"
                 />
               </div>
               {errors.confirmPassword && (
-                <div className="text-bw-62 text-sm mt-1">
+                <div className="text-[#868685] text-sm mt-1">
                   {errors.confirmPassword}
                 </div>
               )}
