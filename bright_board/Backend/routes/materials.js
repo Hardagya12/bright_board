@@ -12,7 +12,8 @@ module.exports = (db) => {
     type: Joi.string().valid("pdf", "doc", "image", "video", "file").required(),
     subject: Joi.string().allow("").optional(),
     batch: Joi.string().allow("").optional(),
-    url: Joi.string().uri().allow("").optional(),
+    url: Joi.string().allow("").optional(),
+    base64Data: Joi.any().optional(),
     restricted: Joi.boolean().optional().default(false),
   });
 
@@ -48,13 +49,36 @@ module.exports = (db) => {
         if (error)
           return res.status(400).json({ error: error.details[0].message });
         const instituteId = new ObjectId(req.user.instituteId);
+        let fileUrl = value.url || "";
+        
+        if (value.base64Data) {
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Determine extension from type or filename
+          let ext = value.name.split('.').pop() || 'file';
+          const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+          const uploadsDir = path.join(__dirname, '..', 'uploads', 'materials');
+          
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          
+          const filePath = path.join(uploadsDir, filename);
+          const base64Content = value.base64Data.includes(',') ? value.base64Data.split(',')[1] : value.base64Data;
+          fs.writeFileSync(filePath, base64Content, 'base64');
+          
+          // Use relative URL so frontend can fetch from same host
+          fileUrl = `/uploads/materials/${filename}`;
+        }
+
         const doc = {
           instituteId,
           name: value.name,
           type: value.type,
           subject: value.subject || "Uncategorized",
           batch: value.batch || "General",
-          url: value.url || "",
+          url: fileUrl,
           restricted: !!value.restricted,
           views: 0,
           downloads: 0,
