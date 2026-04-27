@@ -148,17 +148,17 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--bb-offwhite)] text-[#0e0f0c] flex items-center justify-center px-4">
       <Card className="w-full max-w-md p-6">
         <div className="mb-3">
           <Link
             to="/"
-            className="text-bw-75 text-sm hover:text-white flex items-center gap-2"
+            className="text-[#454745] text-sm hover:text-[#0e0f0c] flex items-center gap-2"
           >
             <ArrowLeft size={16} /> Back to Login
           </Link>
         </div>
-        <h1 className="font-comic text-2xl mb-2">
+        <h1 className="font-display tracking-tight text-2xl mb-2">
           {isOtpVerified
             ? "Verification Successful"
             : isOtpSent
@@ -167,7 +167,7 @@ const ForgotPasswordPage = () => {
         </h1>
         {statusMessage && (
           <div
-            className={`border rounded p-3 mb-3 ${isOtpVerified ? "border-bw-75" : "border-bw-37"}`}
+            className={`border rounded p-3 mb-3 ${isOtpVerified ? "border-[#868685]" : "border-[#e8ebe6]"}`}
           >
             {statusMessage}
           </div>
@@ -176,19 +176,19 @@ const ForgotPasswordPage = () => {
         {!isOtpSent && !isOtpVerified && (
           <form onSubmit={handleRequestOtp} className="space-y-4">
             <div>
-              <label className="block text-sm text-bw-75 mb-1">Email</label>
+              <label className="block text-sm text-[#454745] mb-1">Email</label>
               <div className="flex items-center gap-2">
-                <Mail size={18} className="text-bw-62" />
+                <Mail size={18} className="text-[#868685]" />
                 <input
                   type="email"
                   placeholder="Enter your registered email"
                   value={email}
                   onChange={handleEmailChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75"
+                  className="w-full px-3 py-2 bg-[var(--bb-offwhite)] border border-[#e8ebe6] rounded text-[#0e0f0c] focus:outline-none focus:border-[#868685]"
                 />
               </div>
               {emailError && (
-                <div className="text-bw-62 text-sm mt-1">{emailError}</div>
+                <div className="text-[#868685] text-sm mt-1">{emailError}</div>
               )}
             </div>
             <Button type="submit" fullWidth disabled={isSending}>
@@ -200,20 +200,20 @@ const ForgotPasswordPage = () => {
         {isOtpSent && !isOtpVerified && (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
-              <label className="block text-sm text-bw-75 mb-1">OTP</label>
+              <label className="block text-sm text-[#454745] mb-1">OTP</label>
               <div className="flex items-center gap-2">
-                <Key size={18} className="text-bw-62" />
+                <Key size={18} className="text-[#868685]" />
                 <input
                   type="text"
                   placeholder="Enter 6-digit OTP"
                   value={otp}
                   onChange={handleOtpChange}
                   maxLength={6}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white focus:outline-none focus:border-bw-75"
+                  className="w-full px-3 py-2 bg-[var(--bb-offwhite)] border border-[#e8ebe6] rounded text-[#0e0f0c] focus:outline-none focus:border-[#868685]"
                 />
               </div>
               {otpError && (
-                <div className="text-bw-62 text-sm mt-1">{otpError}</div>
+                <div className="text-[#868685] text-sm mt-1">{otpError}</div>
               )}
             </div>
             <Button type="submit" fullWidth disabled={isVerifying}>
@@ -221,14 +221,14 @@ const ForgotPasswordPage = () => {
             </Button>
             <div className="text-center">
               {countdown > 0 ? (
-                <p className="text-bw-62 text-sm">
+                <p className="text-[#868685] text-sm">
                   Resend code in {countdown} seconds
                 </p>
               ) : (
                 <button
                   onClick={handleRequestOtp}
                   disabled={isSending}
-                  className="text-bw-75 text-sm hover:text-white"
+                  className="text-[#454745] text-sm hover:text-[#0e0f0c]"
                   type="button"
                 >
                   Resend verification code
