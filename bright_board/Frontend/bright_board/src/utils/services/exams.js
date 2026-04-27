@@ -10,6 +10,8 @@ export const deleteExam = (id) => api.delete(`/tutor/exams/${id}`);
 
 // Questions
 export const addQuestion = (id, payload) => api.post(`/tutor/exams/${id}/questions`, payload);
+export const addBulkQuestions = (id, questions) => api.post(`/tutor/exams/${id}/questions/bulk`, { questions });
+export const uploadPdfQuestions = (id, pdfBase64) => api.post(`/tutor/exams/${id}/questions/upload-pdf`, { pdfBase64 });
 export const updateQuestion = (id, qid, payload) => api.put(`/tutor/exams/${id}/questions/${qid}`, payload);
 export const reorderQuestions = (id, order) => api.put(`/tutor/exams/${id}/questions-order`, { order });
 export const deleteQuestion = (id, qid) => api.delete(`/tutor/exams/${id}/questions/${qid}`);
