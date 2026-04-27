@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, AlertTriangle, Shield, ChevronLeft, ChevronRight, Flag, X as XIcon, CheckCircle2, Send, Maximize, BookOpen } from 'lucide-react';
+import { Clock, AlertTriangle, Shield, ChevronLeft, ChevronRight, Flag, X as XIcon, CheckCircle2, Send, Zap, Book } from 'lucide-react';
 import { startExam, submitExam, getExamStudent } from '../../utils/services/exams';
+import Button from '../../components/ui/Button';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -12,17 +13,18 @@ const TimerBar = ({ secondsLeft, totalSeconds }) => {
   const pct = totalSeconds > 0 ? (secondsLeft / totalSeconds) * 100 : 0;
   const isWarning = secondsLeft <= 600 && secondsLeft > 300;
   const isDanger = secondsLeft <= 300;
-  const color = isDanger ? 'text-red-400' : isWarning ? 'text-amber-400' : 'text-cyan-400';
+  const color = isDanger ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-cyan-600';
   const bgColor = isDanger ? 'bg-red-500' : isWarning ? 'bg-amber-500' : 'bg-cyan-500';
+  const shadow = isDanger ? 'animate-pulse' : '';
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-4 bg-white border border-[#e8ebe6] rounded-full px-5 py-2.5 shadow-sm">
       <Clock size={18} className={`${color} ${isDanger ? 'animate-pulse' : ''}`} />
-      <span className={`font-mono text-lg font-bold ${color} tabular-nums`}>
+      <span className={`font-bold text-lg ${color} tabular-nums tracking-wide`}>
         {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
       </span>
-      <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden hidden md:block">
-        <div className={`h-full ${bgColor} rounded-full transition-all duration-1000`} style={{ width: `${pct}%` }} />
+      <div className="w-32 h-2 bg-[#f9faf6] border border-[#e8ebe6] rounded-full hidden md:block overflow-hidden relative">
+        <div className={`h-full ${bgColor} ${shadow} rounded-full transition-all duration-1000`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -38,35 +40,35 @@ const QuestionNavigator = ({ questions, answers, markedForReview, currentIndex, 
   };
 
   const stateColors = {
-    'current': 'bg-cyan-500 text-white ring-2 ring-cyan-400/50',
-    'answered': 'bg-emerald-500 text-white',
-    'review': 'bg-amber-500 text-white',
-    'not-visited': 'bg-white/10 text-white/50 hover:bg-white/20',
+    'current': 'bg-cyan-50 text-cyan-600 border border-cyan-200',
+    'answered': 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+    'review': 'bg-amber-50 text-amber-600 border border-amber-200',
+    'not-visited': 'bg-white text-[#868685] border border-[#e8ebe6] hover:bg-[#f9faf6]',
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider">Questions</h3>
-      <div className="grid grid-cols-5 gap-2">
+    <div className="space-y-6">
+      <h3 className="text-xs font-bold text-[#868685] uppercase tracking-widest border-b border-[#e8ebe6] pb-3">Question Map</h3>
+      <div className="grid grid-cols-4 gap-3">
         {questions.map((_, idx) => (
           <button
             key={idx}
             onClick={() => onSelect(idx)}
-            className={`w-9 h-9 rounded-lg text-xs font-bold transition-all ${stateColors[getState(idx)]}`}
+            className={`w-10 h-10 rounded-[12px] font-bold text-sm transition-all duration-300 ${stateColors[getState(idx)]}`}
           >
             {idx + 1}
           </button>
         ))}
       </div>
-      <div className="space-y-1.5 pt-4 border-t border-white/10">
-        <div className="flex items-center gap-2 text-xs text-white/50">
-          <div className="w-3 h-3 rounded bg-white/10" /> Not Visited
+      <div className="space-y-4 pt-6 border-t border-[#e8ebe6] text-[11px] font-bold uppercase tracking-widest">
+        <div className="flex items-center gap-3 text-[#868685]">
+          <div className="w-3 h-3 rounded-full bg-[#e2f6d5]" /> PENDING
         </div>
-        <div className="flex items-center gap-2 text-xs text-white/50">
-          <div className="w-3 h-3 rounded bg-emerald-500" /> Answered
+        <div className="flex items-center gap-3 text-emerald-400">
+          <div className="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/50" /> COMPLETED
         </div>
-        <div className="flex items-center gap-2 text-xs text-white/50">
-          <div className="w-3 h-3 rounded bg-amber-500" /> Marked
+        <div className="flex items-center gap-3 text-amber-400">
+          <div className="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/50" /> MARKED
         </div>
       </div>
     </div>
@@ -78,32 +80,37 @@ const ViolationWarning = ({ count, maxViolations, onDismiss }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+    className="fixed inset-0 bg-[#0e0f0c]/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 font-body"
   >
     <motion.div
-      initial={{ scale: 0.8, y: 30 }}
+      initial={{ scale: 0.9, y: 20 }}
       animate={{ scale: 1, y: 0 }}
-      className="bg-[#1a1a1a] border border-amber-500/30 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl shadow-amber-500/10"
+      className="bg-white border border-red-200 rounded-[32px] p-10 max-w-md w-full text-center shadow-2xl relative overflow-hidden"
     >
-      <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-6">
-        <AlertTriangle size={40} className="text-amber-400" />
+      <div className="absolute top-0 left-1/4 right-1/4 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-50 rounded-full"></div>
+      
+      <div className="w-24 h-24 bg-red-50 border border-red-100 rounded-[20px] flex items-center justify-center mx-auto mb-6">
+        <AlertTriangle size={40} className="text-red-500 animate-pulse" />
       </div>
-      <h2 className="text-2xl font-bold text-white mb-2">Warning! Tab Switch Detected</h2>
-      <p className="text-white/60 mb-6">You have switched tabs or minimized the window.</p>
-      <div className="flex justify-center gap-2 mb-6">
+      <h2 className="text-2xl font-bold text-[#0e0f0c] mb-3 font-display tracking-tight">Focus Lost</h2>
+      <p className="text-[#868685] mb-8 text-sm tracking-wide leading-relaxed">We detected that you navigated away from the exam window. This action has been logged.</p>
+      
+      <div className="flex justify-center gap-3 mb-8">
         {Array.from({ length: maxViolations }).map((_, i) => (
-          <div key={i} className={`w-4 h-4 rounded-full ${i < count ? 'bg-amber-500' : 'bg-white/20'}`} />
+          <div key={i} className={`w-12 h-2.5 rounded-full transition-all ${i < count ? 'bg-red-500 shadow-sm' : 'bg-[#f9faf6] border border-[#e8ebe6]'}`} />
         ))}
       </div>
-      <p className="text-red-400 font-semibold mb-8">
-        ⚠️ {maxViolations - count} more violation{maxViolations - count !== 1 ? 's' : ''} will auto-submit your exam!
+      
+      <p className="text-red-600 font-bold mb-8 text-sm tracking-wide bg-red-50 border border-red-100 rounded-[16px] p-4">
+        Exam termination in {maxViolations - count} more violation{maxViolations - count !== 1 ? 's' : ''}.
       </p>
-      <button
+      
+      <Button
         onClick={onDismiss}
-        className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-colors"
+        className="w-full py-4 bg-transparent border border-red-200 text-red-600 font-bold hover:bg-red-50 hover:border-red-300 transition-colors rounded-full"
       >
-        Return to Exam
-      </button>
+        I Understand, Return
+      </Button>
     </motion.div>
   </motion.div>
 );
@@ -142,7 +149,7 @@ const ExamWindow = () => {
       try {
         const { data } = await getExamStudent(examId);
         if (data.exam.attempted) {
-          setError('You have already attempted this exam.');
+          setError('Exam already attempted.');
           setPhase('submitted');
           return;
         }
@@ -244,7 +251,6 @@ const ExamWindow = () => {
     };
 
     const handleBlur = () => {
-      // Small delay to avoid false positives from fullscreen changes
       setTimeout(() => {
         if (phase === 'exam' && !isSubmittingRef.current) {
           recordViolation('window_blur');
@@ -323,7 +329,7 @@ const ExamWindow = () => {
       localStorage.removeItem(`exam_${examId}_currentQ`);
       try { document.exitFullscreen?.(); } catch { }
     } catch (err) {
-      setError(err.response?.data?.error || 'Submit failed');
+      setError(err.response?.data?.error || 'Submission Failed');
       setPhase('submitted');
     }
     setSubmitting(false);
@@ -373,10 +379,13 @@ const ExamWindow = () => {
   // ─── LOADING ──────────────────────────────────────────────────────────────
   if (phase === 'loading') {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Loading exam...</p>
+      <div className="fixed inset-0 bg-[#f9faf6] flex items-center justify-center font-body">
+                <div className="flex flex-col items-center gap-6 bg-white border border-[#e8ebe6] rounded-[24px] shadow-sm p-10 rounded-[32px] relative z-10">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-[#e8ebe6] rounded-full"></div>
+            <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin absolute top-0 left-0 drop-shadow-[0_0_10px_rgba(0,245,255,0.5)]"></div>
+          </div>
+          <p className="text-[#868685] font-bold uppercase tracking-widest text-sm animate-pulse">Initializing Portal...</p>
         </div>
       </div>
     );
@@ -385,95 +394,83 @@ const ExamWindow = () => {
   // ─── INSTRUCTIONS ─────────────────────────────────────────────────────────
   if (phase === 'instructions') {
     return (
-      <div className="fixed inset-0 bg-black overflow-y-auto">
-        <div className="min-h-screen flex items-center justify-center p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-2xl"
-          >
-            <div className="bg-[#0d0d0d] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+      <div className="fixed inset-0 bg-[#f9faf6] overflow-y-auto font-body">
+        <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+                
+        <div className="min-h-screen flex items-center justify-center p-6 relative z-10">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-3xl">
+            <div className="bg-white border border-[#e8ebe6] rounded-[24px] shadow-sm overflow-hidden accent-top-cyan">
+              
               {/* Header */}
-              <div className="bg-gradient-to-r from-cyan-600/20 to-purple-600/20 p-8 border-b border-white/10">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center">
-                    <BookOpen size={28} className="text-cyan-400" />
+              <div className="p-8 md:p-10 border-b border-[#e8ebe6] relative bg-white/[0.02]">
+                <div className="flex items-center gap-6 mb-8 relative z-10">
+                  <div className="w-20 h-20 rounded-[20px] bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-inner">
+                    <Book size={36} className="text-cyan-400 drop-shadow-[0_0_10px_rgba(0,245,255,0.5)]" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-white">{examInfo?.title || 'Exam'}</h1>
-                    <p className="text-white/50">{examInfo?.subject || ''}</p>
+                    <h1 className="text-3xl font-bold text-[#0e0f0c] font-display tracking-tight">{examInfo?.title || 'Examination'}</h1>
+                    <p className="text-[#868685] mt-2 tracking-wide font-medium flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400"></span> {examInfo?.subject || 'General'} Module
+                    </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
                   {[
-                    { label: 'Duration', value: `${examInfo?.durationMinutes || 0} min` },
+                    { label: 'Duration', value: `${examInfo?.durationMinutes || 0}m` },
                     { label: 'Questions', value: examInfo?.questionCount || '—' },
                     { label: 'Total Marks', value: examInfo?.calculatedTotalMarks || examInfo?.totalMarks || '—' },
-                    { label: 'Passing', value: examInfo?.passingMarks ? `${examInfo.passingMarks}%` : '40%' },
+                    { label: 'Pass Mark', value: examInfo?.passingMarks ? `${examInfo.passingMarks}%` : '40%' },
                   ].map((item, i) => (
-                    <div key={i} className="bg-black/30 rounded-xl p-3 text-center">
-                      <p className="text-white/40 text-xs uppercase tracking-wider">{item.label}</p>
-                      <p className="text-white font-bold text-lg">{item.value}</p>
+                    <div key={i} className="bg-[#f9faf6] border border-[#e8ebe6] rounded-2xl p-4 text-center hover:border-cyan-400 transition-colors">
+                      <p className="text-[#868685] text-[10px] font-bold uppercase tracking-widest mb-1.5">{item.label}</p>
+                      <p className="text-[#0e0f0c] font-bold text-xl">{item.value}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Instructions */}
-              <div className="p-8 space-y-6">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Shield size={20} className="text-amber-400" /> Exam Rules & Instructions
-                </h2>
+              <div className="p-8 md:p-10 space-y-8">
+                <div className="flex items-center gap-3 text-amber-400 border-b border-[#e8ebe6] pb-4">
+                  <Shield size={24} /> <h2 className="text-lg font-bold font-display tracking-wide">Security Protocols</h2>
+                </div>
 
                 {examInfo?.instructions && (
-                  <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-white/70 text-sm whitespace-pre-wrap">
+                  <div className="p-6 rounded-[20px] bg-white/[0.03] border border-[#e8ebe6] text-[#0e0f0c]/70 text-sm whitespace-pre-wrap leading-relaxed shadow-inner">
                     {examInfo.instructions}
                   </div>
                 )}
 
-                <ul className="space-y-3">
+                <ul className="space-y-4 text-sm text-[#0e0f0c]/70 tracking-wide font-medium">
                   {[
-                    'This exam will open in fullscreen mode.',
-                    'You cannot switch tabs or windows during the exam.',
-                    'Tab switching is allowed max 2 times. On 3rd violation, exam auto-submits.',
-                    'Do not press Escape, Alt+Tab, Windows key, or Ctrl+W.',
-                    'Your answers are auto-saved every 30 seconds.',
-                    'Ensure stable internet before starting.',
-                    'Do not refresh the page during exam.',
-                    examInfo?.negativeMarkingEnabled ? '⚠️ Negative marking is enabled for wrong answers.' : null,
+                    'Fullscreen mode will be activated automatically upon starting.',
+                    'Navigating away from the exam window is strictly prohibited.',
+                    'Exceeding 3 violations will result in automatic termination.',
+                    'Keyboard shortcuts and special keys are disabled during the session.',
+                    'Your progress is continuously synced to the server.',
+                    examInfo?.negativeMarkingEnabled ? 'Negative marking is applied for incorrect responses.' : null,
                   ].filter(Boolean).map((rule, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-white/70">
-                      <span className="mt-0.5 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs text-white/50 shrink-0">{i + 1}</span>
-                      {rule}
+                    <li key={i} className="flex items-start gap-4 p-4 rounded-[16px] bg-white/[0.02] border border-[#e8ebe6] hover:bg-white/[0.05] transition-colors">
+                      <span className="w-6 h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0 text-xs font-bold border border-cyan-500/20">{i + 1}</span>
+                      <span className="mt-0.5">{rule}</span>
                     </li>
                   ))}
                 </ul>
 
-                {/* System Check */}
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: 'Fullscreen', status: !!document.documentElement.requestFullscreen },
-                    { label: 'Browser', status: true },
-                    { label: 'Internet', status: navigator.onLine },
-                  ].map((check, i) => (
-                    <div key={i} className={`flex items-center gap-2 p-3 rounded-xl border text-sm ${check.status ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-                      <CheckCircle2 size={16} /> {check.label}: {check.status ? 'Ready' : 'Issue'}
-                    </div>
-                  ))}
-                </div>
-
                 {error && (
-                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">{error}</div>
+                  <div className="p-5 rounded-[20px] border border-red-200 bg-red-50 text-red-600 text-sm font-bold flex items-center gap-4">
+                    <AlertTriangle size={20} /> {error}
+                  </div>
                 )}
 
-                <button
+                <Button
                   onClick={handleStartExam}
                   disabled={!!error || examInfo?.attempted}
-                  className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-3"
+                  className="w-full py-4 btn-primary text-base rounded-full shadow-glow-cyan flex items-center justify-center gap-3"
                 >
-                  <Maximize size={20} /> Start Exam
-                </button>
+                  <Zap size={20} /> Begin Assessment
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -485,84 +482,74 @@ const ExamWindow = () => {
   // ─── SUBMITTED ────────────────────────────────────────────────────────────
   if (phase === 'submitted') {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-lg"
-        >
-          <div className="bg-[#0d0d0d] border border-white/10 rounded-3xl p-8 text-center shadow-2xl">
+      <div className="fixed inset-0 bg-[#f9faf6] flex items-center justify-center p-6 font-body">
+        <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+        
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-xl z-10">
+          <div className={`bg-white border border-[#e8ebe6] rounded-[24px] shadow-sm p-10 md:p-12 text-center relative overflow-hidden ${submitResult?.passed ? 'accent-top-green' : 'accent-top-purple'}`}>
+            
             {error && !submitResult ? (
               <>
-                <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
+                <div className="w-24 h-24 rounded-[24px] bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto mb-8 shadow-[inset_0_0_20px_rgba(248,113,113,0.2)]">
                   <AlertTriangle size={40} className="text-red-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Submission Error</h2>
-                <p className="text-white/60 mb-8">{error}</p>
+                <h2 className="text-3xl font-bold text-[#0e0f0c] mb-4 font-display tracking-tight">Submission Failed</h2>
+                <p className="text-[#868685] mb-8 bg-black/30 rounded-[16px] border border-[#e8ebe6] p-5 shadow-inner">{error}</p>
               </>
             ) : submitResult?.showResult === false ? (
               <>
-                <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 size={40} className="text-emerald-400" />
+                <div className="w-24 h-24 rounded-[24px] bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto mb-8 shadow-[inset_0_0_20px_rgba(0,245,255,0.2)]">
+                  <CheckCircle2 size={40} className="text-cyan-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Exam Submitted!</h2>
-                <p className="text-white/60 mb-4">Your answers have been recorded successfully.</p>
-                <p className="text-white/40 text-sm mb-8">Your tutor will review and publish results soon.</p>
+                <h2 className="text-3xl font-bold text-[#0e0f0c] mb-4 font-display tracking-tight">Assessment Submitted</h2>
+                <p className="text-[#868685] mb-8 text-sm tracking-wide">Your responses have been securely recorded.</p>
+                <div className="bg-white/[0.03] border border-[#e8ebe6] rounded-[16px] p-4 mb-8">
+                  <p className="text-cyan-400/80 text-sm font-medium tracking-wide">Evaluation is pending tutor authorization.</p>
+                </div>
               </>
             ) : submitResult ? (
               <>
-                <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 size={40} className="text-emerald-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Exam Completed!</h2>
+                <h2 className="text-3xl font-bold text-[#0e0f0c] mb-8 font-display tracking-tight">Assessment Report</h2>
 
                 {submitResult.submissionType !== 'manual' && (
-                  <div className={`inline-flex px-3 py-1 rounded-full text-xs font-bold mb-4 ${
-                    submitResult.submissionType === 'violation' ? 'bg-red-500/20 text-red-400' :
-                    submitResult.submissionType === 'timeout' ? 'bg-amber-500/20 text-amber-400' :
-                    'bg-blue-500/20 text-blue-400'
+                  <div className={`inline-block px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-8 border ${
+                    submitResult.submissionType === 'violation' ? 'bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_15px_rgba(248,113,113,0.2)]' :
+                    submitResult.submissionType === 'timeout' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.2)]' :
+                    'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(0,245,255,0.2)]'
                   }`}>
-                    Auto-submitted: {submitResult.submissionType}
+                    Auto-Submitted: {submitResult.submissionType}
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3 my-6">
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Score</p>
-                    <p className="text-3xl font-bold text-white">{submitResult.score}%</p>
+                <div className="grid grid-cols-2 gap-5 mb-8">
+                  <div className="bg-[#f9faf6] border border-[#e8ebe6] rounded-[24px] p-6 relative overflow-hidden group hover:border-cyan-400 transition-colors">
+                    <p className="text-[#868685] text-[10px] font-bold uppercase tracking-widest mb-2 relative z-10">Score Percentage</p>
+                    <p className="text-4xl font-bold text-cyan-500 relative z-10">{submitResult.score}%</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Marks</p>
-                    <p className="text-3xl font-bold text-white">{submitResult.totalScore}<span className="text-lg text-white/40">/{submitResult.maxMarks}</span></p>
+                  <div className="bg-[#f9faf6] border border-[#e8ebe6] rounded-[24px] p-6 relative overflow-hidden group hover:border-purple-400 transition-colors">
+                    <p className="text-[#868685] text-[10px] font-bold uppercase tracking-widest mb-2 relative z-10">Marks Obtained</p>
+                    <p className="text-4xl font-bold text-purple-500 relative z-10">{submitResult.totalScore}<span className="text-xl text-[#868685] font-medium">/{submitResult.maxMarks}</span></p>
                   </div>
                 </div>
 
-                <div className="flex justify-center gap-6 text-sm mb-6">
-                  <span className="text-emerald-400">✅ {submitResult.correct} Correct</span>
-                  <span className="text-red-400">❌ {submitResult.wrong} Wrong</span>
-                  <span className="text-white/40">⭕ {submitResult.unattempted} Skipped</span>
+                <div className="flex justify-center gap-6 text-xs font-bold tracking-wide mb-10 bg-white/[0.02] border border-[#e8ebe6] rounded-[16px] p-5 shadow-inner">
+                  <span className="text-emerald-400 flex items-center gap-2"><CheckCircle2 size={16}/> {submitResult.correct} Correct</span>
+                  <span className="text-red-400 flex items-center gap-2"><XIcon size={16}/> {submitResult.wrong} Incorrect</span>
+                  <span className="text-[#868685] flex items-center gap-2"><div className="w-3 h-3 rounded-full border border-white/40"/> {submitResult.unattempted} Omitted</span>
                 </div>
 
-                <div className={`inline-flex px-4 py-2 rounded-full text-sm font-bold ${submitResult.passed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                  {submitResult.passed ? '✅ PASSED' : '❌ FAILED'}
+                <div className={`w-full py-4 rounded-full border text-lg font-bold tracking-wide mb-8 ${submitResult.passed ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                  {submitResult.passed ? 'Passed Assessment' : 'Failed Assessment'}
                 </div>
               </>
-            ) : (
-              <>
-                <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 size={40} className="text-emerald-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Exam Submitted!</h2>
-                <p className="text-white/60 mb-8">Your answers have been recorded.</p>
-              </>
-            )}
+            ) : null}
 
-            <button
+            <Button
               onClick={() => navigate('/s/dashboard')}
-              className="w-full mt-6 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors"
+              className="w-full py-4 border border-[#e8ebe6] hover:bg-white text-[#0e0f0c] bg-transparent transition-colors rounded-full"
             >
-              Go to Dashboard
-            </button>
+              Return to Dashboard
+            </Button>
           </div>
         </motion.div>
       </div>
@@ -571,61 +558,45 @@ const ExamWindow = () => {
 
   // ─── EXAM UI ──────────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 bg-[#0a0a0a] flex flex-col select-none">
+    <div className="fixed inset-0 bg-[#f9faf6] flex flex-col select-none font-body">
       {/* Violation Warning Modal */}
       <AnimatePresence>
         {showWarning && (
-          <ViolationWarning
-            count={violations}
-            maxViolations={MAX_VIOLATIONS}
-            onDismiss={() => setShowWarning(false)}
-          />
+          <ViolationWarning count={violations} maxViolations={MAX_VIOLATIONS} onDismiss={() => setShowWarning(false)} />
         )}
       </AnimatePresence>
 
       {/* Submit Confirmation Modal */}
       <AnimatePresence>
         {showConfirmSubmit && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl"
-            >
-              <h2 className="text-xl font-bold text-white mb-4">Submit Exam?</h2>
-              <div className="space-y-2 mb-6 text-sm">
-                <div className="flex justify-between text-white/70">
-                  <span>Attempted</span>
-                  <span className="text-emerald-400 font-bold">{answeredCount}/{questions.length}</span>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-[#f9faf6]/80 backdrop-blur-xl z-[90] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-[#0f0f1a]/90 backdrop-blur-2xl border border-[#e8ebe6] p-8 md:p-10 rounded-[32px] max-w-md w-full shadow-[0_20px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] relative overflow-hidden">
+              <div className="absolute top-0 left-10 right-10 h-1 bg-gradient-to-r from-cyan-400 to-purple-500 opacity-50 blur-sm rounded-full"></div>
+              
+              <h2 className="text-2xl font-bold text-[#0e0f0c] mb-6 font-display tracking-tight text-center">Confirm Submission</h2>
+              
+              <div className="space-y-4 mb-8 text-sm font-medium tracking-wide bg-[#f9faf6] rounded-[20px] p-6 border border-[#e8ebe6]">
+                <div className="flex justify-between items-center text-[#868685]">
+                  <span>Questions Attempted</span>
+                  <span className="text-emerald-600 font-bold bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">{answeredCount}/{questions.length}</span>
                 </div>
-                <div className="flex justify-between text-white/70">
+                <div className="flex justify-between items-center text-[#868685]">
                   <span>Unanswered</span>
-                  <span className="text-red-400 font-bold">{unansweredCount}</span>
+                  <span className="text-red-600 font-bold bg-red-50 px-3 py-1 rounded-full border border-red-200">{unansweredCount}</span>
                 </div>
-                <div className="flex justify-between text-white/70">
+                <div className="flex justify-between items-center text-[#868685]">
                   <span>Marked for Review</span>
-                  <span className="text-amber-400 font-bold">{reviewCount}</span>
+                  <span className="text-amber-600 font-bold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">{reviewCount}</span>
                 </div>
               </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowConfirmSubmit(false)}
-                  className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors font-medium"
-                >
+              
+              <div className="flex gap-4">
+                <Button onClick={() => setShowConfirmSubmit(false)} className="flex-1 py-4 bg-white border border-[#e8ebe6] hover:bg-[#e2f6d5] text-[#0e0f0c] rounded-full transition-all">
                   Cancel
-                </button>
-                <button
-                  onClick={handleManualSubmit}
-                  disabled={submitting}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-xl transition-colors font-bold"
-                >
-                  {submitting ? 'Submitting...' : 'Yes, Submit'}
-                </button>
+                </Button>
+                <Button onClick={handleManualSubmit} disabled={submitting} className="flex-1 py-4 btn-primary rounded-full shadow-glow-cyan disabled:opacity-50 font-bold tracking-wide">
+                  {submitting ? 'Submitting...' : 'Submit Now'}
+                </Button>
               </div>
             </motion.div>
           </motion.div>
@@ -633,105 +604,97 @@ const ExamWindow = () => {
       </AnimatePresence>
 
       {/* ─── Top Bar ─────────────────────────────────────────────────────── */}
-      <div className="h-14 bg-black/80 border-b border-white/10 flex items-center justify-between px-4 md:px-6 shrink-0 backdrop-blur-sm">
+      <div className="h-[72px] bg-white border-b border-[#e8ebe6] flex items-center justify-between px-4 md:px-8 shrink-0 relative z-20 shadow-sm">
         <div className="flex items-center gap-4">
-          <span className="text-white font-bold text-sm hidden md:block">{examInfo?.title}</span>
-          <span className="px-2 py-0.5 bg-white/10 rounded text-xs text-white/60">{examInfo?.subject}</span>
-        </div>
-        <div className="flex items-center gap-6">
-          <TimerBar secondsLeft={secondsLeft} totalSeconds={totalSeconds} />
-          <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${
-            violations === 0 ? 'bg-emerald-500/20 text-emerald-400' :
-            violations === 1 ? 'bg-amber-500/20 text-amber-400' :
-            'bg-red-500/20 text-red-400'
-          }`}>
-            <AlertTriangle size={14} /> {violations}/{MAX_VIOLATIONS}
+          <div className="w-10 h-10 rounded-[12px] bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shadow-inner hidden md:flex">
+             <Book size={18} className="text-cyan-400" />
           </div>
-          <button
-            onClick={() => setShowConfirmSubmit(true)}
-            className="px-4 py-1.5 bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
-          >
-            <Send size={14} /> Submit
-          </button>
+          <span className="text-[#0e0f0c] font-bold font-display tracking-wide hidden md:block">{examInfo?.title}</span>
+          <span className="px-3 py-1 bg-white border border-[#e8ebe6] rounded-full text-[10px] font-bold text-[#868685] uppercase tracking-widest">{examInfo?.subject}</span>
+        </div>
+        <div className="flex items-center gap-4 md:gap-6">
+          <TimerBar secondsLeft={secondsLeft} totalSeconds={totalSeconds} />
+          
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-bold tracking-widest uppercase ${
+            violations === 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+            violations === 1 ? 'bg-amber-50 text-amber-600 border-amber-200' :
+            'bg-red-50 text-red-600 border-red-200 animate-pulse'
+          }`}>
+            <Shield size={14} /> <span className="hidden sm:inline">Violations:</span> {violations}/{MAX_VIOLATIONS}
+          </div>
+          
+          <Button onClick={() => setShowConfirmSubmit(true)} className="px-6 py-2.5 bg-white border border-[#e8ebe6] hover:bg-[#e2f6d5] text-[#0e0f0c] rounded-full text-xs font-bold tracking-wide transition-all hidden md:block">
+            Finish
+          </Button>
         </div>
       </div>
 
       {/* ─── Main Content ────────────────────────────────────────────────── */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
+        <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+                
         {/* Left: Question Navigator */}
-        <div className="w-[200px] bg-black/50 border-r border-white/10 p-4 overflow-y-auto hidden md:block shrink-0">
-          <QuestionNavigator
-            questions={questions}
-            answers={answers}
-            markedForReview={markedForReview}
-            currentIndex={currentIndex}
-            onSelect={setCurrentIndex}
-          />
-          <button
-            onClick={() => setShowConfirmSubmit(true)}
-            className="mt-6 w-full py-3 bg-red-600/80 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            <Send size={16} /> Submit Exam
-          </button>
+        <div className="w-[300px] bg-white border-r border-[#e8ebe6] p-6 overflow-y-auto hidden lg:flex flex-col shrink-0 relative z-10">
+          <QuestionNavigator questions={questions} answers={answers} markedForReview={markedForReview} currentIndex={currentIndex} onSelect={setCurrentIndex} />
+          <div className="mt-auto pt-8">
+             <Button onClick={() => setShowConfirmSubmit(true)} className="w-full py-4 bg-gradient-to-r from-cyan-50 to-purple-50 border border-cyan-200 text-[#0e0f0c] font-bold tracking-wide rounded-[16px] hover:border-cyan-400 transition-all flex items-center justify-center gap-3">
+               Submit Assessment <Send size={16} />
+             </Button>
+          </div>
         </div>
 
         {/* Right: Question Area */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 custom-scrollbar">
           {currentQ && (
-            <div className="max-w-3xl mx-auto space-y-8">
+            <div className="max-w-3xl mx-auto space-y-8 bg-white border border-[#e8ebe6] rounded-[32px] p-8 md:p-10 shadow-sm my-4 md:my-8 relative overflow-hidden">
+              <div className="absolute top-0 left-10 right-10 h-1 bg-gradient-to-r from-cyan-400 to-purple-500 opacity-30 rounded-full"></div>
+              
               {/* Question Header */}
-              <div className="flex items-center justify-between">
-                <h2 className="text-white/50 text-sm font-medium">
-                  Question <span className="text-white font-bold text-lg">{currentIndex + 1}</span> of {questions.length}
+              <div className="flex flex-wrap items-center justify-between border-b border-[#e8ebe6] pb-6 gap-4">
+                <h2 className="text-[#868685] text-xs font-bold uppercase tracking-widest flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-[#e8ebe6] shadow-inner">
+                    <span className="text-cyan-400 text-sm">{currentIndex + 1}</span>
+                  </span>
+                  <span>of {questions.length}</span>
                 </h2>
                 <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg">
-                    +{currentQ.marks} marks
+                  <span className="px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-600 text-[10px] font-bold tracking-widest uppercase">
+                    +{currentQ.marks} Pts
                   </span>
                   {currentQ.negativeMarks > 0 && (
-                    <span className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-lg">
-                      -{currentQ.negativeMarks} marks
+                    <span className="px-4 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 text-[10px] font-bold tracking-widest uppercase">
+                      -{currentQ.negativeMarks} Pts
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Question Text */}
-              <p className="text-white text-lg md:text-xl leading-relaxed font-medium">
-                {currentQ.text}
-              </p>
+              <div className="relative">
+                <p className="text-[#0e0f0c] text-lg md:text-xl leading-relaxed font-medium tracking-wide">
+                  {currentQ.text}
+                </p>
+              </div>
 
               {/* Question Image */}
               {currentQ.questionImage && (
-                <img
-                  src={currentQ.questionImage}
-                  alt="Question"
-                  className="max-w-full max-h-64 rounded-xl border border-white/10 object-contain"
-                />
+               <div className="p-4 rounded-[20px] border border-[#e8ebe6] bg-black/30 shadow-inner inline-block w-full text-center">
+                  <img src={currentQ.questionImage} alt="Reference" className="max-w-full max-h-[300px] object-contain rounded-[12px] inline-block" />
+                </div>
               )}
 
               {/* Options (MCQ & True-False) */}
               {(currentQ.type === 'mcq' || currentQ.type === 'true-false') && (
-                <div className="space-y-3">
+                <div className="space-y-4 pt-4">
                   {currentQ.options.map((opt, optIdx) => {
                     const isSelected = answers[currentQ.id]?.chosenIndex === optIdx;
                     return (
-                      <button
-                        key={optIdx}
-                        onClick={() => selectOption(currentQ.id, optIdx)}
-                        className={`w-full text-left flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 ${
-                          isSelected
-                            ? 'bg-cyan-500/20 border-cyan-500/50'
-                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                        }`}
-                      >
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          isSelected ? 'border-cyan-400 bg-cyan-500' : 'border-white/30'
-                        }`}>
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                      <button key={optIdx} onClick={() => selectOption(currentQ.id, optIdx)} className={`w-full text-left flex items-center p-5 rounded-[20px] transition-all duration-300 border ${isSelected ? 'bg-cyan-50 border-cyan-400 shadow-sm' : 'bg-[#f9faf6] border-[#e8ebe6] hover:border-cyan-200'}`}>
+                        <div className={`w-7 h-7 rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors mr-5 ${isSelected ? 'border-cyan-500' : 'border-[#e8ebe6]'}`}>
+                          {isSelected && <div className="w-3.5 h-3.5 rounded-full bg-cyan-500" />}
                         </div>
-                        <span className={`text-sm md:text-base ${isSelected ? 'text-white font-medium' : 'text-white/70'}`}>
-                          {currentQ.type === 'mcq' && <span className="text-white/30 mr-2">{String.fromCharCode(65 + optIdx)}.</span>}
+                        <span className={`text-base font-medium tracking-wide ${isSelected ? 'text-[#0e0f0c]' : 'text-[#868685]'}`}>
+                          {currentQ.type === 'mcq' && <span className={`mr-4 font-bold text-sm ${isSelected ? 'text-cyan-600' : 'text-[#868685]'}`}>{String.fromCharCode(65 + optIdx)}.</span>}
                           {opt}
                         </span>
                       </button>
@@ -742,49 +705,33 @@ const ExamWindow = () => {
 
               {/* Short Answer */}
               {currentQ.type === 'short' && (
-                <textarea
-                  value={answers[currentQ.id]?.textAnswer || ''}
-                  onChange={(e) => setTextAnswer(currentQ.id, e.target.value)}
-                  placeholder="Type your answer here..."
-                  rows={4}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder:text-white/30 focus:ring-2 focus:ring-cyan-500/50 outline-none resize-none"
-                />
+                <div className="space-y-4 pt-4">
+                  <textarea
+                    value={answers[currentQ.id]?.textAnswer || ''}
+                    onChange={(e) => setTextAnswer(currentQ.id, e.target.value)}
+                    placeholder="Type your answer here..."
+                    rows={5}
+                    className="w-full bg-[#f9faf6] border border-[#e8ebe6] rounded-[20px] p-6 text-[#0e0f0c] placeholder:text-[#868685] focus:border-cyan-400 focus:shadow-sm outline-none resize-none text-base tracking-wide transition-all"
+                  />
+                </div>
               )}
 
               {/* Action Row */}
-              <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => toggleReview(currentQ.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                      markedForReview.has(currentQ.id)
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10'
-                    }`}
-                  >
-                    <Flag size={14} /> {markedForReview.has(currentQ.id) ? 'Marked' : 'Mark for Review'}
+              <div className="flex flex-col sm:flex-row items-center justify-between pt-8 mt-6 border-t border-[#e8ebe6] gap-4">
+                <div className="flex gap-4 w-full sm:w-auto">
+                  <button onClick={() => toggleReview(currentQ.id)} className={`flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all flex border ${markedForReview.has(currentQ.id) ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-[#868685] border-[#e8ebe6] hover:border-[#868685] hover:text-[#0e0f0c]'}`}>
+                    <Flag size={16} /> {markedForReview.has(currentQ.id) ? 'Marked' : 'Mark Review'}
                   </button>
-                  <button
-                    onClick={() => clearResponse(currentQ.id)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/5 text-white/60 hover:bg-white/10 border border-white/10 transition-colors"
-                  >
-                    <XIcon size={14} /> Clear
+                  <button onClick={() => clearResponse(currentQ.id)} className="flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-[#e8ebe6] bg-white text-[#868685] hover:border-[#868685] hover:text-[#0e0f0c] hover:bg-[#f9faf6] text-xs font-bold uppercase tracking-widest transition-all flex">
+                    <XIcon size={16} /> Clear
                   </button>
                 </div>
 
-                <div className="flex gap-3">
-                  <button
-                    disabled={currentIndex === 0}
-                    onClick={() => setCurrentIndex(prev => prev - 1)}
-                    className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium bg-white/5 text-white/60 hover:bg-white/10 border border-white/10 transition-colors disabled:opacity-30"
-                  >
-                    <ChevronLeft size={16} /> Previous
+                <div className="flex gap-4 w-full sm:w-auto">
+                  <button disabled={currentIndex === 0} onClick={() => setCurrentIndex(prev => prev - 1)} className="flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-[#e8ebe6] bg-white text-[#868685] hover:text-[#0e0f0c] hover:bg-[#f9faf6] text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-30 disabled:hover:bg-white flex">
+                    <ChevronLeft size={16} /> Prev
                   </button>
-                  <button
-                    disabled={currentIndex === questions.length - 1}
-                    onClick={() => setCurrentIndex(prev => prev + 1)}
-                    className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium bg-cyan-600 text-white hover:bg-cyan-500 transition-colors disabled:opacity-30"
-                  >
+                  <button disabled={currentIndex === questions.length - 1} onClick={() => setCurrentIndex(prev => prev + 1)} className="flex-1 sm:flex-none items-center justify-center gap-2 px-8 py-3.5 rounded-full border border-cyan-200 bg-cyan-50 text-cyan-600 hover:bg-cyan-100 text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-30 flex">
                     Next <ChevronRight size={16} />
                   </button>
                 </div>
@@ -795,21 +742,15 @@ const ExamWindow = () => {
       </div>
 
       {/* ─── Mobile Bottom Nav ───────────────────────────────────────────── */}
-      <div className="md:hidden h-14 bg-black/80 border-t border-white/10 flex items-center justify-between px-4 shrink-0">
-        <button
-          disabled={currentIndex === 0}
-          onClick={() => setCurrentIndex(prev => prev - 1)}
-          className="p-2 text-white/60 disabled:opacity-30"
-        >
-          <ChevronLeft size={24} />
+      <div className="lg:hidden h-20 bg-white border-t border-[#e8ebe6] flex items-center justify-between px-6 shrink-0 relative z-20 shadow-sm">
+        <button disabled={currentIndex === 0} onClick={() => setCurrentIndex(prev => prev - 1)} className="w-12 h-12 rounded-full border border-[#e8ebe6] bg-white flex items-center justify-center text-[#0e0f0c] disabled:opacity-30">
+          <ChevronLeft size={20} />
         </button>
-        <span className="text-white/60 text-sm">{currentIndex + 1} / {questions.length}</span>
-        <button
-          disabled={currentIndex === questions.length - 1}
-          onClick={() => setCurrentIndex(prev => prev + 1)}
-          className="p-2 text-white/60 disabled:opacity-30"
-        >
-          <ChevronRight size={24} />
+        <span className="text-[#868685] text-sm font-bold tracking-widest">
+          <span className="text-cyan-400">{currentIndex + 1}</span> / {questions.length}
+        </span>
+        <button disabled={currentIndex === questions.length - 1} onClick={() => setCurrentIndex(prev => prev + 1)} className="w-12 h-12 rounded-full border border-cyan-400/30 bg-cyan-500/10 flex items-center justify-center text-cyan-400 disabled:opacity-30 disabled:border-[#e8ebe6] disabled:bg-white disabled:text-[#868685]">
+          <ChevronRight size={20} />
         </button>
       </div>
     </div>
