@@ -3,9 +3,8 @@ import { motion } from 'framer-motion';
 import { Book, Calendar, Clock, ArrowRight, AlertCircle, Zap, CheckCircle, XCircle, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
 import Skeleton from '../../components/ui/Skeleton';
+import Button from '../../components/ui/Button';
 import { listExamsStudent } from '../../utils/services/exams';
 
 const tabs = ['live', 'upcoming', 'completed', 'missed'];
@@ -57,37 +56,39 @@ const Exams = () => {
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
 
   return (
-    <div className="flex h-screen overflow-hidden bg-transparent">
+    <div className="flex h-screen overflow-hidden bg-[#f9faf6] font-body relative">
+      <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+      
       <Sidebar />
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-[#e8ebe6] scrollbar-track-transparent relative z-10">
         <div className="max-w-7xl mx-auto space-y-8">
 
           <div>
-            <h1 className="text-4xl font-bold text-white tracking-tight mb-2">My Exams</h1>
-            <p className="text-white/50">View, attempt, and track your examinations.</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-[#0e0f0c] font-display tracking-tight mb-2">My Exams</h1>
+            <p className="text-[#868685] tracking-wide mt-2">View, attempt, and track your examinations.</p>
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-2">
+            <div className="p-5 rounded-[20px] bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-3 font-medium shadow-inner">
               <AlertCircle size={20} />
               {error}
             </div>
           )}
 
           {/* Tabs */}
-          <div className="flex gap-2 bg-white/5 rounded-xl p-1">
+          <div className="flex flex-wrap gap-2 bg-white border border-[#e8ebe6] rounded-full p-1.5 w-fit shadow-card">
             {tabs.map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium capitalize transition-all relative ${
+                className={`flex-1 min-w-[100px] py-2.5 px-6 rounded-full text-sm font-bold tracking-wide capitalize transition-all duration-300 relative ${
                   activeTab === tab
-                    ? 'bg-white/10 text-white shadow-sm'
-                    : 'text-white/50 hover:text-white/80'
+                    ? 'bg-gradient-to-r from-cyan-400/20 to-purple-500/20 text-[#0e0f0c] shadow-[inset_0_0_15px_rgba(0,245,255,0.1)] border border-cyan-400/30'
+                    : 'text-[#868685] hover:text-[#0e0f0c] hover:bg-[#f9faf6] border border-transparent'
                 }`}
               >
                 {tab === 'live' && liveCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full text-[10px] font-bold flex items-center justify-center text-[#0f0f1a] shadow-glow-green animate-pulse">
                     {liveCount}
                   </span>
                 )}
@@ -98,33 +99,38 @@ const Exams = () => {
 
           {/* Content */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 rounded-2xl bg-white/5" />)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 rounded-[24px] bg-[#e8ebe6]" />)}
             </div>
           ) : currentExams.length === 0 ? (
-            <Card variant="glass" className="p-12 text-center">
-              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 text-white/20">
-                <Book size={40} />
+            <div className="bg-white border border-[#e8ebe6] rounded-[24px] shadow-sm p-12 md:p-16 text-center border-dashed">
+              <div className="w-24 h-24 rounded-[24px] bg-[#f9faf6] flex items-center justify-center mx-auto mb-6 text-[#868685] shadow-inner border border-[#e8ebe6]">
+                <Book size={48} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-2xl font-bold text-[#0e0f0c] font-display mb-2">
                 {activeTab === 'live' ? 'No Live Exams' :
                  activeTab === 'upcoming' ? 'No Upcoming Exams' :
                  activeTab === 'completed' ? 'No Completed Exams' :
                  'No Missed Exams'}
               </h3>
-              <p className="text-white/40">
+              <p className="text-[#868685] tracking-wide">
                 {activeTab === 'live' ? 'No exams are currently live.' :
                  activeTab === 'upcoming' ? 'No exams scheduled. Check back later.' :
                  activeTab === 'completed' ? 'You haven\'t completed any exams yet.' :
                  'You haven\'t missed any exams. Great job!'}
               </p>
-            </Card>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentExams.map((exam, idx) => {
                 const isLive = categorize(exam) === 'live';
                 const isCompleted = categorize(exam) === 'completed';
                 const isMissed = categorize(exam) === 'missed';
+                
+                let accent = 'purple';
+                if (isLive) accent = 'cyan';
+                if (isCompleted) accent = 'green';
+                if (isMissed) accent = 'pink';
 
                 return (
                   <motion.div
@@ -133,30 +139,30 @@ const Exams = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                   >
-                    <Card variant="glass" className={`h-full flex flex-col p-6 group hover:bg-white/5 transition-all ${
-                      isLive ? 'ring-2 ring-emerald-500/50' : ''
+                    <div className={`bg-white border border-[#e8ebe6] rounded-[24px] shadow-sm h-full flex flex-col p-8 group hover:-translate-y-2 transition-all duration-300 accent-top-${accent} ${
+                      isLive ? 'shadow-[0_10px_40px_rgba(0,245,255,0.15)] border-cyan-400/30' : ''
                     }`}>
                       {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                          isLive ? 'bg-emerald-500/20 text-emerald-400' :
-                          isCompleted ? 'bg-blue-500/20 text-blue-400' :
-                          isMissed ? 'bg-red-500/20 text-red-400' :
-                          'bg-purple-500/20 text-purple-400'
+                      <div className="flex items-start justify-between mb-6">
+                        <div className={`w-14 h-14 rounded-[16px] flex items-center justify-center shadow-inner ${
+                          isLive ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30' :
+                          isCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' :
+                          isMissed ? 'bg-red-500/10 text-red-400 border border-red-500/30' :
+                          'bg-purple-500/10 text-purple-400 border border-purple-500/30'
                         }`}>
-                          {isLive ? <Zap size={24} /> : isCompleted ? <CheckCircle size={24} /> : isMissed ? <XCircle size={24} /> : <Book size={24} />}
+                          {isLive ? <Zap size={28} /> : isCompleted ? <CheckCircle size={28} /> : isMissed ? <XCircle size={28} /> : <Book size={28} />}
                         </div>
                         {isLive && (
-                          <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-full">
-                            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" /> LIVE NOW
+                          <span className="flex items-center gap-2 px-4 py-1.5 bg-cyan-500/10 border border-cyan-400/30 text-cyan-400 text-[10px] font-bold rounded-full uppercase tracking-widest shadow-[0_0_15px_rgba(0,245,255,0.1)]">
+                            <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-glow-cyan" /> LIVE NOW
                           </span>
                         )}
                         {isMissed && (
-                          <span className="px-3 py-1 bg-white/5 text-white/40 text-xs font-medium rounded-full">Not Attempted</span>
+                          <span className="px-4 py-1.5 bg-white border border-[#e8ebe6] text-[#868685] text-[10px] font-bold rounded-full uppercase tracking-widest shadow-inner">Not Attempted</span>
                         )}
                         {isCompleted && exam.attemptScore != null && (
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            exam.attemptScore >= 40 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                          <span className={`px-4 py-1.5 rounded-full border text-xs font-bold shadow-inner ${
+                            exam.attemptScore >= 40 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
                           }`}>
                             {exam.attemptScore}%
                           </span>
@@ -164,56 +170,53 @@ const Exams = () => {
                       </div>
 
                       {/* Body */}
-                      <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">{exam.title}</h3>
-                      <p className="text-white/40 text-sm mb-4">
+                      <h3 className="text-xl font-bold text-[#0e0f0c] font-display tracking-wide mb-2 line-clamp-2 group-hover:text-cyan-400 transition-colors">{exam.title}</h3>
+                      <p className="text-[#868685] text-xs font-bold uppercase tracking-widest mb-6">
                         {exam.subject || 'General'}
                       </p>
 
                       {/* Meta */}
-                      <div className="space-y-2 text-sm text-white/40 mb-4">
+                      <div className="space-y-3 text-sm font-medium tracking-wide text-[#868685] mb-8 bg-[#f9faf6] p-4 rounded-[16px] border border-[#e8ebe6]">
                         {exam.scheduledDate && (
-                          <div className="flex items-center gap-2">
-                            <Calendar size={14} /> {formatDate(exam.scheduledDate)}
+                          <div className="flex items-center gap-3">
+                            <Calendar size={16} className="text-[#868685]" /> {formatDate(exam.scheduledDate)}
                           </div>
                         )}
-                        <div className="flex items-center gap-2">
-                          <Clock size={14} /> {exam.durationMinutes} minutes
+                        <div className="flex items-center gap-3">
+                          <Clock size={16} className="text-[#868685]" /> {exam.durationMinutes} minutes
                         </div>
                         {exam.totalMarks > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Book size={14} /> {exam.totalMarks} marks {exam.passingMarks ? `(Pass: ${exam.passingMarks}%)` : ''}
+                          <div className="flex items-center gap-3">
+                            <Book size={16} className="text-[#868685]" /> {exam.totalMarks} marks {exam.passingMarks ? <span className="text-[#868685] text-xs uppercase ml-1">(Pass: {exam.passingMarks}%)</span> : ''}
                           </div>
                         )}
                       </div>
 
                       {/* Action */}
-                      <div className="mt-auto">
+                      <div className="mt-auto pt-2 border-t border-[#e8ebe6]">
                         {isLive ? (
-                          <button
+                          <Button
                             onClick={() => navigate(`/s/exam/${exam.id || exam._id}`)}
-                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3.5 btn-primary rounded-full flex items-center justify-center gap-2 shadow-glow-cyan font-bold tracking-wide mt-2"
                           >
-                            <Zap size={18} /> Attempt Now
-                          </button>
+                            <Zap size={18} /> Attempt Assessment
+                          </Button>
                         ) : isCompleted ? (
-                          <button
+                          <Button
                             onClick={() => navigate('/s/result')}
-                            className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white/70 font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-white/10"
+                            className="w-full py-3.5 bg-[#f9faf6] hover:bg-[#e2f6d5] text-[#0e0f0c] font-bold rounded-full transition-colors flex items-center justify-center gap-2 border border-[#e8ebe6] mt-2"
                           >
-                            View Result <ArrowRight size={16} />
-                          </button>
+                            View Result <ArrowRight size={18} />
+                          </Button>
                         ) : !isMissed ? (
-                          <button
-                            disabled
-                            className="w-full py-2.5 bg-white/5 text-white/30 font-medium rounded-xl border border-white/10 cursor-not-allowed"
-                          >
-                            <Timer size={16} className="inline mr-2" /> Not Live Yet
-                          </button>
+                          <div className="w-full py-3.5 bg-[#f9faf6] text-[#868685] font-bold rounded-full border border-[#e8ebe6] flex items-center justify-center gap-2 mt-2">
+                            <Timer size={18} /> Not Live Yet
+                          </div>
                         ) : (
-                          <div className="text-center text-white/20 text-sm py-2">Exam ended</div>
+                          <div className="text-center text-[#868685] text-xs font-bold uppercase tracking-widest py-3 mt-2">Assessment Concluded</div>
                         )}
                       </div>
-                    </Card>
+                    </div>
                   </motion.div>
                 );
               })}
