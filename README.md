@@ -1,64 +1,87 @@
-# Bright Board
-
-https://www.figma.com/design/xcEDvU6QBItNIE7jeAkjKi/Bright-Board?node-id=0-1&t=w65gnY37rnB355p3-1
-
 # Deployed Link:
 https://brightboard-seven.vercel.app/
+# Bright Board
 
-### **Problem Statement**  
-The education sector faces challenges in managing and organizing digital classrooms, especially for small to medium-sized institutions. Tutors often lack a centralized platform to manage student attendance, share study materials, track progress, and provide feedback. Similarly, students and parents often struggle to access information about attendance, results, and payments in an organized manner. Current solutions are either too expensive, overly complex, or lack customization for small institutions.
+## System Overview
 
-There is a need for an easy-to-use, affordable, and centralized platform that allows tutors to manage their institutes efficiently while providing students and parents with a seamless experience to track academic progress, access resources, and communicate with educators.
+Bright Board is a comprehensive Educational Technology (EdTech) management platform designed to streamline administrative workflows and enhance the student learning experience. The system is split into a robust Node.js backend API and a high-performance React.js frontend application.
 
----
+## High-Level Architecture
 
-### **Proposed Solution**  
-**Bright Board** is an all-in-one **digital classroom management system** designed to simplify and streamline the administrative and educational processes for tutors and students. The platform provides the following features:  
+The architecture follows a standard client-server model with a clear separation of concerns between the presentation layer and the data processing layer.
 
-#### **Features for Tutors/Admins**:
-1. **Institute Registration**: Allow tutors to register their institute and manage students.
-2. **Attendance Management**: Upload and manage daily student attendance.
-3. **Weekly Reports**: Generate and share detailed weekly progress reports.
-4. **Dashboards**: Visualize student performance and institute analytics.
-5. **Study Material Upload**: Share resources such as PDFs, videos, and links with students (using a dark theme for better focus).
-6. **Exam Management**: Set up exams and assign schedules.
-7. **Result Upload and Tracking**: Upload and analyze student results.
-8. **Payment Gateway**: Simplify fee collection and payment tracking.
-9. **Feedback System**: Collect feedback from students and parents to improve the learning experience.
+```mermaid
+graph TD
+    subgraph Client Layer
+        A[Administrator Portal] --> C[React SPA]
+        B[Student Portal] --> C
+    end
 
-#### **Features for Students and Parents**:
-1. **Attendance Tracking**: View attendance records and notifications.
-2. **Performance Monitoring**: Access results and progress reports.
-3. **Study Materials**: Easily download and review study resources.
-4. **Payment Tracking**: Pay fees online and track transactions.
-5. **Feedback Portal**: Provide suggestions or issues for improvement.
+    subgraph API Gateway
+        C -- HTTP/REST --> D[Node.js Express Server]
+    end
 
----
+    subgraph Services Layer
+        D --> E[Authentication Service]
+        D --> F[Student Management Service]
+        D --> G[Exam Engine Service]
+        D --> H[Analytics Service]
+    end
 
-### **Technical Implementation**
-1. **Frontend**:  
-   - **Technologies**: React.js for user interfaces, Figma for design prototyping.  
-   - **Theme**: Vibrant and colorful for admin/tutor interfaces; dark theme for the study materials section.
-   - **Responsive Design**: Ensure compatibility with various devices (desktop, tablet, mobile).
+    subgraph Data Layer
+        E --> I[(MongoDB Database)]
+        F --> I
+        G --> I
+        H --> I
+    end
+```
 
-2. **Backend**:  
-   - **Technologies**: Node.js with Express.js for server-side logic.  
-   - **Database**: MongoDB for managing user data, attendance records, and study materials.
+## User Access and Authentication Workflow
 
-3. **Authentication**:  
-   - Use JWT-based authentication for secure access.  
-   - Role-based access control (Admins, Tutors, Students).
+The system implements Role-Based Access Control (RBAC) to differentiate capabilities between administrative personnel and enrolled students.
 
-4. **Payment Gateway**:  
-   - Integrate with APIs like Stripe or Razorpay for fee collection.
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant AuthAPI
+    participant Database
 
-5. **Deployment**:  
-   - Host on platforms like AWS, Vercel, or Netlify.  
-   - Use GitHub for version control.
+    User->>Frontend: Submit credentials
+    Frontend->>AuthAPI: POST /login
+    AuthAPI->>Database: Verify credentials
+    Database-->>AuthAPI: Return verification status
+    
+    alt is Valid
+        AuthAPI-->>Frontend: Return JWT Token & User Context
+        Frontend->>User: Redirect to Role Dashboard
+    else is Invalid
+        AuthAPI-->>Frontend: 401 Unauthorized
+        Frontend->>User: Display Error Message
+    end
+```
 
----
+## Directory Structure
 
-### **Benefits**
-- **Tutors/Admins**: Save time and reduce administrative burdens with automated tools.  
-- **Students/Parents**: Gain transparency and easy access to essential academic information.  
-- **Institutions**: Improve communication and enhance the overall education experience.  
+```mermaid
+graph LR
+    A[Bright Board Root] --> B[Frontend Application]
+    A --> C[Backend Service]
+    
+    B --> D[src]
+    B --> E[dist]
+    
+    C --> F[routes]
+    C --> G[middleware]
+    C --> H[uploads]
+```
+
+## Deployment Guidelines
+
+The project is configured for split deployment:
+1. **Frontend**: Optimized for static hosting environments via Vite build output.
+2. **Backend**: Optimized for Node.js containerized or serverless hosting environments.
+
+For detailed instructions, refer to the individual module documentation:
+- [Frontend Documentation](bright_board/Frontend/bright_board/README.md)
+- [Backend Documentation](bright_board/Backend/README.md)
