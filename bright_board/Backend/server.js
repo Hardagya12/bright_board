@@ -1,6 +1,8 @@
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -27,7 +29,18 @@ const dbName = "bright_board";
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+try { app.use(require('compression')()); } catch(e) { /* compression not installed yet */ }
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads', 'materials');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Security Middleware
 const helmet = require('helmet');
@@ -37,17 +50,21 @@ app.use(helmet());
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
-    max: 100000, // 100k requests
-    message: 'Too many requests from this IP, please try again later.'
+    max: 500, // 500 requests per 15 minutes per IP
+    message: { error: 'Too many requests from this IP, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
-// app.use(limiter); // DISABLED temporarily to guarantee no 429 errors during dev
+app.use(limiter);
 
-// Request logging middleware
-app.use((req, res, next) => {
+// Request logging middleware (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
     next();
-});
+  });
+}
 
 // Health endpoints
 app.get('/', (req, res) => {
@@ -152,8 +169,7 @@ async function initializeDatabase() {
 
         // Start the server
         app.listen(port, () => {
-            console.log(`Server running at http://localhost:${port}`);
-            console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`Server running on port ${port}`);
         });
 
     } catch (err) {
