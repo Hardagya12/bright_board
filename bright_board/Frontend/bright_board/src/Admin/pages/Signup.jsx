@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import Joi from "joi";
 import {
   Building2,
@@ -9,10 +9,14 @@ import {
   Lock,
   BookOpen,
   Key,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { API_BASE_URL } from "../../config/api";
+import { PencilSVG, GradCapSVG, StarSVG, SparklesSVG } from "../../components/svg/SchoolIllustrations";
 
 // Validation schemas
 const schema = Joi.object({
@@ -53,6 +57,28 @@ const otpSchema = Joi.string().length(6).pattern(/^\d+$/).required().messages({
   "string.empty": "OTP is required",
 });
 
+const InputGroup = ({ label, icon: Icon, error, ...props }) => (
+  <div className="space-y-1.5">
+    <label className="text-[12px] font-bold text-[#454745] uppercase tracking-wider font-body">
+      {label}
+    </label>
+    <div className="relative group">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#868685] group-focus-within:text-[#0e0f0c] transition-colors">
+        <Icon size={18} />
+      </div>
+      <input
+        className={`input-wise pl-11 ${error ? "border-[#d03238] focus:border-[#d03238] focus:ring-1 focus:ring-[#d03238]" : ""}`}
+        {...props}
+      />
+    </div>
+    {error && (
+      <p className="text-[12px] text-[#d03238] font-bold uppercase flex items-center gap-1.5 mt-1">
+        <AlertCircle size={14} /> {error}
+      </p>
+    )}
+  </div>
+);
+
 const SignupPage = () => {
   // State
   const [formData, setFormData] = useState({
@@ -76,7 +102,7 @@ const SignupPage = () => {
   const [registrationInProgress, setRegistrationInProgress] = useState(false);
   const [verificationToken, setVerificationToken] = useState("");
 
-  const navigate = useNavigate(); // Added for navigation
+  const navigate = useNavigate();
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -86,14 +112,12 @@ const SignupPage = () => {
     }
   }, [countdown]);
 
-  // Validate individual field
   const validateField = (name, value) => {
     const fieldSchema = schema.extract(name);
     const { error } = fieldSchema.validate(value);
     return error ? error.message : null;
   };
 
-  // Form field change handler
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -101,7 +125,6 @@ const SignupPage = () => {
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  // OTP field change handler
   const handleOtpChange = (e) => {
     const value = e.target.value;
     setOtp(value);
@@ -109,11 +132,9 @@ const SignupPage = () => {
     setOtpError(error ? error.message : "");
   };
 
-  // Request OTP handler
   const handleRequestOtp = async (e) => {
     e.preventDefault();
 
-    // Validate email before requesting OTP
     const { error } = Joi.object({
       email: schema.extract("email"),
     }).validate({ email: formData.email });
@@ -150,7 +171,6 @@ const SignupPage = () => {
     }
   };
 
-  // Verify OTP handler
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
 
@@ -179,7 +199,7 @@ const SignupPage = () => {
       setIsEmailVerified(true);
       setVerificationToken(data.verificationToken);
       setStatusMessage(
-        "Email verified successfully! Complete your registration.",
+        "Email verified successfully! Complete your registration."
       );
     } catch (err) {
       setOtpError(err.message);
@@ -189,11 +209,9 @@ const SignupPage = () => {
     }
   };
 
-  // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate all form fields
     const { error } = schema.validate(formData, { abortEarly: false });
 
     if (error) {
@@ -214,12 +232,11 @@ const SignupPage = () => {
     setRegistrationInProgress(true);
 
     try {
-      // Map frontend field names to backend expected format
       const response = await fetch(`${API_BASE_URL}/institutes/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${verificationToken}`, // Include verification token
+          Authorization: `Bearer ${verificationToken}`,
         },
         body: JSON.stringify({
           name: formData.instituteName,
@@ -242,10 +259,9 @@ const SignupPage = () => {
       setIsRegistered(true);
       setStatusMessage(`Registration successful! Redirecting to dashboard...`);
 
-      // Redirect to /a/dashboard after a short delay
       setTimeout(() => {
         navigate("/a/dashboard");
-      }, 1500); // 1.5-second delay to show success message
+      }, 1500);
     } catch (err) {
       setStatusMessage(err.message);
     } finally {
@@ -253,240 +269,230 @@ const SignupPage = () => {
     }
   };
 
-  // Animation variants removed in favor of Tailwind and route transitions
-
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-      <Card className="w-full max-w-lg p-6">
-        <h1 className="font-comic text-2xl mb-2">
-          {isRegistered
-            ? "Registration Complete"
-            : isEmailVerified
-              ? "Complete Registration"
-              : isOtpSent
-                ? "Verify Email"
-                : "Institute Registration"}
-        </h1>
+    <div className="min-h-screen bg-[var(--bb-offwhite)] text-[var(--bb-black)] flex items-center justify-center p-4 relative overflow-hidden font-body py-12 notebook-lines">
+      
+      {/* Decorative SVG Elements */}
+      <div className="absolute top-[10%] left-[10%] hidden md:block opacity-60">
+        <PencilSVG size={120} />
+      </div>
+      <div className="absolute bottom-[10%] right-[10%] hidden md:block opacity-60">
+        <GradCapSVG size={150} />
+      </div>
+      <div className="absolute top-[20%] right-[15%] hidden lg:block opacity-80">
+        <StarSVG size={80} color="#9fe870" />
+      </div>
+      <div className="absolute bottom-[20%] left-[15%] hidden lg:block opacity-70">
+        <SparklesSVG size={60} />
+      </div>
+
+      <Card variant="default" className="w-full max-w-lg p-6 md:p-8 relative z-10 my-auto shadow-2xl">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-[16px] bg-[#e2f6d5] border-2 border-[#163300] shadow-[4px_4px_0_#163300] flex items-center justify-center mx-auto mb-6 relative animate-bounce-gentle">
+            <Building2 size={32} className="text-[#163300]" />
+          </div>
+          <h1 className="text-4xl font-display text-[#0e0f0c] tracking-tight relative inline-block mb-2">
+            {isRegistered
+              ? "Registration Complete"
+              : isEmailVerified
+                ? "Complete Registration"
+                : isOtpSent
+                  ? "Verify Email"
+                  : "Institute Registration"}
+            <div className="doodle-underline w-full absolute bottom-[-4px] left-0"></div>
+          </h1>
+          <p className="text-[#454745] font-medium mt-2">
+            Join the brightest platform for managing your institution.
+          </p>
+        </div>
 
         {statusMessage && (
-          <div className="border border-bw-37 rounded p-3 mb-4 text-bw-62">
-            {statusMessage}
+          <div className={`p-4 rounded-xl mb-6 text-sm font-bold flex items-center gap-3 ${isRegistered || isEmailVerified ? 'badge-green border border-[#054d28]/20' : 'badge-info border border-[#0066cc]/20'}`}>
+            <CheckCircle2 size={18} /> {statusMessage}
           </div>
         )}
 
-        {/* Email Input Form */}
-        {!isOtpSent && !isEmailVerified && !isRegistered && (
-          <form onSubmit={handleRequestOtp} className="space-y-4">
-            <div>
-              <label className="block text-sm text-bw-75 mb-1">Email</label>
-              <div className="flex items-center gap-2">
-                <Mail size={18} className="text-bw-62" />
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
-                />
-              </div>
-              {errors.email && (
-                <div className="text-bw-62 text-sm mt-1">{errors.email}</div>
-              )}
-            </div>
+        <AnimatePresence mode="wait">
+          {/* Email Input Form */}
+          {!isOtpSent && !isEmailVerified && !isRegistered && (
+            <motion.form
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              onSubmit={handleRequestOtp} 
+              className="space-y-6"
+            >
+              <InputGroup
+                label="Institute Email"
+                icon={Mail}
+                type="email"
+                name="email"
+                placeholder="admin@institute.edu"
+                value={formData.email}
+                onChange={handleChange}
+                error={errors.email}
+              />
 
-            <Button type="submit" fullWidth disabled={isSending}>
-              {isSending ? "Sending..." : "Request OTP"}
-            </Button>
+              <Button type="submit" variant="primary" fullWidth disabled={isSending}>
+                {isSending ? "Sending OTP..." : "Request OTP"}
+              </Button>
 
-            <div className="text-right">
-              <Link
-                to="/a/signin"
-                className="text-bw-75 hover:text-white text-sm"
-              >
-                Already registered? Sign In
-              </Link>
-            </div>
-          </form>
-        )}
-
-        {/* OTP Verification Form */}
-        {isOtpSent && !isEmailVerified && !isRegistered && (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <div>
-              <label className="block text-sm text-bw-75 mb-1">OTP</label>
-              <div className="flex items-center gap-2">
-                <Key size={18} className="text-bw-62" />
-                <input
-                  type="text"
-                  placeholder="Enter 6-digit OTP"
-                  value={otp}
-                  onChange={handleOtpChange}
-                  maxLength={6}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
-                />
-              </div>
-              {otpError && (
-                <div className="text-bw-62 text-sm mt-1">{otpError}</div>
-              )}
-            </div>
-
-            <Button type="submit" fullWidth disabled={isVerifying}>
-              {isVerifying ? "Verifying..." : "Verify OTP"}
-            </Button>
-
-            <div className="text-center">
-              {countdown > 0 ? (
-                <p className="text-bw-62 text-sm">
-                  Resend code in {countdown} seconds
-                </p>
-              ) : (
-                <button
-                  onClick={handleRequestOtp}
-                  disabled={isSending}
-                  className="text-bw-75 text-sm hover:text-white"
-                  type="button"
+              <div className="text-center pt-2">
+                <Link
+                  to="/a/signin"
+                  className="text-sm font-bold text-[#868685] hover:text-[#163300] transition-colors inline-block doodle-underline"
                 >
-                  Resend verification code
-                </button>
-              )}
-            </div>
-          </form>
-        )}
-
-        {/* Registration Form */}
-        {isEmailVerified && !isRegistered && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm text-bw-75 mb-1">
-                Institute Name
-              </label>
-              <div className="flex items-center gap-2">
-                <Building2 size={18} className="text-bw-62" />
-                <input
-                  type="text"
-                  name="instituteName"
-                  placeholder="Institute Name"
-                  value={formData.instituteName}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
-                />
+                  Already registered? Sign In
+                </Link>
               </div>
-              {errors.instituteName && (
-                <div className="text-bw-62 text-sm mt-1">
-                  {errors.instituteName}
-                </div>
-              )}
-            </div>
+            </motion.form>
+          )}
 
-            <div>
-              <label className="block text-sm text-bw-75 mb-1">Address</label>
-              <div className="flex items-center gap-2">
-                <MapPin size={18} className="text-bw-62" />
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="Address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
-                />
+          {/* OTP Verification Form */}
+          {isOtpSent && !isEmailVerified && !isRegistered && (
+            <motion.form
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              onSubmit={handleVerifyOtp} 
+              className="space-y-6"
+            >
+              <InputGroup
+                label="Enter Verification Code"
+                icon={Key}
+                type="text"
+                placeholder="••••••"
+                value={otp}
+                onChange={handleOtpChange}
+                maxLength={6}
+                error={otpError}
+                className="input-wise text-center tracking-[1em] text-lg font-bold"
+              />
+
+              <Button type="submit" variant="primary" fullWidth disabled={isVerifying}>
+                {isVerifying ? "Verifying..." : "Verify OTP"}
+              </Button>
+
+              <div className="text-center font-bold text-sm text-[#868685] pt-2">
+                {countdown > 0 ? (
+                  <p>Resend code in {countdown}s</p>
+                ) : (
+                  <button
+                    onClick={handleRequestOtp}
+                    disabled={isSending}
+                    className="text-[#163300] hover:text-[#054d28] transition-colors font-bold underline"
+                    type="button"
+                  >
+                    Resend verification code
+                  </button>
+                )}
               </div>
-              {errors.address && (
-                <div className="text-bw-62 text-sm mt-1">{errors.address}</div>
-              )}
-            </div>
+            </motion.form>
+          )}
 
-            <div>
-              <label className="block text-sm text-bw-75 mb-1">
-                Contact Number
-              </label>
-              <div className="flex items-center gap-2">
-                <Phone size={18} className="text-bw-62" />
-                <input
+          {/* Registration Form */}
+          {isEmailVerified && !isRegistered && (
+            <motion.form
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              onSubmit={handleSubmit} 
+              className="space-y-5"
+            >
+              <InputGroup
+                label="Institute Name"
+                icon={Building2}
+                type="text"
+                name="instituteName"
+                placeholder="Bright Academy"
+                value={formData.instituteName}
+                onChange={handleChange}
+                error={errors.instituteName}
+              />
+
+              <InputGroup
+                label="Address"
+                icon={MapPin}
+                type="text"
+                name="address"
+                placeholder="123 Education Lane"
+                value={formData.address}
+                onChange={handleChange}
+                error={errors.address}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <InputGroup
+                  label="Contact Number"
+                  icon={Phone}
                   type="text"
                   name="contactNumber"
-                  placeholder="Contact Number"
+                  placeholder="9876543210"
                   value={formData.contactNumber}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                  error={errors.contactNumber}
                 />
-              </div>
-              {errors.contactNumber && (
-                <div className="text-bw-62 text-sm mt-1">
-                  {errors.contactNumber}
-                </div>
-              )}
-            </div>
 
-            <div>
-              <label className="block text-sm text-bw-75 mb-1">Email</label>
-              <div className="flex items-center gap-2">
-                <Mail size={18} className="text-bw-62" />
-                <input
+                <InputGroup
+                  label="Email (Verified)"
+                  icon={CheckCircle2}
                   type="email"
                   name="email"
-                  placeholder="Email"
                   value={formData.email}
                   readOnly
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white"
-                />
-                <span className="text-bw-75 text-sm">✓ Verified</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-bw-75 mb-1">Password</label>
-              <div className="flex items-center gap-2">
-                <Lock size={18} className="text-bw-62" />
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
+                  className="input-wise pl-11 bg-[#e2f6d5] border-[#054d28]/20 text-[#054d28] opacity-80 cursor-not-allowed"
                 />
               </div>
-              {errors.password && (
-                <div className="text-bw-62 text-sm mt-1">{errors.password}</div>
-              )}
-            </div>
 
-            <div>
-              <label className="block text-sm text-bw-75 mb-1">Courses</label>
-              <div className="flex items-center gap-2">
-                <BookOpen size={18} className="text-bw-62" />
-                <input
-                  type="text"
-                  name="courses"
-                  placeholder="Courses (comma separated)"
-                  value={formData.courses}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 bg-black border border-bw-37 rounded text-white placeholder:text-bw-62 focus:outline-none focus:border-bw-75"
-                />
+              <InputGroup
+                label="Password"
+                icon={Lock}
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+              />
+
+              <InputGroup
+                label="Courses Offered"
+                icon={BookOpen}
+                type="text"
+                name="courses"
+                placeholder="Maths, Physics, Chem (comma separated)"
+                value={formData.courses}
+                onChange={handleChange}
+                error={errors.courses}
+              />
+
+              <div className="pt-6">
+                <Button type="submit" variant="primary" fullWidth disabled={registrationInProgress}>
+                  {registrationInProgress ? "Registering..." : "Complete Registration"}
+                </Button>
               </div>
-              {errors.courses && (
-                <div className="text-bw-62 text-sm mt-1">{errors.courses}</div>
-              )}
-            </div>
+            </motion.form>
+          )}
 
-            <Button type="submit" fullWidth disabled={registrationInProgress}>
-              {registrationInProgress
-                ? "Registering..."
-                : "Complete Registration"}
-            </Button>
-          </form>
-        )}
-
-        {/* Registration Success */}
-        {isRegistered && (
-          <div>
-            <p className="text-bw-75">
-              Registration successful! Redirecting to dashboard...
-            </p>
-          </div>
-        )}
+          {/* Registration Success */}
+          {isRegistered && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-8"
+            >
+              <div className="w-24 h-24 rounded-full bg-[#e2f6d5] border-4 border-[#163300] flex items-center justify-center mx-auto mb-6 text-[#163300] shadow-[6px_6px_0_#163300]">
+                <CheckCircle2 size={48} />
+              </div>
+              <h3 className="text-3xl font-display text-[#0e0f0c] mb-3">
+                Welcome to BrightBoard!
+              </h3>
+              <p className="text-[#454745] font-medium text-lg">
+                Redirecting you to your new dashboard...
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Card>
     </div>
   );
