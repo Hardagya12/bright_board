@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
   }
 
   // In production mode, use the deployed backend
-  return "https://bb-t5a0.onrender.com";
+  return "https://bright-board.onrender.com";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
